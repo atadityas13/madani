@@ -1,0 +1,108 @@
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+@import 'tailwindcss/theme' prefix(tw);
+@import 'tailwindcss/utilities' prefix(tw);
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../vendor/livewire/livewire/dist/**/*.js';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+    --madani-ink: #0b3d2e;
+    --madani-ink-soft: #145c45;
+    --madani-gold: #c9a227;
+    --madani-paper: #f4f1ea;
+    --madani-line: #d9d3c4;
+    --bs-primary: #0b3d2e;
+    --bs-primary-rgb: 11, 61, 46;
+    --bs-body-bg: #f4f1ea;
+    --bs-body-font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --bs-border-radius: 0.65rem;
+}
+
+html,
+body {
+    min-height: 100%;
+}
+
+body {
+    background: var(--madani-paper);
+    color: #1c1917;
+}
+
+a {
+    color: var(--madani-ink-soft);
+}
+
+.madani-shell {
+    min-height: 100vh;
+}
+
+.madani-sidebar {
+    width: 260px;
+    background: var(--madani-ink);
+    color: #f8f4e8;
+}
+
+.madani-sidebar a {
+    color: #e8e0cc;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    padding: 0.55rem 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.madani-sidebar a:hover,
+.madani-sidebar a.active {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.madani-brand {
+    letter-spacing: 0.18em;
+    font-weight: 700;
+    font-size: 0.82rem;
+}
+
+.madani-topbar {
+    background: #fff;
+    border-bottom: 1px solid var(--madani-line);
+}
+
+.madani-card {
+    background: #fff;
+    border: 1px solid var(--madani-line);
+    border-radius: 0.85rem;
+}
+
+.btn-madani {
+    background: var(--madani-ink);
+    color: #fff;
+    border: 0;
+}
+
+.btn-madani:hover {
+    background: var(--madani-ink-soft);
+    color: #fff;
+}
+
+.hero-panel {
+    background: var(--madani-ink);
+    color: #f8f4e8;
+    border-radius: 1.25rem;
+}
+
+.stat-label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #78716c;
+}
