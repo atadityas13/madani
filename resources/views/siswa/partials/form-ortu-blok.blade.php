@@ -1,0 +1,115 @@
+@php
+    $ortu = $siswa->orangTuas->firstWhere('peran', $peran);
+    $input = "ortu[$peran]";
+    $old = "ortu.$peran";
+    $judul = ['ayah' => 'Ayah kandung', 'ibu' => 'Ibu kandung', 'wali' => 'Wali'][$peran];
+    $valStatusWali = old($old.'.status', $ortu?->status ?? 'Sama dengan ayah kandung');
+    $valKewarganegaraan = old($old.'.kewarganegaraan', $ortu?->kewarganegaraan ?? 'WNI');
+    $valDomisili = old($old.'.domisili', $ortu?->domisili ?? 'Dalam Negeri');
+@endphp
+<div class="madani-card p-4 h-100">
+    <div class="stat-label mb-3">{{ $judul }}</div>
+    @if ($peran === 'ibu')
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="{{ $input }}[sama_dengan_ayah]" value="1" id="kk_sama_ayah" @checked(old($old.'.sama_dengan_ayah', $ortu?->sama_dengan_ayah))>
+            <label class="form-check-label" for="kk_sama_ayah">KK sama dengan ayah kandung</label>
+        </div>
+    @endif
+    @if ($peran === 'wali')
+        <div class="mb-3">
+            <label class="form-label">Status</label>
+            <x-emis-select :name="$input.'[status]'" :options="$emis['status_wali']" :value="$valStatusWali" />
+        </div>
+    @endif
+    <div class="mb-3">
+        <label class="form-label">Nama lengkap</label>
+        <input class="form-control" name="{{ $input }}[nama]" value="{{ old($old.'.nama', $ortu?->nama) }}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Status</label>
+        <x-emis-select :name="$input.'[status_hidup]'" :options="$emis['status_hidup']" :value="old($old.'.status_hidup', $ortu?->status_hidup)" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">NIK</label>
+        <input class="form-control" name="{{ $input }}[nik]" value="{{ old($old.'.nik', $ortu?->nik) }}" maxlength="16">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Kewarganegaraan</label>
+        <x-emis-select :name="$input.'[kewarganegaraan]'" :options="$emis['kewarganegaraan']" :value="$valKewarganegaraan" />
+    </div>
+    <div class="row g-2">
+        <div class="col-6">
+            <label class="form-label">Tempat lahir</label>
+            <input class="form-control" name="{{ $input }}[tempat_lahir]" value="{{ old($old.'.tempat_lahir', $ortu?->tempat_lahir) }}">
+        </div>
+        <div class="col-6">
+            <label class="form-label">Tanggal lahir</label>
+            <input class="form-control" type="date" name="{{ $input }}[tanggal_lahir]" value="{{ old($old.'.tanggal_lahir', optional($ortu?->tanggal_lahir)->format('Y-m-d')) }}">
+        </div>
+        <div class="col-12">
+            <label class="form-label">Pendidikan terakhir</label>
+            <x-emis-select :name="$input.'[pendidikan]'" :options="$emis['pendidikan']" :value="old($old.'.pendidikan', $ortu?->pendidikan)" />
+        </div>
+        <div class="col-12">
+            <label class="form-label">Pekerjaan utama</label>
+            <x-emis-select :name="$input.'[pekerjaan]'" :options="$emis['pekerjaan']" :value="old($old.'.pekerjaan', $ortu?->pekerjaan)" />
+        </div>
+        <div class="col-12">
+            <label class="form-label">Penghasilan rata-rata per bulan (Rp)</label>
+            <x-emis-select :name="$input.'[penghasilan]'" :options="$emis['penghasilan']" :value="old($old.'.penghasilan', $ortu?->penghasilan)" />
+        </div>
+        <div class="col-12">
+            <label class="form-label">Nomor handphone</label>
+            <input class="form-control" name="{{ $input }}[no_hp]" value="{{ old($old.'.no_hp', $ortu?->no_hp) }}" placeholder="628…">
+            <div class="form-check mt-1">
+                <input class="form-check-input" type="checkbox" name="{{ $input }}[tidak_punya_hp]" value="1" @checked(old($old.'.tidak_punya_hp', $ortu?->tidak_punya_hp))>
+                <label class="form-check-label small">Tidak memiliki nomor handphone</label>
+            </div>
+        </div>
+        <div class="col-12">
+            <label class="form-label">Domisili</label>
+            <x-emis-select :name="$input.'[domisili]'" :options="$emis['domisili']" :value="$valDomisili" />
+        </div>
+        <div class="col-12">
+            <label class="form-label">Status tempat tinggal</label>
+            <x-emis-select :name="$input.'[status_tempat_tinggal]'" :options="$emis['status_tempat_tinggal']" :value="old($old.'.status_tempat_tinggal', $ortu?->status_tempat_tinggal)" />
+        </div>
+        <div class="col-6">
+            <label class="form-label">Provinsi</label>
+            <input class="form-control" name="{{ $input }}[provinsi]" value="{{ old($old.'.provinsi', $ortu?->provinsi) }}">
+        </div>
+        <div class="col-6">
+            <label class="form-label">Kota/Kabupaten</label>
+            <input class="form-control" name="{{ $input }}[kota]" value="{{ old($old.'.kota', $ortu?->kota) }}">
+        </div>
+        <div class="col-6">
+            <label class="form-label">Kecamatan</label>
+            <input class="form-control" name="{{ $input }}[kecamatan]" value="{{ old($old.'.kecamatan', $ortu?->kecamatan) }}">
+        </div>
+        <div class="col-6">
+            <label class="form-label">Kelurahan/Desa</label>
+            <input class="form-control" name="{{ $input }}[desa]" value="{{ old($old.'.desa', $ortu?->desa) }}">
+        </div>
+        <div class="col-3">
+            <label class="form-label">RT</label>
+            <input class="form-control" name="{{ $input }}[rt]" value="{{ old($old.'.rt', $ortu?->rt) }}">
+        </div>
+        <div class="col-3">
+            <label class="form-label">RW</label>
+            <input class="form-control" name="{{ $input }}[rw]" value="{{ old($old.'.rw', $ortu?->rw) }}">
+        </div>
+        <div class="col-6">
+            <label class="form-label">Kode pos</label>
+            <input class="form-control" name="{{ $input }}[kode_pos]" value="{{ old($old.'.kode_pos', $ortu?->kode_pos) }}">
+        </div>
+        <div class="col-12">
+            <label class="form-label">Alamat</label>
+            <input class="form-control" name="{{ $input }}[alamat]" value="{{ old($old.'.alamat', $ortu?->alamat) }}">
+        </div>
+        <div class="col-12">
+            <label class="form-label">Unggah KK</label>
+            <input class="form-control" type="file" name="file_kk_{{ $peran }}" accept=".pdf,.jpg,.jpeg,.png">
+            <div class="form-text">Maks. 2MB bertipe pdf jpg png</div>
+        </div>
+    </div>
+</div>

@@ -2,60 +2,380 @@
 
 @section('title', $siswa->nama)
 @section('heading', $siswa->nama)
-@section('subheading', 'NISN: '.($siswa->nisn ?: 'belum ada').' · status '.$siswa->status_keaktifan)
+@section('subheading', 'NISN: '.($siswa->nisn ?: 'belum ada').' · '.$siswa->status_keaktifan)
+
+@php
+    $tabs = [
+        'data-siswa' => 'Data siswa',
+        'orang-tua' => 'Data orang tua',
+        'alamat' => 'Data alamat',
+        'aktivitas' => 'Aktivitas belajar',
+        'kebutuhan-khusus' => 'Kebutuhan khusus',
+        'beasiswa' => 'Beasiswa & bantuan',
+        'prestasi' => 'Prestasi siswa',
+        'rekam-didik' => 'Rekam didik',
+    ];
+@endphp
 
 @section('content')
-<ul class="nav nav-pills mb-3">
-    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#data-siswa">Data siswa</a></li>
-    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#orang-tua">Orang tua</a></li>
-    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#aktivitas">Aktivitas belajar</a></li>
-    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#beasiswa">Beasiswa</a></li>
-    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#prestasi">Prestasi</a></li>
-    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pendidikan-lain">Pendidikan lain</a></li>
+<ul class="nav nav-pills mb-3 flex-nowrap overflow-auto pb-1">
+    @foreach ($tabs as $id => $label)
+        <li class="nav-item">
+            <a class="nav-link {{ $tab === $id ? 'active' : '' }}" href="{{ route('siswa.show', ['siswa' => $siswa, 'tab' => $id]) }}">{{ $label }}</a>
+        </li>
+    @endforeach
 </ul>
-<div class="tab-content">
-    <div class="tab-pane fade show active" id="data-siswa">
-        <div class="madani-card p-4">
-            <dl class="row mb-0">
-                <dt class="col-sm-3">Nama</dt><dd class="col-sm-9">{{ $siswa->nama }}</dd>
-                <dt class="col-sm-3">NIK</dt><dd class="col-sm-9">{{ $siswa->nik ?: '—' }}</dd>
-                <dt class="col-sm-3">Tempat, tanggal lahir</dt>
-                <dd class="col-sm-9">{{ $siswa->tempat_lahir ?: '—' }}, {{ optional($siswa->tanggal_lahir)->translatedFormat('d F Y') ?: '—' }}</dd>
-                <dt class="col-sm-3">Jenis kelamin</dt><dd class="col-sm-9">{{ $siswa->jenis_kelamin ?: '—' }}</dd>
-                <dt class="col-sm-3">Agama</dt><dd class="col-sm-9">{{ $siswa->agama ?: '—' }}</dd>
-            </dl>
-        </div>
+
+@if ($tab === 'data-siswa')
+    <div class="madani-card p-4">
+        <form method="POST" action="{{ route('siswa.update', $siswa) }}" enctype="multipart/form-data">
+            @csrf
+            @method('PUT')
+            <input type="hidden" name="bagian" value="data-siswa">
+            @include('siswa.partials.form-data-siswa', ['siswa' => $siswa, 'periodik' => $periodik, 'emis' => $emis])
+            <div class="mt-4 d-flex gap-2">
+                <button class="btn btn-madani" type="submit">Simpan</button>
+                <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
+            </div>
+        </form>
     </div>
-    <div class="tab-pane fade" id="orang-tua">
+@endif
+
+@if ($tab === 'orang-tua')
+    <form method="POST" action="{{ route('siswa.update', $siswa) }}" enctype="multipart/form-data">
+        @csrf
+        @method('PUT')
+        <input type="hidden" name="bagian" value="orang-tua">
         <div class="row g-3">
-            @foreach ($siswa->orangTuas as $ortu)
-                <div class="col-md-4">
-                    <div class="madani-card p-3 h-100">
-                        <div class="stat-label mb-2">{{ strtoupper($ortu->peran) }}</div>
-                        <div>{{ $ortu->nama ?: 'Belum diisi' }}</div>
-                        <div class="small text-secondary">NIK {{ $ortu->nik ?: '—' }}</div>
-                    </div>
+            @foreach (['ayah', 'ibu', 'wali'] as $peran)
+                <div class="col-lg-4">
+                    @include('siswa.partials.form-ortu-blok', ['peran' => $peran])
                 </div>
             @endforeach
         </div>
+        <div class="madani-card p-4 mt-3">
+            <div class="stat-label mb-3">Penghasilan orang tua / wali & bantuan</div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Nomor KKS</label>
+                    <input class="form-control" name="no_kks" value="{{ old('no_kks', $periodik?->no_kks) }}">
+                    <div class="form-text">Unggah KKS maks. 2MB pdf jpg png</div>
+                    <input class="form-control mt-1" type="file" name="file_kks" accept=".pdf,.jpg,.jpeg,.png">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Nomor PKH</label>
+                    <input class="form-control" name="no_pkh" value="{{ old('no_pkh', $periodik?->no_pkh) }}">
+                    <div class="form-text">Unggah PKH maks. 2MB pdf jpg png</div>
+                    <input class="form-control mt-1" type="file" name="file_pkh" accept=".pdf,.jpg,.jpeg,.png">
+                </div>
+            </div>
+        </div>
+        <div class="mt-3 d-flex gap-2">
+            <button class="btn btn-madani" type="submit">Simpan</button>
+            <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
+        </div>
+    </form>
+@endif
+
+@if ($tab === 'alamat')
+    <div class="madani-card p-4">
+        <form method="POST" action="{{ route('siswa.update', $siswa) }}">
+            @csrf
+            @method('PUT')
+            <input type="hidden" name="bagian" value="alamat">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Status tempat tinggal</label>
+                    <x-emis-select name="tempat_tinggal" :options="$emis['status_tempat_tinggal']" :value="old('tempat_tinggal', $periodik?->tempat_tinggal)" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Titik koordinat</label>
+                    <input class="form-control" name="koordinat" value="{{ old('koordinat', $periodik?->koordinat) }}" placeholder="-6.83, 108.22">
+                    <div class="form-text">Latitude, longitude — peta Leaflet EMIS memakai format ini.</div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Provinsi</label>
+                    <input class="form-control" name="provinsi" value="{{ old('provinsi', $periodik?->provinsi) }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Kota/Kabupaten</label>
+                    <input class="form-control" name="kota" value="{{ old('kota', $periodik?->kota) }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Kecamatan</label>
+                    <input class="form-control" name="kecamatan" value="{{ old('kecamatan', $periodik?->kecamatan) }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Kelurahan/Desa</label>
+                    <input class="form-control" name="desa" value="{{ old('desa', $periodik?->desa) }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">RT</label>
+                    <input class="form-control" name="rt" value="{{ old('rt', $periodik?->rt) }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">RW</label>
+                    <input class="form-control" name="rw" value="{{ old('rw', $periodik?->rw) }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Kode pos</label>
+                    <input class="form-control" name="kode_pos" value="{{ old('kode_pos', $periodik?->kode_pos) }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Alamat siswa</label>
+                    <input class="form-control" name="alamat" value="{{ old('alamat', $periodik?->alamat) }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Jarak tempat tinggal – madrasah</label>
+                    <x-emis-select name="jarak" :options="$emis['jarak']" :value="old('jarak', $periodik?->jarak)" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Waktu tempuh</label>
+                    <x-emis-select name="waktu_tempuh" :options="$emis['waktu_tempuh']" :value="old('waktu_tempuh', $periodik?->waktu_tempuh)" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Transportasi ke sekolah</label>
+                    <x-emis-select name="transportasi" :options="$emis['transportasi']" :value="old('transportasi', $periodik?->transportasi)" />
+                </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button class="btn btn-madani" type="submit">Simpan</button>
+                <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
+            </div>
+        </form>
     </div>
-    <div class="tab-pane fade" id="aktivitas">
-        <div class="madani-card p-4">
-            @forelse ($siswa->rombels as $rombel)
-                <div>{{ $rombel->nama }} · tingkat {{ $rombel->tingkat }} · {{ $rombel->tahunAjaran?->nama }}</div>
-            @empty
-                <p class="text-secondary mb-0">Belum ditempatkan di rombel (aktif tanpa rombel).</p>
-            @endforelse
+@endif
+
+@if ($tab === 'aktivitas')
+    <div class="madani-card p-4">
+        <form method="POST" action="{{ route('siswa.update', $siswa) }}">
+            @csrf
+            @method('PUT')
+            <input type="hidden" name="bagian" value="aktivitas">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Tanggal masuk</label>
+                    <input class="form-control" type="date" name="tanggal_masuk" value="{{ old('tanggal_masuk', optional($periodik?->tanggal_masuk)->format('Y-m-d')) }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Alasan masuk</label>
+                    <x-emis-select name="alasan_masuk" :options="$emis['alasan_masuk']" :value="old('alasan_masuk', $periodik?->alasan_masuk)" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Rombel</label>
+                    <select class="form-select" name="rombel_id">
+                        <option value="">Aktif tanpa rombel</option>
+                        @foreach ($rombels as $rombel)
+                            <option value="{{ $rombel->id }}" @selected((int) old('rombel_id', $siswa->rombelAktif()?->id) === $rombel->id)>
+                                {{ $rombel->nama }} · tingkat {{ $rombel->tingkat }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">NPSN sekolah asal</label>
+                    <input class="form-control" name="npsn_asal" value="{{ old('npsn_asal', $periodik?->npsn_asal) }}">
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label">Nama sekolah asal</label>
+                    <input class="form-control" name="nama_sekolah_asal" value="{{ old('nama_sekolah_asal', $periodik?->nama_sekolah_asal) }}">
+                </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button class="btn btn-madani" type="submit">Simpan</button>
+                <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
+            </div>
+        </form>
+    </div>
+@endif
+
+@if ($tab === 'kebutuhan-khusus')
+    <div class="madani-card p-4" style="max-width: 720px;">
+        <form method="POST" action="{{ route('siswa.update', $siswa) }}">
+            @csrf
+            @method('PUT')
+            <input type="hidden" name="bagian" value="kebutuhan-khusus">
+            <div class="mb-3">
+                <label class="form-label">Kebutuhan khusus</label>
+                <x-emis-select name="kebutuhan_khusus" :options="$emis['kebutuhan_khusus']" :value="old('kebutuhan_khusus', $periodik?->kebutuhanKhususLabel())" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Kebutuhan khusus lainnya</label>
+                <input class="form-control" name="kebutuhan_khusus_lainnya" value="{{ old('kebutuhan_khusus_lainnya', $periodik?->kebutuhan_khusus_lainnya) }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Kebutuhan disabilitas</label>
+                <x-emis-select name="disabilitas" :options="$emis['disabilitas']" :value="old('disabilitas', $periodik?->disabilitasLabel())" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Kebutuhan disabilitas lainnya</label>
+                <input class="form-control" name="disabilitas_lainnya" value="{{ old('disabilitas_lainnya', $periodik?->disabilitas_lainnya) }}">
+            </div>
+            <button class="btn btn-madani" type="submit">Simpan</button>
+        </form>
+    </div>
+@endif
+
+@if ($tab === 'beasiswa')
+    <div class="row g-3">
+        <div class="col-lg-5">
+            <div class="madani-card p-4">
+                <div class="stat-label mb-3">Tambah beasiswa / bantuan</div>
+                <form method="POST" action="{{ route('siswa.update', $siswa) }}">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="bagian" value="beasiswa">
+                    <div class="mb-3">
+                        <label class="form-label">Tahun</label>
+                        <input class="form-control" type="number" name="tahun" value="{{ old('tahun', date('Y')) }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Jenis bantuan</label>
+                        <x-emis-select name="kategori" :options="$emis['jenis_beasiswa']" :value="old('kategori')" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nama</label>
+                        <input class="form-control" name="nama" value="{{ old('nama') }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Instansi</label>
+                        <input class="form-control" name="instansi" value="{{ old('instansi') }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Jangka (bulan)</label>
+                        <input class="form-control" type="number" name="jangka_bulan" value="{{ old('jangka_bulan') }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nominal (Rp)</label>
+                        <input class="form-control" type="number" name="nominal" value="{{ old('nominal') }}">
+                    </div>
+                    <button class="btn btn-madani" type="submit">Tambah</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="madani-card p-0">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Tahun</th>
+                            <th>Jenis</th>
+                            <th>Nama</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($siswa->beasiswas as $item)
+                            <tr>
+                                <td>{{ $item->tahun }}</td>
+                                <td>{{ $item->kategori }}</td>
+                                <td>{{ $item->nama }}</td>
+                                <td class="text-end">
+                                    <form method="POST" action="{{ route('siswa.relasi.destroy', $siswa) }}" onsubmit="return confirm('Hapus data ini?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <input type="hidden" name="jenis" value="beasiswa">
+                                        <input type="hidden" name="id" value="{{ $item->id }}">
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Hapus</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="4" class="text-secondary p-3">Belum ada beasiswa.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-    <div class="tab-pane fade" id="beasiswa">
-        <div class="madani-card p-4 text-secondary">Belum ada beasiswa.</div>
+@endif
+
+@if ($tab === 'prestasi')
+    <div class="row g-3">
+        <div class="col-lg-5">
+            <div class="madani-card p-4">
+                <div class="stat-label mb-3">Tambah prestasi</div>
+                <form method="POST" action="{{ route('siswa.update', $siswa) }}" enctype="multipart/form-data">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="bagian" value="prestasi">
+                    <div class="mb-3">
+                        <label class="form-label">Nama prestasi / penghargaan</label>
+                        <input class="form-control" name="nama" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Jenis</label>
+                        <x-emis-select name="jenis" :options="$emis['jenis_prestasi']" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tingkat</label>
+                        <x-emis-select name="tingkat" :options="$emis['tingkat_prestasi']" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tahun</label>
+                        <input class="form-control" type="number" name="tahun" value="{{ date('Y') }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Penyelenggara</label>
+                        <input class="form-control" name="penyelenggara">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sertifikat</label>
+                        <input class="form-control" type="file" name="sertifikat" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                    <button class="btn btn-madani" type="submit">Tambah</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="madani-card p-0">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Nama</th>
+                            <th>Jenis</th>
+                            <th>Tingkat</th>
+                            <th>Tahun</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($siswa->prestasis as $item)
+                            <tr>
+                                <td>{{ $item->nama }}</td>
+                                <td>{{ $item->jenis ?: '—' }}</td>
+                                <td>{{ $item->tingkat ?: '—' }}</td>
+                                <td>{{ $item->tahun ?: '—' }}</td>
+                                <td class="text-end">
+                                    <form method="POST" action="{{ route('siswa.relasi.destroy', $siswa) }}" onsubmit="return confirm('Hapus data ini?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <input type="hidden" name="jenis" value="prestasi">
+                                        <input type="hidden" name="id" value="{{ $item->id }}">
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Hapus</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="5" class="text-secondary p-3">Belum ada prestasi.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-    <div class="tab-pane fade" id="prestasi">
-        <div class="madani-card p-4 text-secondary">Belum ada prestasi.</div>
-    </div>
-    <div class="tab-pane fade" id="pendidikan-lain">
-        <div class="madani-card p-4 text-secondary">Tab ini disiapkan mengikuti EMIS; isian menyusul.</div>
-    </div>
-</div>
+@endif
+
+@if ($tab === 'rekam-didik')
+    <form method="POST" action="{{ route('siswa.update', $siswa) }}" enctype="multipart/form-data">
+        @csrf
+        @method('PUT')
+        <input type="hidden" name="bagian" value="rekam-didik">
+        @include('siswa.partials.form-rekam-didik')
+        <div class="mt-3 d-flex gap-2">
+            <button class="btn btn-madani" type="submit">Simpan</button>
+            <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
+        </div>
+    </form>
+@endif
 @endsection

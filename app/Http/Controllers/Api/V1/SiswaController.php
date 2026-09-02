@@ -39,6 +39,8 @@ class SiswaController extends Controller
             'data' => [
                 'id' => $siswa->id,
                 'nisn' => $siswa->nisn,
+                'nik' => $siswa->nik,
+                'nis' => $siswa->nis,
                 'nama' => $siswa->nama,
                 'jenis_kelamin' => $siswa->jenis_kelamin,
                 'status_keaktifan' => $siswa->status_keaktifan,
