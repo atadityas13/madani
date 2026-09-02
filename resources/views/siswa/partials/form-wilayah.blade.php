@@ -4,7 +4,7 @@
     $record = $record ?? null;
     $root = $root ?? 'siswa';
     $wide = $wide ?? false;
-    $colMain = $wide ? 'col-md-3' : 'col-12';
+    $colMain = $wide ? 'col-sm-6 col-xl-3' : 'col-12';
 
     $fieldName = function (string $field) use ($namePrefix): string {
         return $namePrefix === '' ? $field : $namePrefix.'['.$field.']';

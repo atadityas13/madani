@@ -116,6 +116,19 @@ return [
         '> 20.000.000' => '> 20.000.000',
     ],
 
+    'penghasilan_gabungan' => [
+        'dibawah 800.000' => 'dibawah 800.000',
+        '800.001 - 1.200.000' => '800.001 - 1.200.000',
+        '1.200.001 - 1.800.000' => '1.200.001 - 1.800.000',
+        '1.800.001 - 2.500.000' => '1.800.001 - 2.500.000',
+        '2.500.001 - 3.500.000' => '2.500.001 - 3.500.000',
+        '3.500.001 - 4.800.000' => '3.500.001 - 4.800.000',
+        '4.800.001 - 6.500.000' => '4.800.001 - 6.500.000',
+        '6.500.001 - 10.000.000' => '6.500.001 - 10.000.000',
+        '10.000.001 - 20.000.000' => '10.000.001 - 20.000.000',
+        'diatas 20.000.001' => 'diatas 20.000.001',
+    ],
+
     'status_wali' => [
         'Sama dengan ayah kandung' => 'Sama dengan ayah kandung',
         'Sama dengan ibu kandung' => 'Sama dengan ibu kandung',
@@ -123,15 +136,13 @@ return [
     ],
 
     'hubungan_wali' => [
+        'Ayah sambung' => 'Ayah sambung',
+        'Ibu Sambung' => 'Ibu Sambung',
         'Kakek' => 'Kakek',
         'Nenek' => 'Nenek',
-        'Paman' => 'Paman',
-        'Bibi' => 'Bibi',
         'Kakak' => 'Kakak',
         'Saudara' => 'Saudara',
         'Orang tua asuh' => 'Orang tua asuh',
-        'Wali pengadilan' => 'Wali pengadilan',
-        'Lainnya' => 'Lainnya',
     ],
 
     'transportasi' => [

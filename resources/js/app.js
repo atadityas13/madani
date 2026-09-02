@@ -249,17 +249,63 @@ function copyWilayah(fromRoot, toRoot) {
     });
 }
 
+function bindHidupFields(blok) {
+    const status = blok.querySelector('[data-status-hidup]');
+    const extra = blok.querySelector('[data-ortu-hidup]');
+
+    if (!status || !extra) {
+        return;
+    }
+
+    const sync = () => {
+        extra.hidden = status.value !== 'hidup';
+    };
+
+    status.addEventListener('change', sync);
+    sync();
+}
+
 function bindOrtuForm() {
     const ibuBlok = document.querySelector('[data-ortu-blok="ibu"]');
     const ayahBlok = document.querySelector('[data-ortu-blok="ayah"]');
     const waliBlok = document.querySelector('[data-ortu-blok="wali"]');
 
+    [ayahBlok, ibuBlok, waliBlok].filter(Boolean).forEach(bindHidupFields);
+
+    if (waliBlok) {
+        const status = waliBlok.querySelector('[data-wali-status]');
+        const detail = waliBlok.querySelector('[data-ortu-detail]');
+
+        const syncWali = () => {
+            const lainnya = status?.value === 'Lainnya' || status?.value === 'Isi sendiri';
+
+            if (detail) {
+                detail.hidden = !lainnya;
+            }
+        };
+
+        status?.addEventListener('change', syncWali);
+        syncWali();
+    }
+}
+
+function bindAlamatOrtu() {
+    const form = document.querySelector('[data-alamat-form]');
+
+    if (!form) {
+        return;
+    }
+
+    const ayahBlok = form.querySelector('[data-alamat-ortu="ayah"]');
+    const ibuBlok = form.querySelector('[data-alamat-ortu="ibu"]');
+    const waliBlok = form.querySelector('[data-alamat-ortu="wali"]');
+
     if (ibuBlok && ayahBlok) {
         const checkbox = ibuBlok.querySelector('[data-ibu-kk-ayah]');
         const alamat = ibuBlok.querySelector('[data-ortu-alamat]');
         const note = ibuBlok.querySelector('[data-ibu-alamat-note]');
-        const ayahStatus = ayahBlok.querySelector('[name="ortu[ayah][status_tempat_tinggal]"]');
-        const ibuStatus = ibuBlok.querySelector('[name="ortu[ibu][status_tempat_tinggal]"]');
+        const ayahStatus = ayahBlok.querySelector('[data-status-tempat-tinggal]');
+        const ibuStatus = ibuBlok.querySelector('[data-status-tempat-tinggal]');
         const ayahWilayah = ayahBlok.querySelector('[data-wilayah-root]');
         const ibuWilayah = ibuBlok.querySelector('[data-wilayah-root]');
 
@@ -298,19 +344,19 @@ function bindOrtuForm() {
     }
 
     if (waliBlok) {
-        const status = waliBlok.querySelector('[data-wali-status]');
-        const detail = waliBlok.querySelector('[data-ortu-detail]');
+        const status = waliBlok.getAttribute('data-wali-status');
+        const alamat = waliBlok.querySelector('[data-ortu-alamat]');
+        const note = waliBlok.querySelector('[data-wali-alamat-note]');
 
-        const syncWali = () => {
-            const lainnya = status?.value === 'Lainnya' || status?.value === 'Isi sendiri';
-
-            if (detail) {
-                detail.hidden = !lainnya;
+        if (status && status !== 'Lainnya' && status !== 'Isi sendiri') {
+            if (alamat) {
+                alamat.hidden = true;
             }
-        };
 
-        status?.addEventListener('change', syncWali);
-        syncWali();
+            if (note) {
+                note.hidden = false;
+            }
+        }
     }
 }
 
@@ -450,7 +496,7 @@ async function geocodeAddress(fields) {
 }
 
 function bindAlamatSiswa() {
-    const form = document.querySelector('[data-alamat-siswa]');
+    const form = document.querySelector('[data-alamat-form]') || document.querySelector('[data-alamat-siswa]');
 
     if (!form) {
         return;
@@ -516,6 +562,25 @@ function bindAlamatSiswa() {
         return true;
     };
 
+    const copyAlamatDariOrtu = () => {
+        if (!root) {
+            return false;
+        }
+
+        for (const peran of ['ayah', 'ibu', 'wali']) {
+            const sumber = document.querySelector(`[data-wilayah-root="ortu-${peran}"]`);
+            const desa = sumber?.querySelector('[data-wilayah-field="desa"]')?.value?.trim();
+
+            if (sumber && desa) {
+                copyWilayah(sumber, root);
+
+                return true;
+            }
+        }
+
+        return false;
+    };
+
     const applyStatus = () => {
         const status = tempat?.value || '';
 
@@ -529,13 +594,14 @@ function bindAlamatSiswa() {
         }
 
         if (status === 'Tinggal dengan Orang Tua/Wali') {
-            const adaAlamat = Boolean(alamatOrtu.desa);
+            const copied = copyAlamatDariOrtu();
+            const adaAlamat = copied || Boolean(alamatOrtu.desa);
 
             if (note) {
                 note.hidden = adaAlamat;
             }
 
-            if (adaAlamat && root?._wilayah) {
+            if (! copied && adaAlamat && root?._wilayah) {
                 root._wilayah.apply(alamatOrtu);
             }
         } else if (note) {
@@ -658,6 +724,15 @@ function bindAlamatSiswa() {
         scheduleGeocode();
     });
 
+    ['ortu-ayah', 'ortu-ibu', 'ortu-wali'].forEach((id) => {
+        document.querySelector(`[data-wilayah-root="${id}"]`)?.addEventListener('wilayah:changed', () => {
+            if (tempat?.value === 'Tinggal dengan Orang Tua/Wali') {
+                copyAlamatDariOrtu();
+                scheduleGeocode();
+            }
+        });
+    });
+
     lokasiBtn?.addEventListener('click', ambilLokasiSaatIni);
 
     if (koordinat?.value) {
@@ -672,4 +747,5 @@ function bindAlamatSiswa() {
 
 document.querySelectorAll('[data-wilayah-root]').forEach(bindWilayahRoot);
 bindOrtuForm();
+bindAlamatOrtu();
 bindAlamatSiswa();

@@ -64,9 +64,9 @@
         @csrf
         @method('PUT')
         <input type="hidden" name="bagian" value="orang-tua">
-        <div class="row g-3" style="max-width: 760px;">
+        <div class="row g-3">
             @foreach (['ayah', 'ibu', 'wali'] as $peran)
-                <div class="col-12">
+                <div class="col-12 col-md-4">
                     @include('siswa.partials.form-ortu-blok', ['peran' => $peran])
                 </div>
             @endforeach
@@ -75,8 +75,8 @@
             <div class="stat-label mb-3">Penghasilan Gabungan Orang tua & Data Bantuan</div>
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label">Penghasilan gabungan</label>
-                    <x-emis-select name="penghasilan_gabungan" :options="$emis['penghasilan']" :value="old('penghasilan_gabungan', $periodik?->penghasilan_gabungan)" />
+                    <label class="form-label">Nominal penghasilan gabungan orang tua</label>
+                    <x-emis-select name="penghasilan_gabungan" :options="$emis['penghasilan_gabungan']" :value="old('penghasilan_gabungan', $periodik?->penghasilan_gabungan)" />
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Nomor KKS</label>
@@ -100,12 +100,20 @@
 @endif
 
 @if ($tab === 'alamat')
-    <div class="madani-card p-4">
-        <form method="POST" action="{{ route('siswa.update', $siswa) }}">
-            @csrf
-            @method('PUT')
-            <input type="hidden" name="bagian" value="alamat">
-            <div class="row g-3" data-alamat-siswa>
+    <form method="POST" action="{{ route('siswa.update', $siswa) }}" enctype="multipart/form-data" data-alamat-form>
+        @csrf
+        @method('PUT')
+        <input type="hidden" name="bagian" value="alamat">
+        <div class="row g-3">
+            @foreach (['ayah', 'ibu', 'wali'] as $peran)
+                <div class="col-12">
+                    @include('siswa.partials.form-alamat-ortu', ['peran' => $peran])
+                </div>
+            @endforeach
+        </div>
+        <div class="madani-card p-4 mt-3" data-alamat-siswa>
+            <div class="stat-label mb-3">Alamat Siswa</div>
+            <div class="row g-3">
                 <div class="col-md-6">
                     <label class="form-label">Status tempat tinggal</label>
                     <x-emis-select name="tempat_tinggal" :options="$emis['status_tempat_tinggal_siswa']" :value="old('tempat_tinggal', $periodik?->tempat_tinggal)" data-tempat-tinggal />
@@ -144,14 +152,14 @@
                     <x-emis-select name="transportasi" :options="$emis['transportasi']" :value="old('transportasi', $periodik?->transportasi)" />
                 </div>
             </div>
-            <script type="application/json" id="madani-alamat-ortu">@json($alamatOrtu ?? [])</script>
-            <script type="application/json" id="madani-alamat-asrama">@json($alamatAsrama ?? [])</script>
-            <div class="emis-actions">
-                <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
-                <button class="btn btn-madani" type="submit">Simpan</button>
-            </div>
-        </form>
-    </div>
+        </div>
+        <script type="application/json" id="madani-alamat-ortu">@json($alamatOrtu ?? [])</script>
+        <script type="application/json" id="madani-alamat-asrama">@json($alamatAsrama ?? [])</script>
+        <div class="emis-actions">
+            <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
+            <button class="btn btn-madani" type="submit">Simpan</button>
+        </div>
+    </form>
 @endif
 
 @if ($tab === 'aktivitas')

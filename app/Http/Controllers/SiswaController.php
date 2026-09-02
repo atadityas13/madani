@@ -170,9 +170,6 @@ class SiswaController extends Controller
             'ortu.wali.nama' => ['nullable', 'string', 'max:255'],
             'ortu.wali.hubungan' => ['nullable', 'string', 'max:80'],
             'penghasilan_gabungan' => ['nullable', 'string', 'max:80'],
-            'file_kk_ayah' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-            'file_kk_ibu' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-            'file_kk_wali' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
             'file_kks' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
             'file_pkh' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
         ]);
@@ -181,21 +178,17 @@ class SiswaController extends Controller
         $ibu = $this->ortuPayload($request->input('ortu.ibu', []), 'ibu');
         $wali = $this->ortuPayload($request->input('ortu.wali', []), 'wali');
 
-        if ($ibu['sama_dengan_ayah']) {
-            $ibu = array_merge($ibu, Arr::only($ayah, $this->alamatOrtuKeys()));
-        }
-
         $waliStatus = $wali['status'] ?? 'Sama dengan ayah kandung';
         if ($waliStatus === 'Isi sendiri') {
             $waliStatus = 'Lainnya';
         }
 
         if ($waliStatus === 'Sama dengan ayah kandung') {
-            $wali = array_merge($wali, Arr::except($ayah, ['status', 'sama_dengan_ayah', 'hubungan']));
+            $wali = array_merge($wali, Arr::except($ayah, ['status', 'hubungan']));
             $wali['status'] = $waliStatus;
             $wali['hubungan'] = 'Ayah kandung';
         } elseif ($waliStatus === 'Sama dengan ibu kandung') {
-            $wali = array_merge($wali, Arr::except($ibu, ['status', 'sama_dengan_ayah', 'hubungan']));
+            $wali = array_merge($wali, Arr::except($ibu, ['status', 'hubungan']));
             $wali['status'] = $waliStatus;
             $wali['hubungan'] = 'Ibu kandung';
         } else {
@@ -220,13 +213,6 @@ class SiswaController extends Controller
             );
         }
 
-        $this->simpanDokumen($request, $siswa, 'file_kk_ayah', 'kk_ayah');
-        if (! $ibu['sama_dengan_ayah']) {
-            $this->simpanDokumen($request, $siswa, 'file_kk_ibu', 'kk_ibu');
-        }
-        if ($waliStatus === 'Lainnya') {
-            $this->simpanDokumen($request, $siswa, 'file_kk_wali', 'kk_wali');
-        }
         $this->simpanDokumen($request, $siswa, 'file_kks', 'kks');
         $this->simpanDokumen($request, $siswa, 'file_pkh', 'pkh');
 
@@ -252,9 +238,46 @@ class SiswaController extends Controller
             'jarak' => ['nullable', 'string', 'max:40'],
             'waktu_tempuh' => ['nullable', 'string', 'max:40'],
             'transportasi' => ['nullable', 'string', 'max:80'],
+            'file_kk_ayah' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+            'file_kk_ibu' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+            'file_kk_wali' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
         ]);
 
-        $alamat = $this->resolveAlamatSiswa($request, $siswa);
+        $siswa->loadMissing('orangTuas');
+
+        $ayah = $this->alamatOrtuPayload($request->input('ortu.ayah', []));
+        $ibu = $this->alamatOrtuPayload($request->input('ortu.ibu', []));
+        $wali = $this->alamatOrtuPayload($request->input('ortu.wali', []));
+        $ibu['sama_dengan_ayah'] = $request->boolean('ortu.ibu.sama_dengan_ayah');
+
+        if ($ibu['sama_dengan_ayah']) {
+            $ibu = array_merge($ibu, Arr::only($ayah, $this->alamatOrtuKeys()));
+        }
+
+        $waliStatus = $siswa->orangTuas->firstWhere('peran', 'wali')?->status ?? 'Sama dengan ayah kandung';
+        if ($waliStatus === 'Isi sendiri') {
+            $waliStatus = 'Lainnya';
+        }
+
+        if ($waliStatus === 'Sama dengan ayah kandung') {
+            $wali = array_merge($wali, Arr::only($ayah, $this->alamatOrtuKeys()));
+        } elseif ($waliStatus === 'Sama dengan ibu kandung') {
+            $wali = array_merge($wali, Arr::only($ibu, $this->alamatOrtuKeys()));
+        }
+
+        $siswa->orangTuas()->updateOrCreate(['peran' => 'ayah'], $ayah);
+        $siswa->orangTuas()->updateOrCreate(['peran' => 'ibu'], $ibu);
+        $siswa->orangTuas()->updateOrCreate(['peran' => 'wali'], $wali);
+
+        $this->simpanDokumen($request, $siswa, 'file_kk_ayah', 'kk_ayah');
+        if (! $ibu['sama_dengan_ayah']) {
+            $this->simpanDokumen($request, $siswa, 'file_kk_ibu', 'kk_ibu');
+        }
+        if ($waliStatus === 'Lainnya') {
+            $this->simpanDokumen($request, $siswa, 'file_kk_wali', 'kk_wali');
+        }
+
+        $alamat = $this->resolveAlamatSiswa($request, $siswa->fresh(['orangTuas']));
 
         if ($tahun = TahunAjaran::aktif()) {
             $siswa->periodiks()->updateOrCreate(
@@ -521,6 +544,25 @@ class SiswaController extends Controller
     private function ortuPayload(array $input, string $peran): array
     {
         $tidakPunyaHp = (bool) ($input['tidak_punya_hp'] ?? false);
+
+        return [
+            'nama' => $input['nama'] ?? null,
+            'status_hidup' => $input['status_hidup'] ?? null,
+            'status' => $peran === 'wali' ? ($input['status'] ?? null) : ($input['status_hidup'] ?? null),
+            'nik' => $input['nik'] ?? null,
+            'tempat_lahir' => $input['tempat_lahir'] ?? null,
+            'tanggal_lahir' => ($input['tanggal_lahir'] ?? '') !== '' ? $input['tanggal_lahir'] : null,
+            'pendidikan' => $input['pendidikan'] ?? null,
+            'pekerjaan' => $input['pekerjaan'] ?? null,
+            'penghasilan' => $input['penghasilan'] ?? null,
+            'tidak_punya_hp' => $tidakPunyaHp,
+            'no_hp' => $tidakPunyaHp ? null : ($input['no_hp'] ?? null),
+            'hubungan' => $peran === 'wali' ? ($input['hubungan'] ?? null) : null,
+        ];
+    }
+
+    private function alamatOrtuPayload(array $input): array
+    {
         $provinsi = $input['provinsi'] ?? null;
         $kota = $input['kota'] ?? null;
         $kecamatan = $input['kecamatan'] ?? null;
@@ -530,17 +572,6 @@ class SiswaController extends Controller
         $rw = $input['rw'] ?? null;
 
         return [
-            'nama' => $input['nama'] ?? null,
-            'status_hidup' => $input['status_hidup'] ?? null,
-            'status' => $peran === 'wali' ? ($input['status'] ?? null) : ($input['status_hidup'] ?? null),
-            'nik' => $input['nik'] ?? null,
-            'tempat_lahir' => $input['tempat_lahir'] ?? null,
-            'tanggal_lahir' => $input['tanggal_lahir'] ?: null,
-            'pendidikan' => $input['pendidikan'] ?? null,
-            'pekerjaan' => $input['pekerjaan'] ?? null,
-            'penghasilan' => $input['penghasilan'] ?? null,
-            'tidak_punya_hp' => $tidakPunyaHp,
-            'no_hp' => $tidakPunyaHp ? null : ($input['no_hp'] ?? null),
             'status_tempat_tinggal' => $input['status_tempat_tinggal'] ?? null,
             'provinsi' => $provinsi,
             'kota' => $kota,
@@ -556,8 +587,6 @@ class SiswaController extends Controller
                 (string) $desa,
             ),
             'alamat' => Wilayah::formatAlamat($blok, $rt, $rw, $desa, $kecamatan, $kota),
-            'hubungan' => $peran === 'wali' ? ($input['hubungan'] ?? null) : null,
-            'sama_dengan_ayah' => $peran === 'ibu' && ! empty($input['sama_dengan_ayah']),
         ];
     }
 

@@ -7,17 +7,12 @@
     if ($statusWali === 'Isi sendiri') {
         $statusWali = 'Lainnya';
     }
-    $kkSamaAyah = (bool) old($old.'.sama_dengan_ayah', $ortu?->sama_dengan_ayah);
+    $statusHidup = old($old.'.status_hidup', $ortu?->status_hidup);
     $waliLainnya = $statusWali === 'Lainnya';
+    $tampilHidup = $statusHidup === 'hidup';
 @endphp
-<div class="madani-card p-4" data-ortu-blok="{{ $peran }}">
+<div class="madani-card p-4 h-100" data-ortu-blok="{{ $peran }}">
     <div class="stat-label mb-3">{{ $judul }}</div>
-    @if ($peran === 'ibu')
-        <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" name="{{ $input }}[sama_dengan_ayah]" value="1" id="kk_sama_ayah" data-ibu-kk-ayah @checked($kkSamaAyah)>
-            <label class="form-check-label" for="kk_sama_ayah">KK sama dengan ayah kandung</label>
-        </div>
-    @endif
     @if ($peran === 'wali')
         <div class="mb-3">
             <label class="form-label">Status</label>
@@ -34,23 +29,24 @@
             </div>
         @endif
         <div class="mb-3">
-            <label class="form-label">Nama lengkap</label>
+            <label class="form-label">Nama lengkap {{ $judul }}</label>
             <input class="form-control" name="{{ $input }}[nama]" value="{{ old($old.'.nama', $ortu?->nama) }}">
         </div>
         <div class="mb-3">
             <label class="form-label">Status</label>
-            <x-emis-select :name="$input.'[status_hidup]'" :options="$emis['status_hidup']" :value="old($old.'.status_hidup', $ortu?->status_hidup)" />
+            <x-emis-select :name="$input.'[status_hidup]'" :options="$emis['status_hidup']" :value="$statusHidup" data-status-hidup />
         </div>
-        <div class="mb-3">
-            <label class="form-label">NIK</label>
-            <input class="form-control" name="{{ $input }}[nik]" value="{{ old($old.'.nik', $ortu?->nik) }}" maxlength="16">
-        </div>
-        <div class="row g-2">
-            <div class="col-6">
+
+        <div class="row g-2" data-ortu-hidup @if (! $tampilHidup) hidden @endif>
+            <div class="col-12">
+                <label class="form-label">NIK</label>
+                <input class="form-control" name="{{ $input }}[nik]" value="{{ old($old.'.nik', $ortu?->nik) }}" maxlength="16">
+            </div>
+            <div class="col-sm-6">
                 <label class="form-label">Tempat lahir</label>
                 <input class="form-control" name="{{ $input }}[tempat_lahir]" value="{{ old($old.'.tempat_lahir', $ortu?->tempat_lahir) }}">
             </div>
-            <div class="col-6">
+            <div class="col-sm-6">
                 <label class="form-label">Tanggal lahir</label>
                 <input class="form-control" type="date" name="{{ $input }}[tanggal_lahir]" value="{{ old($old.'.tanggal_lahir', optional($ortu?->tanggal_lahir)->format('Y-m-d')) }}">
             </div>
@@ -75,28 +71,5 @@
                 </div>
             </div>
         </div>
-
-        <div class="mt-3" data-ortu-alamat @if ($peran === 'ibu' && $kkSamaAyah) hidden @endif>
-            <div class="mb-2">
-                <label class="form-label">Status tempat tinggal</label>
-                <x-emis-select :name="$input.'[status_tempat_tinggal]'" :options="$emis['status_tempat_tinggal_ortu']" :value="old($old.'.status_tempat_tinggal', $ortu?->status_tempat_tinggal)" />
-            </div>
-            @include('siswa.partials.form-wilayah', [
-                'namePrefix' => $input,
-                'oldPrefix' => $old,
-                'record' => $ortu,
-                'root' => 'ortu-'.$peran,
-            ])
-            <div class="mt-2" data-ortu-kk>
-                <label class="form-label">Unggah KK</label>
-                <input class="form-control" type="file" name="file_kk_{{ $peran }}" accept=".pdf,.jpg,.jpeg,.png">
-                <div class="form-text">Maks. 2MB bertipe pdf jpg png</div>
-            </div>
-        </div>
-        @if ($peran === 'ibu')
-            <p class="form-text mb-0 mt-2" data-ibu-alamat-note @if (! $kkSamaAyah) hidden @endif>
-                Tempat tinggal dan unggah KK mengikuti ayah kandung.
-            </p>
-        @endif
     </div>
 </div>
