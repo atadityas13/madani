@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'tempat_lahir_ijazah', 'tanggal_lahir_ijazah', 'jenis_kelamin_ijazah',
     'nama_ayah_ijazah', 'nama_sd', 'npsn', 'tahun_ajaran_kelulusan', 'nip_kepala_sekolah',
     'nama_kepala_sekolah', 'nomor_seri_ijazah', 'tanggal_terbit_ijazah',
-    'status_verval', 'ijazah_sesuai',
+    'status_verval', 'ijazah_sesuai', 'ijazah_sesuai_fields',
 ])]
 class RekamDidik extends Model
 {
@@ -23,6 +23,7 @@ class RekamDidik extends Model
             'tanggal_lahir_ijazah' => 'date',
             'tanggal_terbit_ijazah' => 'date',
             'ijazah_sesuai' => 'boolean',
+            'ijazah_sesuai_fields' => 'array',
         ];
     }
 

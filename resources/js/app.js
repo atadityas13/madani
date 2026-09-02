@@ -815,8 +815,19 @@ function bindKebutuhanDisabilitas() {
     syncDisabilitas();
 }
 
+function bindIjazahSesuai() {
+    document.querySelectorAll('[data-ijazah-sesuai]').forEach((box) => {
+        box.addEventListener('change', () => {
+            if (box.checked && !window.confirm('Apakah anda yakin data ini sesuai?')) {
+                box.checked = false;
+            }
+        });
+    });
+}
+
 document.querySelectorAll('[data-wilayah-root]').forEach(bindWilayahRoot);
 bindOrtuForm();
 bindAlamatOrtu();
 bindAlamatSiswa();
 bindKebutuhanDisabilitas();
+bindIjazahSesuai();

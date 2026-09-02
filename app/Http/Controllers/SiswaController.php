@@ -381,11 +381,14 @@ class SiswaController extends Controller
             'nama_kepala_sekolah' => ['nullable', 'string', 'max:255'],
             'nomor_seri_ijazah' => ['nullable', 'string', 'max:50'],
             'tanggal_terbit_ijazah' => ['nullable', 'date'],
-            'ijazah_sesuai' => ['sometimes', 'boolean'],
+            'ijazah_sesuai' => ['nullable', 'array'],
+            'ijazah_sesuai.*' => ['in:nama,nisn,tempat_lahir,tanggal_lahir,jenis_kelamin,nama_ayah'],
             'file_ijazah' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
         ]);
 
-        $sesuai = $request->boolean('ijazah_sesuai');
+        $keys = ['nama', 'nisn', 'tempat_lahir', 'tanggal_lahir', 'jenis_kelamin', 'nama_ayah'];
+        $fields = array_values(array_intersect($keys, $request->input('ijazah_sesuai', [])));
+        $sesuai = count($fields) === count($keys);
         $siswa->loadMissing('ayah');
 
         $payload = [
@@ -397,6 +400,7 @@ class SiswaController extends Controller
             'nomor_seri_ijazah' => $data['nomor_seri_ijazah'] ?? null,
             'tanggal_terbit_ijazah' => $data['tanggal_terbit_ijazah'] ?? null,
             'ijazah_sesuai' => $sesuai,
+            'ijazah_sesuai_fields' => $fields,
             'status_verval' => $sesuai ? 'sudah' : 'belum',
         ];
 

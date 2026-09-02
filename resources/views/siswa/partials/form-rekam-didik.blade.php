@@ -11,10 +11,23 @@
     $namaKepala = old('nama_kepala_sekolah', $rd?->nama_kepala_sekolah);
     $nomorSeri = old('nomor_seri_ijazah', $rd?->nomor_seri_ijazah);
     $tanggalTerbit = old('tanggal_terbit_ijazah', $rd?->tanggal_terbit_ijazah?->format('Y-m-d'));
-    $ijazahSesuai = old('ijazah_sesuai', $rd?->ijazah_sesuai);
 
     $jkLabel = $siswa->jenis_kelamin === 'P' ? 'Perempuan' : ($siswa->jenis_kelamin === 'L' ? 'Laki-laki' : '—');
     $namaAyah = $ayah?->nama ?: $rd?->nama_ayah_ijazah ?: $rd?->nama_ayah_kk;
+
+    $ijazahItems = [
+        ['key' => 'nama', 'label' => 'Nama', 'value' => $siswa->nama ?: '—', 'col' => 'col-md-6'],
+        ['key' => 'nisn', 'label' => 'NISN', 'value' => $siswa->nisn ?: '—', 'col' => 'col-md-6'],
+        ['key' => 'tempat_lahir', 'label' => 'Tempat lahir', 'value' => $siswa->tempat_lahir ?: '—', 'col' => 'col-md-4'],
+        ['key' => 'tanggal_lahir', 'label' => 'Tanggal lahir', 'value' => optional($siswa->tanggal_lahir)->format('d/m/Y') ?: '—', 'col' => 'col-md-4'],
+        ['key' => 'jenis_kelamin', 'label' => 'Jenis kelamin', 'value' => $jkLabel, 'col' => 'col-md-4'],
+        ['key' => 'nama_ayah', 'label' => 'Nama ayah kandung', 'value' => $namaAyah ?: '—', 'col' => 'col-md-6'],
+    ];
+    $sesuaiFields = old('ijazah_sesuai', $rd?->ijazah_sesuai_fields ?? []);
+    $sesuaiFields = is_array($sesuaiFields) ? $sesuaiFields : [];
+    if ($sesuaiFields === [] && $rd?->ijazah_sesuai) {
+        $sesuaiFields = array_column($ijazahItems, 'key');
+    }
 @endphp
 
 <div class="madani-card p-4 mb-3">
@@ -64,35 +77,25 @@
 <div class="madani-card p-4">
     <div class="stat-label mb-3">Data pada ijazah</div>
     <div class="row g-3">
-        <div class="col-md-6">
-            <label class="form-label">Nama</label>
-            <input class="form-control bg-light" value="{{ $siswa->nama ?: '—' }}" readonly>
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">NISN</label>
-            <input class="form-control bg-light" value="{{ $siswa->nisn ?: '—' }}" readonly>
-        </div>
-        <div class="col-md-4">
-            <label class="form-label">Tempat lahir</label>
-            <input class="form-control bg-light" value="{{ $siswa->tempat_lahir ?: '—' }}" readonly>
-        </div>
-        <div class="col-md-4">
-            <label class="form-label">Tanggal lahir</label>
-            <input class="form-control bg-light" value="{{ optional($siswa->tanggal_lahir)->format('d/m/Y') ?: '—' }}" readonly>
-        </div>
-        <div class="col-md-4">
-            <label class="form-label">Jenis kelamin</label>
-            <input class="form-control bg-light" value="{{ $jkLabel }}" readonly>
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Nama ayah kandung</label>
-            <input class="form-control bg-light" value="{{ $namaAyah ?: '—' }}" readonly>
-        </div>
-        <div class="col-12">
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="ijazah_sesuai" value="1" id="ijazah_sesuai" @checked($ijazahSesuai)>
-                <label class="form-check-label" for="ijazah_sesuai">Sesuai</label>
+        @foreach ($ijazahItems as $item)
+            <div class="{{ $item['col'] }}">
+                <label class="form-label">{{ $item['label'] }}</label>
+                <input class="form-control bg-light" value="{{ $item['value'] }}" readonly>
+                <div class="form-check mt-2">
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        name="ijazah_sesuai[]"
+                        value="{{ $item['key'] }}"
+                        id="ijazah_sesuai_{{ $item['key'] }}"
+                        @checked(in_array($item['key'], $sesuaiFields, true))
+                        data-ijazah-sesuai
+                    >
+                    <label class="form-check-label" for="ijazah_sesuai_{{ $item['key'] }}">Sesuai</label>
+                </div>
             </div>
+        @endforeach
+        <div class="col-12">
             <div class="form-text">Jika terdapat Data yang tidak sesuai silahkan perbaiki/hubungi operator madrasah.</div>
         </div>
     </div>
