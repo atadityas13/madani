@@ -2,11 +2,11 @@
 
 @section('title', 'Data siswa')
 @section('heading', 'Data siswa')
-@section('subheading', 'Master identitas selaras EMIS 4.0')
+@section('subheading', 'MTsN 11 Majalengka')
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3 gap-3 flex-wrap">
-    <form class="d-flex gap-2" method="GET">
+    <form class="d-flex gap-2 flex-grow-1" method="GET" style="max-width: 420px;">
         <input class="form-control" type="search" name="q" value="{{ $q }}" placeholder="Cari nama, NISN, NIK">
         <button class="btn btn-outline-secondary" type="submit">Cari</button>
     </form>

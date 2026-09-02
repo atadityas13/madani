@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
 @section('title', $siswa->nama)
-@section('heading', $siswa->nama)
-@section('subheading', 'NISN: '.($siswa->nisn ?: 'belum ada').' · '.$siswa->status_keaktifan)
+@section('heading', 'Data siswa')
+@section('subheading', 'MTsN 11 Majalengka')
 
 @php
     $tabs = [
@@ -15,16 +15,34 @@
         'prestasi' => 'Prestasi siswa',
         'rekam-didik' => 'Rekam didik',
     ];
+    $inisialSiswa = collect(preg_split('/\s+/', trim($siswa->nama)))
+        ->filter()
+        ->take(2)
+        ->map(fn ($p) => strtoupper(substr($p, 0, 1)))
+        ->implode('');
 @endphp
 
 @section('content')
-<ul class="nav nav-pills mb-3 flex-nowrap overflow-auto pb-1">
-    @foreach ($tabs as $id => $label)
-        <li class="nav-item">
-            <a class="nav-link {{ $tab === $id ? 'active' : '' }}" href="{{ route('siswa.show', ['siswa' => $siswa, 'tab' => $id]) }}">{{ $label }}</a>
-        </li>
-    @endforeach
-</ul>
+<div class="emis-student-head mb-3">
+    <div class="emis-photo">{{ $inisialSiswa ?: 'SW' }}</div>
+    <div>
+        <div class="emis-student-name">{{ $siswa->nama }}</div>
+        <div class="emis-student-meta">
+            NISN {{ $siswa->nisn ?: 'belum ada' }}
+            · {{ str_replace('_', ' ', $siswa->status_keaktifan) }}
+        </div>
+    </div>
+</div>
+
+<div class="madani-card px-2 mb-3">
+    <ul class="nav nav-pills flex-nowrap overflow-auto mb-0">
+        @foreach ($tabs as $id => $label)
+            <li class="nav-item">
+                <a class="nav-link {{ $tab === $id ? 'active' : '' }}" href="{{ route('siswa.show', ['siswa' => $siswa, 'tab' => $id]) }}">{{ $label }}</a>
+            </li>
+        @endforeach
+    </ul>
+</div>
 
 @if ($tab === 'data-siswa')
     <div class="madani-card p-4">
@@ -33,9 +51,9 @@
             @method('PUT')
             <input type="hidden" name="bagian" value="data-siswa">
             @include('siswa.partials.form-data-siswa', ['siswa' => $siswa, 'periodik' => $periodik, 'emis' => $emis])
-            <div class="mt-4 d-flex gap-2">
-                <button class="btn btn-madani" type="submit">Simpan</button>
+            <div class="emis-actions">
                 <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
+                <button class="btn btn-madani" type="submit">Simpan</button>
             </div>
         </form>
     </div>
@@ -70,9 +88,9 @@
                 </div>
             </div>
         </div>
-        <div class="mt-3 d-flex gap-2">
-            <button class="btn btn-madani" type="submit">Simpan</button>
+        <div class="emis-actions">
             <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
+            <button class="btn btn-madani" type="submit">Simpan</button>
         </div>
     </form>
 @endif
@@ -138,9 +156,9 @@
                     <x-emis-select name="transportasi" :options="$emis['transportasi']" :value="old('transportasi', $periodik?->transportasi)" />
                 </div>
             </div>
-            <div class="mt-4 d-flex gap-2">
-                <button class="btn btn-madani" type="submit">Simpan</button>
+            <div class="emis-actions">
                 <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
+                <button class="btn btn-madani" type="submit">Simpan</button>
             </div>
         </form>
     </div>
@@ -181,9 +199,9 @@
                     <input class="form-control" name="nama_sekolah_asal" value="{{ old('nama_sekolah_asal', $periodik?->nama_sekolah_asal) }}">
                 </div>
             </div>
-            <div class="mt-4 d-flex gap-2">
-                <button class="btn btn-madani" type="submit">Simpan</button>
+            <div class="emis-actions">
                 <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
+                <button class="btn btn-madani" type="submit">Simpan</button>
             </div>
         </form>
     </div>
@@ -211,7 +229,9 @@
                 <label class="form-label">Kebutuhan disabilitas lainnya</label>
                 <input class="form-control" name="disabilitas_lainnya" value="{{ old('disabilitas_lainnya', $periodik?->disabilitas_lainnya) }}">
             </div>
-            <button class="btn btn-madani" type="submit">Simpan</button>
+            <div class="emis-actions">
+                <button class="btn btn-madani" type="submit">Simpan</button>
+            </div>
         </form>
     </div>
 @endif
@@ -372,9 +392,9 @@
         @method('PUT')
         <input type="hidden" name="bagian" value="rekam-didik">
         @include('siswa.partials.form-rekam-didik')
-        <div class="mt-3 d-flex gap-2">
-            <button class="btn btn-madani" type="submit">Simpan</button>
+        <div class="emis-actions">
             <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
+            <button class="btn btn-madani" type="submit">Simpan</button>
         </div>
     </form>
 @endif
