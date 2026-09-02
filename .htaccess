@@ -1,0 +1,13 @@
+Options -Indexes
+
+<IfModule mod_authz_core.c>
+    <FilesMatch "(^\.env|composer\.(json|lock)|artisan|\.gitignore)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ /public/$1 [L,QSA]
+</IfModule>

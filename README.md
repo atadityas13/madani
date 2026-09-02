@@ -41,7 +41,13 @@ Ganti sandi segera setelah login pertama.
 
 ## Pull di hosting
 
-Document root Apache/Nginx harus mengarah ke folder `public/`.
+**Penyebab “Index of /”:** document root subdomain mengarah ke folder proyek, bukan `public/`. Laravel hanya boleh dilayani dari `public/index.php`.
+
+Cara yang benar (cPanel → Subdomains → document root):
+
+`/home/mtsnmaja/madani.mtsn11majalengka.sch.id/public`
+
+Jika document root tidak bisa diubah, root `.htaccess` akan meneruskan semua request ke `public/` dan mematikan listing folder. Setelah `git pull`, refresh browser.
 
 ```bash
 cd /path/ke/madani
