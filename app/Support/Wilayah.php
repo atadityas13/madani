@@ -66,7 +66,7 @@ class Wilayah
         }
 
         return sprintf(
-            'Blok/Kp. %s, RT. %s RW. %s Desa %s Kec. %s Kab. %s',
+            'Blok %s, RT. %s RW. %s Desa %s Kec. %s Kab. %s',
             $blok,
             $rt,
             $rw,

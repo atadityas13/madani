@@ -110,23 +110,26 @@
                     <label class="form-label">Status tempat tinggal</label>
                     <x-emis-select name="tempat_tinggal" :options="$emis['status_tempat_tinggal_siswa']" :value="old('tempat_tinggal', $periodik?->tempat_tinggal)" data-tempat-tinggal />
                     <div class="form-text" data-alamat-ortu-kosong hidden>Lengkapi alamat orang tua terlebih dahulu.</div>
+                    <div class="mt-3">
+                        @include('siswa.partials.form-wilayah', [
+                            'namePrefix' => '',
+                            'oldPrefix' => '',
+                            'record' => $periodik,
+                            'root' => 'siswa',
+                            'wide' => false,
+                        ])
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Titik koordinat</label>
-                    <input class="form-control" name="koordinat" value="{{ old('koordinat', $periodik?->koordinat) }}" placeholder="-7.043314, 108.353711" data-koordinat>
-                    <div class="form-text">Geser penanda di peta untuk menyesuaikan titik.</div>
-                </div>
-                <div class="col-12">
-                    <div class="madani-map" data-siswa-map></div>
-                </div>
-                <div class="col-12">
-                    @include('siswa.partials.form-wilayah', [
-                        'namePrefix' => '',
-                        'oldPrefix' => '',
-                        'record' => $periodik,
-                        'root' => 'siswa',
-                        'wide' => true,
-                    ])
+                    <input class="form-control bg-light" name="koordinat" value="{{ old('koordinat', $periodik?->koordinat) }}" placeholder="-7.043314, 108.353711" data-koordinat readonly>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
+                        <button class="btn btn-outline-secondary btn-sm" type="button" data-lokasi-saat-ini>
+                            <i class="bi bi-geo-alt"></i> Ambil lokasi saat ini
+                        </button>
+                        <div class="form-text mb-0" data-lokasi-status>Geser penanda di peta untuk menyesuaikan titik lokasi rumah.</div>
+                    </div>
+                    <div class="madani-map mt-2" data-siswa-map></div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Jarak tempat tinggal – madrasah</label>

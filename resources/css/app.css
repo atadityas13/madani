@@ -434,7 +434,7 @@ a:hover {
 }
 
 .madani-map {
-    height: 280px;
+    height: 160px;
     width: 100%;
     border: 1px solid var(--emis-line, #e5e7eb);
     border-radius: 12px;

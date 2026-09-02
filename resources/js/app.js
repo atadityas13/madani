@@ -95,7 +95,7 @@ function formatAlamat(blok, rt, rw, desa, kecamatan, kabupaten) {
         return '';
     }
 
-    return `Blok/Kp. ${values[0]}, RT. ${values[1]} RW. ${values[2]} Desa ${values[3]} Kec. ${values[4]} Kab. ${values[5]}`;
+    return `Blok ${values[0]}, RT. ${values[1]} RW. ${values[2]} Desa ${values[3]} Kec. ${values[4]} Kab. ${values[5]}`;
 }
 
 function bindWilayahRoot(root) {
@@ -328,35 +328,125 @@ function formatKoordinat(latlng) {
     return `${Number(latlng.lat).toFixed(6)}, ${Number(latlng.lng).toFixed(6)}`;
 }
 
-function addressQuery(root) {
-    const field = (name) => root.querySelector(`[data-wilayah-field="${name}"]`)?.value?.trim();
+function readWilayahFields(root) {
+    const field = (name) => root.querySelector(`[data-wilayah-field="${name}"]`)?.value?.trim() || '';
 
-    return ['blok', 'desa', 'kecamatan', 'kabupaten', 'provinsi']
-        .map((name) => field(name))
-        .filter(Boolean)
-        .concat('Indonesia')
-        .join(', ');
+    return {
+        blok: field('blok'),
+        desa: field('desa'),
+        kecamatan: field('kecamatan'),
+        kabupaten: field('kabupaten'),
+        provinsi: field('provinsi'),
+    };
 }
 
-async function geocodeAddress(query) {
-    if (!query || query === 'Indonesia') {
+function addressQueries(fields) {
+    const { desa, kecamatan, kabupaten, provinsi } = fields;
+    const queries = [];
+
+    if (desa && kecamatan && kabupaten) {
+        queries.push(`${desa}, ${kecamatan}, ${kabupaten}, ${provinsi}, Indonesia`.replace(/, ,/g, ','));
+        queries.push(`Desa ${desa}, ${kabupaten}, Indonesia`);
+        queries.push(`${desa}, ${kabupaten}, Indonesia`);
+    }
+
+    return [...new Set(queries.filter(Boolean))];
+}
+
+function includesName(haystack, needle) {
+    if (!needle) {
+        return false;
+    }
+
+    return String(haystack || '').toLowerCase().includes(needle.toLowerCase());
+}
+
+function scoreGeocode(item, fields) {
+    const type = item.addresstype || item.type || '';
+    const name = `${item.name || ''} ${item.display_name || ''}`;
+    const address = item.address || {};
+    const village = address.village || address.hamlet || address.suburb || '';
+    const county = address.county || address.city || address.municipality || '';
+    let score = Number(item.importance || 0) * 5;
+
+    if (fields.kabupaten && !includesName(county, fields.kabupaten) && !includesName(name, fields.kabupaten)) {
+        return -100;
+    }
+
+    const desaMatch = includesName(item.name, fields.desa) || includesName(village, fields.desa);
+    const kecamatanMatch = includesName(name, fields.kecamatan) || includesName(village, fields.kecamatan);
+
+    if (desaMatch) {
+        score += 60;
+    }
+
+    if (kecamatanMatch && !desaMatch) {
+        score -= 25;
+    }
+
+    if (['village', 'hamlet', 'isolated_dwelling', 'neighbourhood', 'suburb'].includes(type) && desaMatch) {
+        score += 20;
+    }
+
+    if (type === 'administrative' || item.category === 'boundary' || item.class === 'boundary') {
+        score -= 20;
+    }
+
+    return score;
+}
+
+function pickGeocode(results, fields) {
+    if (!Array.isArray(results) || results.length === 0) {
         return null;
     }
 
-    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`;
-    const response = await fetch(url, { headers: { Accept: 'application/json' } });
+    const ranked = results
+        .map((item) => ({ item, score: scoreGeocode(item, fields) }))
+        .filter((entry) => entry.score >= 50)
+        .sort((a, b) => b.score - a.score);
+
+    return ranked[0] || null;
+}
+
+async function searchNominatim(query) {
+    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=8&countrycodes=id&q=${encodeURIComponent(query)}`;
+    const response = await fetch(url, {
+        headers: {
+            Accept: 'application/json',
+            'Accept-Language': 'id',
+        },
+    });
 
     if (!response.ok) {
-        return null;
+        return [];
     }
 
     const results = await response.json();
 
-    if (!results[0]) {
-        return null;
+    return Array.isArray(results) ? results : [];
+}
+
+async function geocodeAddress(fields) {
+    const queries = addressQueries(fields);
+
+    for (let index = 0; index < queries.length; index += 1) {
+        if (index > 0) {
+            await new Promise((resolve) => {
+                setTimeout(resolve, 1100);
+            });
+        }
+
+        const picked = pickGeocode(await searchNominatim(queries[index]), fields);
+
+        if (picked) {
+            return {
+                lat: Number(picked.item.lat),
+                lng: Number(picked.item.lon),
+            };
+        }
     }
 
-    return { lat: Number(results[0].lat), lng: Number(results[0].lon) };
+    return null;
 }
 
 function bindAlamatSiswa() {
@@ -370,13 +460,23 @@ function bindAlamatSiswa() {
     const koordinat = form.querySelector('[data-koordinat]');
     const mapEl = form.querySelector('[data-siswa-map]');
     const note = form.querySelector('[data-alamat-ortu-kosong]');
+    const lokasiBtn = form.querySelector('[data-lokasi-saat-ini]');
+    const lokasiStatus = form.querySelector('[data-lokasi-status]');
     const root = form.querySelector('[data-wilayah-root="siswa"]');
     const alamatOrtu = readJson('madani-alamat-ortu');
     const alamatAsrama = readJson('madani-alamat-asrama');
     const defaultCenter = parseKoordinat(alamatAsrama.koordinat) || { lat: -7.043314, lng: 108.353711 };
+    const statusDefault = 'Geser penanda di peta untuk menyesuaikan titik lokasi rumah.';
     let geocodeTimer = null;
     let map = null;
     let marker = null;
+    let pinSource = koordinat?.value ? 'saved' : 'auto';
+
+    const setStatus = (message) => {
+        if (lokasiStatus) {
+            lokasiStatus.textContent = message || statusDefault;
+        }
+    };
 
     const setMarker = (latlng, zoom = 16) => {
         if (!map) {
@@ -391,10 +491,29 @@ function bindAlamatSiswa() {
                 if (koordinat) {
                     koordinat.value = formatKoordinat(marker.getLatLng());
                 }
+                pinSource = 'manual';
+                setStatus();
             });
         }
 
         map.setView(latlng, zoom);
+    };
+
+    const applyAsramaPin = () => {
+        const parsed = parseKoordinat(alamatAsrama.koordinat);
+
+        if (!parsed) {
+            return false;
+        }
+
+        setMarker(parsed, 17);
+        if (koordinat) {
+            koordinat.value = alamatAsrama.koordinat;
+        }
+        pinSource = 'asrama';
+        setStatus();
+
+        return true;
     };
 
     const applyStatus = () => {
@@ -402,9 +521,7 @@ function bindAlamatSiswa() {
 
         if (status === 'Asrama Madrasah' && root?._wilayah) {
             root._wilayah.apply(alamatAsrama);
-            if (koordinat && !koordinat.value && alamatAsrama.koordinat) {
-                koordinat.value = alamatAsrama.koordinat;
-            }
+            applyAsramaPin();
             if (note) {
                 note.hidden = true;
             }
@@ -426,38 +543,85 @@ function bindAlamatSiswa() {
         }
     };
 
+    const shouldAutoGeocode = () => pinSource === 'auto' || pinSource === 'geocode';
+
     const geocodeNow = async () => {
-        if (!root) {
+        if (!root || tempat?.value === 'Asrama Madrasah' || !shouldAutoGeocode()) {
             return;
         }
 
-        const query = addressQuery(root);
-        const result = await geocodeAddress(query);
+        const fields = readWilayahFields(root);
 
-        if (result) {
-            setMarker(result);
-            if (koordinat) {
-                koordinat.value = formatKoordinat(result);
-            }
+        if (!fields.desa && !fields.kecamatan) {
             return;
         }
 
-        if (tempat?.value === 'Asrama Madrasah' && alamatAsrama.koordinat) {
-            const fallback = parseKoordinat(alamatAsrama.koordinat);
-            if (fallback) {
-                setMarker(fallback);
-                if (koordinat && !koordinat.value) {
-                    koordinat.value = alamatAsrama.koordinat;
-                }
-            }
+        const result = await geocodeAddress(fields);
+
+        if (!shouldAutoGeocode()) {
+            return;
         }
+
+        if (!result) {
+            setStatus();
+            return;
+        }
+
+        setMarker(result, 16);
+        if (koordinat) {
+            koordinat.value = formatKoordinat(result);
+        }
+        pinSource = 'geocode';
+        setStatus();
     };
 
     const scheduleGeocode = () => {
+        if (!shouldAutoGeocode() || tempat?.value === 'Asrama Madrasah') {
+            return;
+        }
+
         clearTimeout(geocodeTimer);
         geocodeTimer = setTimeout(() => {
             geocodeNow();
         }, 700);
+    };
+
+    const ambilLokasiSaatIni = () => {
+        if (!navigator.geolocation) {
+            setStatus('Browser tidak mendukung lokasi perangkat.');
+            return;
+        }
+
+        lokasiBtn.disabled = true;
+        setStatus('Mengambil lokasi perangkat…');
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const latlng = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                };
+
+                setMarker(latlng, 18);
+                if (koordinat) {
+                    koordinat.value = formatKoordinat(latlng);
+                }
+                pinSource = 'gps';
+                setStatus();
+                lokasiBtn.disabled = false;
+            },
+            (error) => {
+                const messages = {
+                    1: 'Izin lokasi ditolak. Izinkan akses lokasi di browser.',
+                    2: 'Lokasi perangkat tidak tersedia.',
+                    3: 'Waktu mengambil lokasi habis. Coba lagi.',
+                };
+
+                setStatus(messages[error?.code] || 'Gagal mengambil lokasi perangkat.');
+                lokasiBtn.disabled = false;
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+        );
     };
 
     if (mapEl) {
@@ -474,25 +638,34 @@ function bindAlamatSiswa() {
     applyStatus();
 
     tempat?.addEventListener('change', () => {
+        if (tempat.value === 'Asrama Madrasah') {
+            applyStatus();
+            return;
+        }
+
         applyStatus();
+        if (pinSource === 'asrama') {
+            pinSource = 'auto';
+        }
         scheduleGeocode();
     });
 
-    root?.addEventListener('wilayah:changed', scheduleGeocode);
-
-    koordinat?.addEventListener('change', () => {
-        const parsed = parseKoordinat(koordinat.value);
-        if (parsed) {
-            setMarker(parsed);
+    root?.addEventListener('wilayah:changed', () => {
+        if (tempat?.value === 'Asrama Madrasah') {
+            return;
         }
+
+        scheduleGeocode();
     });
+
+    lokasiBtn?.addEventListener('click', ambilLokasiSaatIni);
 
     if (koordinat?.value) {
         const parsed = parseKoordinat(koordinat.value);
         if (parsed) {
             setMarker(parsed);
         }
-    } else {
+    } else if (tempat?.value !== 'Asrama Madrasah') {
         scheduleGeocode();
     }
 }
