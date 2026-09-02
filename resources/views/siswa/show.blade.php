@@ -166,77 +166,7 @@
 @endif
 
 @if ($tab === 'beasiswa')
-    <div class="row g-3">
-        <div class="col-lg-5">
-            <div class="madani-card p-4">
-                <div class="stat-label mb-3">Tambah beasiswa / bantuan</div>
-                <form method="POST" action="{{ route('siswa.update', $siswa) }}">
-                    @csrf
-                    @method('PUT')
-                    <input type="hidden" name="bagian" value="beasiswa">
-                    <div class="mb-3">
-                        <label class="form-label">Tahun</label>
-                        <input class="form-control" type="number" name="tahun" value="{{ old('tahun', date('Y')) }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Jenis bantuan</label>
-                        <x-emis-select name="kategori" :options="$emis['jenis_beasiswa']" :value="old('kategori')" required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Nama</label>
-                        <input class="form-control" name="nama" value="{{ old('nama') }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Instansi</label>
-                        <input class="form-control" name="instansi" value="{{ old('instansi') }}">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Jangka (bulan)</label>
-                        <input class="form-control" type="number" name="jangka_bulan" value="{{ old('jangka_bulan') }}">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Nominal (Rp)</label>
-                        <input class="form-control" type="number" name="nominal" value="{{ old('nominal') }}">
-                    </div>
-                    <button class="btn btn-madani" type="submit">Tambah</button>
-                </form>
-            </div>
-        </div>
-        <div class="col-lg-7">
-            <div class="madani-card p-0">
-                <table class="table mb-0">
-                    <thead>
-                        <tr>
-                            <th>Tahun</th>
-                            <th>Jenis</th>
-                            <th>Nama</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($siswa->beasiswas as $item)
-                            <tr>
-                                <td>{{ $item->tahun }}</td>
-                                <td>{{ $item->kategori }}</td>
-                                <td>{{ $item->nama }}</td>
-                                <td class="text-end">
-                                    <form method="POST" action="{{ route('siswa.relasi.destroy', $siswa) }}" onsubmit="return confirm('Hapus data ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <input type="hidden" name="jenis" value="beasiswa">
-                                        <input type="hidden" name="id" value="{{ $item->id }}">
-                                        <button class="btn btn-sm btn-outline-danger" type="submit">Hapus</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="4" class="text-secondary p-3">Belum ada beasiswa.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    @include('siswa.partials.beasiswa')
 @endif
 
 @if ($tab === 'prestasi')

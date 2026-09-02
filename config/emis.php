@@ -210,11 +210,8 @@ return [
 
     'jenis_beasiswa' => [
         'PIP' => 'PIP',
-        'KIP' => 'KIP',
-        'Beasiswa prestasi' => 'Beasiswa prestasi',
-        'Beasiswa tahfidz' => 'Beasiswa tahfidz',
-        'Bantuan madrasah' => 'Bantuan madrasah',
-        'Lainnya' => 'Lainnya',
+        'Bantuan Madrasah' => 'Bantuan Madrasah',
+        'Beasiswa' => 'Beasiswa',
     ],
 
     'jenis_prestasi' => [

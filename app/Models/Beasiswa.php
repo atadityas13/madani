@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'siswa_id', 'tahun', 'kategori', 'nama', 'instansi', 'jenis_instansi',
-    'jangka_bulan', 'nominal',
+    'jangka_bulan', 'nominal', 'nomor_rekening', 'bukti_path',
 ])]
 class Beasiswa extends Model
 {

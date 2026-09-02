@@ -330,19 +330,27 @@ class SiswaController extends Controller
     {
         $data = $request->validate([
             'tahun' => ['required', 'integer', 'min:2000', 'max:2100'],
-            'kategori' => ['required', 'string', 'max:80'],
-            'nama' => ['required', 'string', 'max:255'],
-            'instansi' => ['nullable', 'string', 'max:255'],
-            'jenis_instansi' => ['nullable', 'string', 'max:80'],
-            'jangka_bulan' => ['nullable', 'integer', 'min:1', 'max:120'],
+            'kategori' => ['required', 'string', Rule::in(array_keys(config('emis.jenis_beasiswa')))],
+            'nomor_rekening' => ['nullable', 'string', 'max:50'],
             'nominal' => ['nullable', 'integer', 'min:0'],
+            'bukti' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
         ]);
 
-        $siswa->beasiswas()->create($data);
+        unset($data['bukti']);
+        $data['nama'] = $data['kategori'];
+        $data['nomor_rekening'] = $data['nomor_rekening'] ?: null;
+
+        $beasiswa = $siswa->beasiswas()->create($data);
+
+        if ($request->hasFile('bukti')) {
+            $beasiswa->update([
+                'bukti_path' => $request->file('bukti')->store("dokumen/{$siswa->id}/bantuan", 'public'),
+            ]);
+        }
 
         return redirect()
             ->route('siswa.show', ['siswa' => $siswa, 'tab' => 'beasiswa'])
-            ->with('status', 'Beasiswa / bantuan ditambahkan.');
+            ->with('status', 'Bantuan pendidikan ditambahkan.');
     }
 
     private function storePrestasi(Request $request, Siswa $siswa): RedirectResponse
