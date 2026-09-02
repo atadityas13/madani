@@ -14,21 +14,37 @@ L.Icon.Default.mergeOptions({
     shadowUrl: markerShadow,
 });
 
-document.querySelectorAll('[data-siswa-menu]').forEach((group) => {
-    const trigger = group.querySelector('[data-siswa-trigger]');
+document.querySelectorAll('[data-madani-shell]').forEach((shell) => {
+    if (localStorage.getItem('madani-sidebar') === 'collapsed') {
+        shell.classList.add('is-sidebar-collapsed');
+    }
 
-    trigger?.addEventListener('click', (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        group.classList.toggle('open');
+    shell.querySelectorAll('[data-sidebar-toggle]').forEach((button) => {
+        button.addEventListener('click', () => {
+            shell.classList.toggle('is-sidebar-collapsed');
+            localStorage.setItem(
+                'madani-sidebar',
+                shell.classList.contains('is-sidebar-collapsed') ? 'collapsed' : 'expanded',
+            );
+        });
     });
 });
 
-document.addEventListener('click', (event) => {
-    document.querySelectorAll('[data-siswa-menu].open').forEach((group) => {
-        if (!group.contains(event.target)) {
-            group.classList.remove('open');
+document.querySelectorAll('[data-nav-group]').forEach((group) => {
+    const trigger = group.querySelector('[data-nav-trigger]');
+
+    trigger?.addEventListener('click', () => {
+        const shell = document.querySelector('[data-madani-shell]');
+
+        if (shell?.classList.contains('is-sidebar-collapsed')) {
+            shell.classList.remove('is-sidebar-collapsed');
+            localStorage.setItem('madani-sidebar', 'expanded');
+            group.classList.add('is-open');
+
+            return;
         }
+
+        group.classList.toggle('is-open');
     });
 });
 
@@ -825,9 +841,16 @@ function bindIjazahSesuai() {
     });
 }
 
+function bindOpenModals() {
+    document.querySelectorAll('[data-modal-open]').forEach((node) => {
+        window.bootstrap.Modal.getOrCreateInstance(node).show();
+    });
+}
+
 document.querySelectorAll('[data-wilayah-root]').forEach(bindWilayahRoot);
 bindOrtuForm();
 bindAlamatOrtu();
 bindAlamatSiswa();
 bindKebutuhanDisabilitas();
 bindIjazahSesuai();
+bindOpenModals();

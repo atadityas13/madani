@@ -16,7 +16,9 @@ class DashboardController extends Controller
             'jumlahSiswa' => Siswa::query()->count(),
             'siswaAktif' => Siswa::query()->where('status_keaktifan', 'aktif')->count(),
             'tanpaRombel' => Siswa::query()->where('status_keaktifan', 'aktif_tanpa_rombel')->count(),
-            'jumlahRombel' => Rombel::query()->count(),
+            'jumlahRombel' => Rombel::query()
+                ->when(TahunAjaran::aktif(), fn ($query) => $query->where('tahun_ajaran_id', TahunAjaran::aktif()->id))
+                ->count(),
         ]);
     }
 }

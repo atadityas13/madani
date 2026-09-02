@@ -52,7 +52,7 @@
         <tbody>
             @forelse ($riwayatRombel as $rombel)
                 <tr>
-                    <td>{{ $rombel->tahunAjaran?->nama ?: '—' }}</td>
+                    <td>{{ $rombel->tahunAjaran?->label() ?: '—' }}</td>
                     <td>{{ $rombel->tingkat ?: '—' }}</td>
                     <td>{{ $rombel->nama }}{{ $rombel->program ? ' · '.$rombel->program : '' }}</td>
                     <td>{{ $rombel->pivot->status === 'aktif' ? 'Aktif' : 'Nonaktif' }}</td>

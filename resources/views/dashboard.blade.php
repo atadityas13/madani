@@ -2,7 +2,7 @@
 
 @section('title', 'Ringkasan')
 @section('heading', 'Ringkasan')
-@section('subheading', $tahunAktif?->nama ?? 'Belum ada tahun ajaran aktif')
+@section('subheading', $tahunAktif?->label() ?? 'Belum ada tahun ajaran aktif')
 
 @section('content')
 <div class="row g-3 mb-4">

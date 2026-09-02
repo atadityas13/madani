@@ -30,7 +30,7 @@
                 @forelse ($siswas as $siswa)
                     @php
                         $rombel = $siswa->rombels->first();
-                        $rombelLabel = $rombel ? $rombel->tingkat.' / '.$rombel->nama : '—';
+                        $rombelLabel = $rombel ? $rombel->label() : '—';
                     @endphp
                     <tr>
                         <td>{{ $siswas->firstItem() + $loop->index }}</td>

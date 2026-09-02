@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class SiswaController extends Controller
@@ -19,7 +20,10 @@ class SiswaController extends Controller
         $q = trim((string) $request->query('q', ''));
 
         $siswas = Siswa::query()
-            ->with(['rombels' => fn ($query) => $query->wherePivot('status', 'aktif')])
+            ->with(['rombels' => function ($query) {
+                $query->wherePivot('status', 'aktif')
+                    ->when(TahunAjaran::aktif(), fn ($rombel) => $rombel->where('tahun_ajaran_id', TahunAjaran::aktif()->id));
+            }])
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($inner) use ($q) {
                     $inner->where('nama', 'like', "%{$q}%")
@@ -307,7 +311,10 @@ class SiswaController extends Controller
         }
 
         if ($request->filled('rombel_id')) {
-            $siswa->rombels()->wherePivot('status', 'aktif')->update(['status' => 'nonaktif']);
+            DB::table('rombel_siswas')
+                ->where('siswa_id', $siswa->id)
+                ->where('status', 'aktif')
+                ->update(['status' => 'nonaktif']);
             $siswa->rombels()->syncWithoutDetaching([
                 $request->integer('rombel_id') => ['status' => 'aktif'],
             ]);
@@ -342,8 +349,8 @@ class SiswaController extends Controller
     {
         $data = $request->validate([
             'nama' => ['required', 'string', 'max:255'],
-            'jenis' => ['nullable', 'string', 'max:50'],
-            'tingkat' => ['nullable', 'string', 'max:50'],
+            'jenis' => ['required', 'string', Rule::in(array_keys(config('emis.jenis_prestasi')))],
+            'tingkat' => ['nullable', 'string', Rule::in(array_keys(config('emis.tingkat_prestasi')))],
             'tahun' => ['nullable', 'integer', 'min:2000', 'max:2100'],
             'penyelenggara' => ['nullable', 'string', 'max:255'],
             'sertifikat' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
@@ -509,7 +516,7 @@ class SiswaController extends Controller
 
         if ($request->filled('jumlah_saudara') && $request->filled('anak_ke')) {
             if ((int) $data['anak_ke'] > ((int) $data['jumlah_saudara'] + 1)) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'anak_ke' => 'Anak ke tidak bisa lebih dari jumlah saudara + 1',
                 ]);
             }

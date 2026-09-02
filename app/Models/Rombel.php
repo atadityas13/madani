@@ -7,7 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['tahun_ajaran_id', 'tingkat', 'nama', 'program', 'wali_kelas_id'])]
+#[Fillable([
+    'tahun_ajaran_id', 'tingkat', 'nama', 'program', 'wali_kelas_id',
+    'gtk_id', 'ruangan', 'jenis_rombel', 'waktu_mengajar', 'kurikulum',
+])]
 class Rombel extends Model
 {
     public function tahunAjaran(): BelongsTo
@@ -17,7 +20,7 @@ class Rombel extends Model
 
     public function waliKelas(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'wali_kelas_id');
+        return $this->belongsTo(Gtk::class, 'gtk_id');
     }
 
     public function siswas(): BelongsToMany
@@ -25,5 +28,15 @@ class Rombel extends Model
         return $this->belongsToMany(Siswa::class, 'rombel_siswas')
             ->withPivot('status')
             ->withTimestamps();
+    }
+
+    public function anggotaAktif(): BelongsToMany
+    {
+        return $this->siswas()->wherePivot('status', 'aktif');
+    }
+
+    public function label(): string
+    {
+        return $this->tingkat.' '.$this->nama;
     }
 }

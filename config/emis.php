@@ -239,6 +239,32 @@ return [
         'sudah' => 'Sudah verval',
     ],
 
+    'semester' => [
+        'ganjil' => 'Ganjil',
+        'genap' => 'Genap',
+    ],
+
+    'tingkat_rombel' => [
+        7 => 'Kelas 7',
+        8 => 'Kelas 8',
+        9 => 'Kelas 9',
+    ],
+
+    'jenis_rombel' => [
+        'Reguler' => 'Reguler',
+        'Inklusi' => 'Inklusi',
+    ],
+
+    'waktu_mengajar' => [
+        'Pagi' => 'Pagi',
+        'Siang' => 'Siang',
+    ],
+
+    'kurikulum' => [
+        'Kurikulum Merdeka' => 'Kurikulum Merdeka',
+        'Kurikulum 2013' => 'Kurikulum 2013',
+    ],
+
     'asrama_madrasah' => [
         'provinsi' => 'Jawa Barat',
         'kota' => 'Majalengka',

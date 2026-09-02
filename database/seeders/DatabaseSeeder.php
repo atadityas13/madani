@@ -30,10 +30,10 @@ class DatabaseSeeder extends Seeder
         $admin->syncRoles(['superadmin']);
 
         TahunAjaran::query()->updateOrCreate(
-            ['nama' => '2026/2027'],
+            ['nama' => '2026/2027', 'semester' => 'ganjil'],
             [
                 'tanggal_mulai' => '2026-07-13',
-                'tanggal_selesai' => '2027-06-12',
+                'tanggal_selesai' => '2026-12-19',
                 'is_aktif' => true,
             ]
         );
