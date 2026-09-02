@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'status', 'status_hidup', 'tempat_lahir', 'tanggal_lahir', 'pendidikan',
     'pekerjaan', 'penghasilan', 'no_hp', 'tidak_punya_hp',
     'status_tempat_tinggal', 'alamat', 'blok', 'rt', 'rw', 'desa', 'kecamatan', 'kota',
-    'provinsi', 'kode_pos', 'sama_dengan_ayah',
+    'provinsi', 'kode_pos', 'sama_dengan_ayah', 'hubungan',
 ])]
 class OrangTua extends Model
 {

@@ -64,16 +64,20 @@
         @csrf
         @method('PUT')
         <input type="hidden" name="bagian" value="orang-tua">
-        <div class="row g-3">
+        <div class="row g-3" style="max-width: 760px;">
             @foreach (['ayah', 'ibu', 'wali'] as $peran)
-                <div class="col-lg-4">
+                <div class="col-12">
                     @include('siswa.partials.form-ortu-blok', ['peran' => $peran])
                 </div>
             @endforeach
         </div>
         <div class="madani-card p-4 mt-3">
-            <div class="stat-label mb-3">Penghasilan orang tua / wali & bantuan</div>
+            <div class="stat-label mb-3">Penghasilan Gabungan Orang tua & Data Bantuan</div>
             <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Penghasilan gabungan</label>
+                    <x-emis-select name="penghasilan_gabungan" :options="$emis['penghasilan']" :value="old('penghasilan_gabungan', $periodik?->penghasilan_gabungan)" />
+                </div>
                 <div class="col-md-4">
                     <label class="form-label">Nomor KKS</label>
                     <input class="form-control" name="no_kks" value="{{ old('no_kks', $periodik?->no_kks) }}">
@@ -101,15 +105,19 @@
             @csrf
             @method('PUT')
             <input type="hidden" name="bagian" value="alamat">
-            <div class="row g-3">
+            <div class="row g-3" data-alamat-siswa>
                 <div class="col-md-6">
                     <label class="form-label">Status tempat tinggal</label>
-                    <x-emis-select name="tempat_tinggal" :options="$emis['status_tempat_tinggal_siswa']" :value="old('tempat_tinggal', $periodik?->tempat_tinggal)" />
+                    <x-emis-select name="tempat_tinggal" :options="$emis['status_tempat_tinggal_siswa']" :value="old('tempat_tinggal', $periodik?->tempat_tinggal)" data-tempat-tinggal />
+                    <div class="form-text" data-alamat-ortu-kosong hidden>Lengkapi alamat orang tua terlebih dahulu.</div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Titik koordinat</label>
-                    <input class="form-control" name="koordinat" value="{{ old('koordinat', $periodik?->koordinat) }}" placeholder="-6.83, 108.22">
-                    <div class="form-text">Latitude, longitude — peta Leaflet EMIS memakai format ini.</div>
+                    <input class="form-control" name="koordinat" value="{{ old('koordinat', $periodik?->koordinat) }}" placeholder="-7.043314, 108.353711" data-koordinat>
+                    <div class="form-text">Geser penanda di peta untuk menyesuaikan titik.</div>
+                </div>
+                <div class="col-12">
+                    <div class="madani-map" data-siswa-map></div>
                 </div>
                 <div class="col-12">
                     @include('siswa.partials.form-wilayah', [
@@ -133,6 +141,8 @@
                     <x-emis-select name="transportasi" :options="$emis['transportasi']" :value="old('transportasi', $periodik?->transportasi)" />
                 </div>
             </div>
+            <script type="application/json" id="madani-alamat-ortu">@json($alamatOrtu ?? [])</script>
+            <script type="application/json" id="madani-alamat-asrama">@json($alamatAsrama ?? [])</script>
             <div class="emis-actions">
                 <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
                 <button class="btn btn-madani" type="submit">Simpan</button>

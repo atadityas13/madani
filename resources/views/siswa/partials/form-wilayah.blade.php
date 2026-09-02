@@ -59,7 +59,7 @@
     <div class="col-12" data-wilayah-step="detail" @if ($valDesa === '') hidden @endif>
         <div class="row g-2">
             <div class="col-12">
-                <label class="form-label">Blok</label>
+                <label class="form-label">Blok/Kampung</label>
                 <input class="form-control" name="{{ $nameBlok }}" value="{{ $valBlok }}" data-wilayah-field="blok">
             </div>
             <div class="col-4">

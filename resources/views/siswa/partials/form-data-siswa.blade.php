@@ -22,14 +22,8 @@
 
     <div class="col-md-4">
         <label class="form-label">NISN</label>
-        <input class="form-control @error('nisn') is-invalid @enderror" name="nisn" value="{{ old('nisn', $s?->nisn) }}" maxlength="10" inputmode="numeric" required @disabled($s?->nisn)>
-        @if ($s?->nisn)
-            <input type="hidden" name="nisn" value="{{ $s->nisn }}">
-        @endif
+        <input class="form-control @error('nisn') is-invalid @enderror" name="nisn" value="{{ old('nisn', $s?->nisn) }}" maxlength="10" inputmode="numeric" required>
         @error('nisn') <div class="invalid-feedback">{{ $message }}</div> @enderror
-        @if ($s?->nisn)
-            <div class="form-text">NISN dikunci setelah tersimpan, seperti di EMIS.</div>
-        @endif
     </div>
     <div class="col-md-4">
         <label class="form-label">NIS Lokal</label>
@@ -78,12 +72,12 @@
     </div>
 
     <div class="col-md-6">
-        <label class="form-label">Nomor handphone</label>
+        <label class="form-label">Nomor HP/Whatsapp</label>
         <input class="form-control @error('no_hp') is-invalid @enderror" name="no_hp" value="{{ old('no_hp', $s?->no_hp) }}" placeholder="contoh: 6282372377723">
         @error('no_hp') <div class="invalid-feedback">{{ $message }}</div> @enderror
         <div class="form-check mt-1">
             <input class="form-check-input" type="checkbox" name="tidak_punya_hp" value="1" id="tidak_punya_hp" @checked(old('tidak_punya_hp', $s?->tidak_punya_hp))>
-            <label class="form-check-label small" for="tidak_punya_hp">Tidak memiliki nomor handphone</label>
+            <label class="form-check-label small" for="tidak_punya_hp">Tidak memiliki nomor HP/Whatsapp</label>
         </div>
     </div>
     <div class="col-md-6">

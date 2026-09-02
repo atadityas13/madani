@@ -10,7 +10,7 @@
     $kkSamaAyah = (bool) old($old.'.sama_dengan_ayah', $ortu?->sama_dengan_ayah);
     $waliLainnya = $statusWali === 'Lainnya';
 @endphp
-<div class="madani-card p-4 h-100" data-ortu-blok="{{ $peran }}">
+<div class="madani-card p-4" data-ortu-blok="{{ $peran }}">
     <div class="stat-label mb-3">{{ $judul }}</div>
     @if ($peran === 'ibu')
         <div class="form-check mb-3">
@@ -27,6 +27,12 @@
     @endif
 
     <div @if ($peran === 'wali' && ! $waliLainnya) hidden @endif data-ortu-detail>
+        @if ($peran === 'wali')
+            <div class="mb-3">
+                <label class="form-label">Hubungan dengan siswa</label>
+                <x-emis-select :name="$input.'[hubungan]'" :options="$emis['hubungan_wali']" :value="old($old.'.hubungan', $ortu?->hubungan)" />
+            </div>
+        @endif
         <div class="mb-3">
             <label class="form-label">Nama lengkap</label>
             <input class="form-control" name="{{ $input }}[nama]" value="{{ old($old.'.nama', $ortu?->nama) }}">
@@ -61,11 +67,11 @@
                 <x-emis-select :name="$input.'[penghasilan]'" :options="$emis['penghasilan']" :value="old($old.'.penghasilan', $ortu?->penghasilan)" />
             </div>
             <div class="col-12">
-                <label class="form-label">Nomor handphone</label>
+                <label class="form-label">Nomor HP/Whatsapp</label>
                 <input class="form-control" name="{{ $input }}[no_hp]" value="{{ old($old.'.no_hp', $ortu?->no_hp) }}" placeholder="628…">
                 <div class="form-check mt-1">
                     <input class="form-check-input" type="checkbox" name="{{ $input }}[tidak_punya_hp]" value="1" @checked(old($old.'.tidak_punya_hp', $ortu?->tidak_punya_hp))>
-                    <label class="form-check-label small">Tidak memiliki nomor handphone</label>
+                    <label class="form-check-label small">Tidak memiliki nomor HP/Whatsapp</label>
                 </div>
             </div>
         </div>

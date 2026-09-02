@@ -122,6 +122,18 @@ return [
         'Lainnya' => 'Lainnya',
     ],
 
+    'hubungan_wali' => [
+        'Kakek' => 'Kakek',
+        'Nenek' => 'Nenek',
+        'Paman' => 'Paman',
+        'Bibi' => 'Bibi',
+        'Kakak' => 'Kakak',
+        'Saudara' => 'Saudara',
+        'Orang tua asuh' => 'Orang tua asuh',
+        'Wali pengadilan' => 'Wali pengadilan',
+        'Lainnya' => 'Lainnya',
+    ],
+
     'transportasi' => [
         'Jalan kaki' => 'Jalan kaki',
         'Sepeda' => 'Sepeda',
@@ -208,5 +220,17 @@ return [
     'status_verval' => [
         'belum' => 'Belum verval',
         'sudah' => 'Sudah verval',
+    ],
+
+    'asrama_madrasah' => [
+        'provinsi' => 'Jawa Barat',
+        'kota' => 'Majalengka',
+        'kecamatan' => 'Cingambul',
+        'desa' => 'Maniis',
+        'blok' => 'Sindanghurip',
+        'rt' => '004',
+        'rw' => '005',
+        'kode_pos' => '45467',
+        'koordinat' => '-7.043314, 108.353711',
     ],
 ];

@@ -94,6 +94,8 @@ class SiswaController extends Controller
             'emis' => config('emis'),
             'tab' => $tab,
             'rombels' => $rombels,
+            'alamatOrtu' => $this->alamatOrtuUtama($siswa),
+            'alamatAsrama' => config('emis.asrama_madrasah'),
         ]);
     }
 
@@ -166,6 +168,8 @@ class SiswaController extends Controller
             'ortu.ayah.nama' => ['nullable', 'string', 'max:255'],
             'ortu.ibu.nama' => ['nullable', 'string', 'max:255'],
             'ortu.wali.nama' => ['nullable', 'string', 'max:255'],
+            'ortu.wali.hubungan' => ['nullable', 'string', 'max:80'],
+            'penghasilan_gabungan' => ['nullable', 'string', 'max:80'],
             'file_kk_ayah' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
             'file_kk_ibu' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
             'file_kk_wali' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
@@ -187,11 +191,13 @@ class SiswaController extends Controller
         }
 
         if ($waliStatus === 'Sama dengan ayah kandung') {
-            $wali = array_merge($wali, Arr::except($ayah, ['status', 'sama_dengan_ayah']));
+            $wali = array_merge($wali, Arr::except($ayah, ['status', 'sama_dengan_ayah', 'hubungan']));
             $wali['status'] = $waliStatus;
+            $wali['hubungan'] = 'Ayah kandung';
         } elseif ($waliStatus === 'Sama dengan ibu kandung') {
-            $wali = array_merge($wali, Arr::except($ibu, ['status', 'sama_dengan_ayah']));
+            $wali = array_merge($wali, Arr::except($ibu, ['status', 'sama_dengan_ayah', 'hubungan']));
             $wali['status'] = $waliStatus;
+            $wali['hubungan'] = 'Ibu kandung';
         } else {
             $wali['status'] = 'Lainnya';
         }
@@ -207,6 +213,7 @@ class SiswaController extends Controller
             $siswa->periodiks()->updateOrCreate(
                 ['tahun_ajaran_id' => $tahun->id],
                 [
+                    'penghasilan_gabungan' => $request->input('penghasilan_gabungan'),
                     'no_kks' => $request->input('no_kks'),
                     'no_pkh' => $request->input('no_pkh'),
                 ],
@@ -247,37 +254,12 @@ class SiswaController extends Controller
             'transportasi' => ['nullable', 'string', 'max:80'],
         ]);
 
+        $alamat = $this->resolveAlamatSiswa($request, $siswa);
+
         if ($tahun = TahunAjaran::aktif()) {
             $siswa->periodiks()->updateOrCreate(
                 ['tahun_ajaran_id' => $tahun->id],
-                [
-                    'tempat_tinggal' => $request->input('tempat_tinggal'),
-                    'provinsi' => $request->input('provinsi'),
-                    'kota' => $request->input('kota'),
-                    'kecamatan' => $request->input('kecamatan'),
-                    'desa' => $request->input('desa'),
-                    'blok' => $request->input('blok'),
-                    'rt' => $request->input('rt'),
-                    'rw' => $request->input('rw'),
-                    'kode_pos' => $request->input('kode_pos') ?: Wilayah::kodePos(
-                        (string) $request->input('provinsi'),
-                        (string) $request->input('kota'),
-                        (string) $request->input('kecamatan'),
-                        (string) $request->input('desa'),
-                    ),
-                    'alamat' => Wilayah::formatAlamat(
-                        $request->input('blok'),
-                        $request->input('rt'),
-                        $request->input('rw'),
-                        $request->input('desa'),
-                        $request->input('kecamatan'),
-                        $request->input('kota'),
-                    ),
-                    'koordinat' => $request->input('koordinat'),
-                    'jarak' => $request->input('jarak'),
-                    'waktu_tempuh' => $request->input('waktu_tempuh'),
-                    'transportasi' => $request->input('transportasi'),
-                ],
+                $alamat,
             );
         }
 
@@ -470,14 +452,14 @@ class SiswaController extends Controller
             'file_kip' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
         ], [
             'nama.regex' => 'Nama lengkap hanya dapat diisi huruf dan simbol -\'.,',
-            'no_hp.regex' => 'Nomor handphone tidak bisa diawali 0, harus kode negara, misal: 62',
+            'no_hp.regex' => 'Nomor HP/Whatsapp tidak bisa diawali 0, harus kode negara, misal: 62',
             'nisn.required' => 'NISN tidak boleh kosong',
             'nik.required' => 'NIK tidak boleh kosong',
             'jumlah_saudara.required' => 'Jumlah saudara tidak boleh kosong',
             'anak_ke.required' => 'Anak ke tidak boleh kosong',
             'anak_ke.min' => 'Anak ke tidak boleh NOL',
             'pembiaya.required' => 'Yang membiayai sekolah tidak boleh kosong',
-            'no_hp.required' => 'Nomor handphone tidak boleh kosong',
+            'no_hp.required' => 'Nomor HP/Whatsapp tidak boleh kosong',
             'email.email' => 'Email harus valid',
         ]);
     }
@@ -574,6 +556,7 @@ class SiswaController extends Controller
                 (string) $desa,
             ),
             'alamat' => Wilayah::formatAlamat($blok, $rt, $rw, $desa, $kecamatan, $kota),
+            'hubungan' => $peran === 'wali' ? ($input['hubungan'] ?? null) : null,
             'sama_dengan_ayah' => $peran === 'ibu' && ! empty($input['sama_dengan_ayah']),
         ];
     }
@@ -583,6 +566,76 @@ class SiswaController extends Controller
         return [
             'status_tempat_tinggal', 'provinsi', 'kota', 'kecamatan', 'desa',
             'blok', 'rt', 'rw', 'kode_pos', 'alamat',
+        ];
+    }
+
+    private function alamatOrtuUtama(Siswa $siswa): array
+    {
+        $siswa->loadMissing('orangTuas');
+
+        foreach (['ayah', 'ibu', 'wali'] as $peran) {
+            $ortu = $siswa->orangTuas->firstWhere('peran', $peran);
+
+            if ($ortu && filled($ortu->desa)) {
+                return Arr::only($ortu->toArray(), [
+                    'provinsi', 'kota', 'kecamatan', 'desa',
+                    'blok', 'rt', 'rw', 'kode_pos', 'alamat',
+                ]);
+            }
+        }
+
+        return [];
+    }
+
+    private function resolveAlamatSiswa(Request $request, Siswa $siswa): array
+    {
+        $tempat = $request->input('tempat_tinggal');
+        $source = [];
+
+        if ($tempat === 'Asrama Madrasah') {
+            $source = Arr::except(config('emis.asrama_madrasah', []), ['koordinat']);
+        } elseif ($tempat === 'Tinggal dengan Orang Tua/Wali') {
+            $source = $this->alamatOrtuUtama($siswa);
+        }
+
+        if ($source === []) {
+            $source = $request->only([
+                'provinsi', 'kota', 'kecamatan', 'desa',
+                'blok', 'rt', 'rw', 'kode_pos',
+            ]);
+        }
+
+        $provinsi = $source['provinsi'] ?? null;
+        $kota = $source['kota'] ?? null;
+        $kecamatan = $source['kecamatan'] ?? null;
+        $desa = $source['desa'] ?? null;
+        $blok = $source['blok'] ?? null;
+        $rt = $source['rt'] ?? null;
+        $rw = $source['rw'] ?? null;
+
+        return [
+            'tempat_tinggal' => $tempat,
+            'provinsi' => $provinsi,
+            'kota' => $kota,
+            'kecamatan' => $kecamatan,
+            'desa' => $desa,
+            'blok' => $blok,
+            'rt' => $rt,
+            'rw' => $rw,
+            'kode_pos' => ($source['kode_pos'] ?? null) ?: Wilayah::kodePos(
+                (string) $provinsi,
+                (string) $kota,
+                (string) $kecamatan,
+                (string) $desa,
+            ),
+            'alamat' => Wilayah::formatAlamat($blok, $rt, $rw, $desa, $kecamatan, $kota),
+            'koordinat' => $request->input('koordinat')
+                ?: (config('emis.asrama_madrasah.koordinat') && $tempat === 'Asrama Madrasah'
+                    ? config('emis.asrama_madrasah.koordinat')
+                    : null),
+            'jarak' => $request->input('jarak'),
+            'waktu_tempuh' => $request->input('waktu_tempuh'),
+            'transportasi' => $request->input('transportasi'),
         ];
     }
 
