@@ -90,16 +90,34 @@ a:hover {
     gap: 0.5rem;
 }
 
+.emis-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+    text-decoration: none;
+    color: var(--emis-blue);
+}
+
+.emis-logo-mark {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #000;
+    flex-shrink: 0;
+    display: block;
+}
+
 .emis-logo-word {
     font-weight: 800;
-    font-size: 26px;
+    font-size: 22px;
     letter-spacing: 0.04em;
     color: var(--emis-blue);
     line-height: 1;
-    text-decoration: none;
 }
 
-.emis-logo-word:hover {
+.emis-logo:hover .emis-logo-word {
     color: var(--emis-blue-dark);
 }
 
@@ -231,10 +249,20 @@ a:hover {
     display: none;
 }
 
+.madani-shell.is-sidebar-collapsed .emis-logo {
+    justify-content: center;
+}
+
+.madani-shell.is-sidebar-collapsed .emis-logo-mark {
+    width: 28px;
+    height: 28px;
+}
+
 .madani-shell.is-sidebar-collapsed .emis-sidebar-head {
     justify-content: center;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+    gap: 0.25rem;
+    padding-left: 0.4rem;
+    padding-right: 0.4rem;
 }
 
 .madani-shell.is-sidebar-collapsed .emis-nav-item {
@@ -671,6 +699,19 @@ a:hover {
     background: #fff;
     border-radius: 16px;
     padding: 2rem;
+}
+
+.login-brand {
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    padding: 0.9rem 1rem 0.75rem;
+}
+
+.login-brand img {
+    display: block;
+    width: 100%;
+    height: auto;
 }
 
 .hero-panel {

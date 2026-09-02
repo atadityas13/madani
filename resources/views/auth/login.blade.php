@@ -5,13 +5,10 @@
 @section('body')
 <div class="login-shell d-flex align-items-center justify-content-center p-3">
     <div class="login-card">
-        <div class="d-flex align-items-center gap-3 mb-4">
-            <div class="emis-sidebar-brand">MD</div>
-            <div>
-                <div class="madani-brand mb-0">MADANI</div>
-                <div class="emis-topbar-sub">MTsN 11 Majalengka</div>
-            </div>
+        <div class="login-brand mb-4">
+            <img src="{{ asset('images/logo-madani.png') }}" alt="MADANI — Management Academic Data Native Integration">
         </div>
+        <div class="emis-topbar-sub mb-3">MTsN 11 Majalengka</div>
         <h1 class="h5 fw-bold mb-1">Masuk operator</h1>
         <p class="text-secondary small mb-4">Gunakan username atau email yang terdaftar.</p>
         <form method="POST" action="{{ route('login') }}">
