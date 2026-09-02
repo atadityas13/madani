@@ -1,3 +1,9 @@
+# php -- BEGIN cPanel-generated Handler, do not edit
+# php -- END cPanel-generated Handler, do not edit
+
+DirectoryIndex index.php
+Options -Indexes
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

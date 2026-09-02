@@ -41,13 +41,24 @@ Ganti sandi segera setelah login pertama.
 
 ## Pull di hosting
 
-**Penyebab “Index of /”:** document root subdomain mengarah ke folder proyek, bukan `public/`. Laravel hanya boleh dilayani dari `public/index.php`.
+cPanel (MultiPHP) sering menimpa `.htaccess` dan menghapus rewrite kita. Jangan taruh aturan MADANI di file yang cPanel anggap miliknya.
 
-Cara yang benar (cPanel → Subdomains → document root):
+**Cara tahan lama (disarankan):** Subdomains → document root ke folder `public/`:
 
 `/home/mtsnmaja/madani.mtsn11majalengka.sch.id/public`
 
-Jika document root tidak bisa diubah, buat file `.htaccess` di **akar proyek** (file ini tidak di-git, agar handler PHP cPanel tidak tertimpa). Gabungkan config PHP hosting dengan rewrite ke `public/` — lihat contoh di catatan deploy. Setelah itu refresh browser.
+Handler PHP cPanel hanya mengisi blok di antara `# php -- BEGIN cPanel` dan `# php -- END cPanel` pada `public/.htaccess`. Aturan Laravel di bawahnya biarkan tetap.
+
+**Jika document root tetap di akar proyek:** jangan andalkan rewrite di `.htaccess` root. Repo sudah punya `index.php` di akar (cPanel tidak menimpa file PHP). Setelah pull, buat symlink aset sekali:
+
+```bash
+ln -sfn public/build build
+ln -sfn public/favicon.ico favicon.ico
+```
+
+Matikan listing folder lewat cPanel → Advanced → Indexes → **No Indexing** (tersimpan di konfigurasi vhost, bukan di `.htaccess`).
+
+`.htaccess` di akar proyek boleh hanya berisi handler PHP cPanel. Jangan campur rewrite MADANI di situ.
 
 ```bash
 cd /path/ke/madani

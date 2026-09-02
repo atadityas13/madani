@@ -3,7 +3,7 @@
 .env
 .env.backup
 .env.production
-.htaccess
+/.htaccess
 .phpactor.json
 .phpunit.result.cache
 /.codex
