@@ -2,7 +2,6 @@
     $s = $siswa ?? null;
     $p = $periodik ?? null;
     $imunisasiTerpilih = old('imunisasi', $p?->imunisasi ?? []);
-    $valKewarganegaraan = old('kewarganegaraan', $s?->kewarganegaraan ?? 'WNI');
     $valAgama = old('agama', $s?->agama ?? 'Islam');
 @endphp
 <div class="row g-3">
@@ -23,15 +22,11 @@
 
     <div class="col-md-4">
         <label class="form-label">NISN</label>
-        <input class="form-control @error('nisn') is-invalid @enderror" name="nisn" value="{{ old('nisn', $s?->nisn) }}" maxlength="10" inputmode="numeric" @disabled($s?->nisn)>
+        <input class="form-control @error('nisn') is-invalid @enderror" name="nisn" value="{{ old('nisn', $s?->nisn) }}" maxlength="10" inputmode="numeric" required @disabled($s?->nisn)>
         @if ($s?->nisn)
             <input type="hidden" name="nisn" value="{{ $s->nisn }}">
         @endif
         @error('nisn') <div class="invalid-feedback">{{ $message }}</div> @enderror
-        <div class="form-check mt-1">
-            <input class="form-check-input" type="checkbox" name="tidak_punya_nisn" value="1" id="tidak_punya_nisn" @checked(old('tidak_punya_nisn', $s && ! $s->punya_nisn))>
-            <label class="form-check-label small" for="tidak_punya_nisn">Tidak memiliki NISN</label>
-        </div>
         @if ($s?->nisn)
             <div class="form-text">NISN dikunci setelah tersimpan, seperti di EMIS.</div>
         @endif
@@ -42,28 +37,8 @@
     </div>
     <div class="col-md-4">
         <label class="form-label">NIK</label>
-        <input class="form-control @error('nik') is-invalid @enderror" name="nik" value="{{ old('nik', $s?->nik) }}" maxlength="16" inputmode="numeric">
+        <input class="form-control @error('nik') is-invalid @enderror" name="nik" value="{{ old('nik', $s?->nik) }}" maxlength="16" inputmode="numeric" required>
         @error('nik') <div class="invalid-feedback">{{ $message }}</div> @enderror
-        <div class="form-check mt-1">
-            <input class="form-check-input" type="checkbox" name="tidak_punya_nik" value="1" id="tidak_punya_nik" @checked(old('tidak_punya_nik', $s && ! $s->punya_nik))>
-            <label class="form-check-label small" for="tidak_punya_nik">Tidak memiliki NIK</label>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <label class="form-label">Kewarganegaraan</label>
-        <x-emis-select name="kewarganegaraan" :options="$emis['kewarganegaraan']" :value="$valKewarganegaraan" required />
-        @error('kewarganegaraan') <div class="text-danger small">{{ $message }}</div> @enderror
-    </div>
-    <div class="col-md-4">
-        <label class="form-label">KITAS (WNA)</label>
-        <input class="form-control @error('kitas') is-invalid @enderror" name="kitas" value="{{ old('kitas', $s?->kitas) }}">
-        @error('kitas') <div class="invalid-feedback">{{ $message }}</div> @enderror
-    </div>
-    <div class="col-md-4">
-        <label class="form-label">Negara asal (WNA)</label>
-        <input class="form-control @error('negara_asal') is-invalid @enderror" name="negara_asal" value="{{ old('negara_asal', $s?->negara_asal) }}">
-        @error('negara_asal') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
 
     <div class="col-md-6">
@@ -96,11 +71,6 @@
         <label class="form-label">Cita cita</label>
         <x-emis-select name="cita_cita" :options="$emis['cita_cita']" :value="old('cita_cita', $s?->cita_cita)" required />
         @error('cita_cita') <div class="text-danger small">{{ $message }}</div> @enderror
-    </div>
-    <div class="col-md-6">
-        <label class="form-label">Cita cita lainnya</label>
-        <input class="form-control @error('cita_cita_lainnya') is-invalid @enderror" name="cita_cita_lainnya" value="{{ old('cita_cita_lainnya', $s?->cita_cita_lainnya) }}">
-        @error('cita_cita_lainnya') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
     <div class="col-md-6">
         <label class="form-label">Hobi</label>

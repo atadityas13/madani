@@ -10,12 +10,10 @@
     <aside class="madani-sidebar d-none d-lg-flex flex-column align-items-center py-3 px-2">
         <div class="emis-sidebar-brand mb-4" title="MADANI">MD</div>
         <nav class="d-flex flex-column gap-2 w-100">
-            <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
+            <a href="{{ route('dashboard') }}" class="emis-nav-rail {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                 <i class="bi bi-grid-fill"></i> Ringkasan
             </a>
-            <a href="{{ route('siswa.index') }}" class="{{ request()->routeIs('siswa.*') ? 'active' : '' }}">
-                <i class="bi bi-people-fill"></i> Data siswa
-            </a>
+            @include('layouts.partials.nav-siswa', ['variant' => 'rail'])
         </nav>
         <div class="mt-auto small text-center text-secondary px-1" style="font-size: 10px; line-height: 1.3;">
             MTsN 11 Majalengka
@@ -34,9 +32,7 @@
             <a class="emis-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
                 <i class="bi bi-grid-fill"></i> Ringkasan
             </a>
-            <a class="emis-nav-link {{ request()->routeIs('siswa.*') ? 'active' : '' }}" href="{{ route('siswa.index') }}">
-                <i class="bi bi-people-fill"></i> Data siswa
-            </a>
+            @include('layouts.partials.nav-siswa', ['variant' => 'offcanvas'])
         </div>
     </div>
 

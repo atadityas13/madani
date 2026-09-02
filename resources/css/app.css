@@ -69,6 +69,8 @@ a:hover {
     background: var(--emis-sidebar);
     color: var(--emis-ink);
     border-right: 1px solid var(--emis-line);
+    overflow: visible;
+    z-index: 20;
 }
 
 .emis-sidebar-brand {
@@ -85,7 +87,7 @@ a:hover {
     justify-content: center;
 }
 
-.madani-sidebar a,
+.madani-sidebar .emis-nav-rail,
 .emis-nav-link {
     color: var(--emis-muted);
     text-decoration: none;
@@ -100,18 +102,76 @@ a:hover {
     font-weight: 700;
     text-align: center;
     line-height: 1.15;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
 }
 
-.madani-sidebar a i,
+.madani-sidebar .emis-nav-rail i,
 .emis-nav-link i {
     font-size: 1.25rem;
 }
 
-.madani-sidebar a:hover,
-.madani-sidebar a.active,
+.madani-sidebar .emis-nav-rail:hover,
+.madani-sidebar .emis-nav-rail.active,
+.emis-nav-group.is-current .emis-nav-rail,
 .emis-nav-link:hover,
 .emis-nav-link.active {
     background: var(--emis-blue-soft);
+    color: var(--emis-blue);
+}
+
+.emis-nav-group {
+    position: relative;
+}
+
+.emis-nav-flyout {
+    display: none;
+    position: absolute;
+    left: calc(100% + 8px);
+    top: 0;
+    min-width: 188px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+    padding: 0.4rem;
+    z-index: 40;
+}
+
+.emis-nav-group:hover .emis-nav-flyout,
+.emis-nav-group.open .emis-nav-flyout {
+    display: block;
+}
+
+.emis-nav-flyout a {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.55rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 8px;
+    color: var(--emis-ink);
+    font-size: 13px;
+    font-weight: 700;
+    text-align: left;
+}
+
+.emis-nav-flyout a i {
+    font-size: 1rem;
+    color: var(--emis-muted);
+}
+
+.emis-nav-flyout a:hover,
+.emis-nav-flyout a.active {
+    background: var(--emis-blue-soft);
+    color: var(--emis-blue);
+}
+
+.emis-nav-flyout a:hover i,
+.emis-nav-flyout a.active i {
     color: var(--emis-blue);
 }
 
@@ -365,6 +425,13 @@ a:hover {
     margin-top: 1.25rem;
 }
 
+[data-wilayah-step][hidden],
+[data-ortu-detail][hidden],
+[data-ortu-alamat][hidden],
+[data-ibu-alamat-note][hidden] {
+    display: none !important;
+}
+
 .offcanvas .emis-nav-link {
     flex-direction: row;
     justify-content: flex-start;
@@ -372,6 +439,10 @@ a:hover {
     font-size: 14px;
     padding: 0.75rem 1rem;
     margin-bottom: 0.35rem;
+}
+
+.offcanvas button.emis-nav-link {
+    text-align: left;
 }
 
 .login-shell {

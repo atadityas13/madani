@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Rombel;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
+use App\Support\Wilayah;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -52,8 +54,6 @@ class SiswaController extends Controller
                 $siswa->orangTuas()->create([
                     'peran' => $peran,
                     'status' => $peran === 'wali' ? 'Sama dengan ayah kandung' : null,
-                    'domisili' => 'Dalam Negeri',
-                    'kewarganegaraan' => 'WNI',
                 ]);
             }
 
@@ -173,11 +173,33 @@ class SiswaController extends Controller
             'file_pkh' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
         ]);
 
-        foreach (['ayah', 'ibu', 'wali'] as $peran) {
-            $input = $request->input("ortu.$peran", []);
+        $ayah = $this->ortuPayload($request->input('ortu.ayah', []), 'ayah');
+        $ibu = $this->ortuPayload($request->input('ortu.ibu', []), 'ibu');
+        $wali = $this->ortuPayload($request->input('ortu.wali', []), 'wali');
+
+        if ($ibu['sama_dengan_ayah']) {
+            $ibu = array_merge($ibu, Arr::only($ayah, $this->alamatOrtuKeys()));
+        }
+
+        $waliStatus = $wali['status'] ?? 'Sama dengan ayah kandung';
+        if ($waliStatus === 'Isi sendiri') {
+            $waliStatus = 'Lainnya';
+        }
+
+        if ($waliStatus === 'Sama dengan ayah kandung') {
+            $wali = array_merge($wali, Arr::except($ayah, ['status', 'sama_dengan_ayah']));
+            $wali['status'] = $waliStatus;
+        } elseif ($waliStatus === 'Sama dengan ibu kandung') {
+            $wali = array_merge($wali, Arr::except($ibu, ['status', 'sama_dengan_ayah']));
+            $wali['status'] = $waliStatus;
+        } else {
+            $wali['status'] = 'Lainnya';
+        }
+
+        foreach (['ayah' => $ayah, 'ibu' => $ibu, 'wali' => $wali] as $peran => $payload) {
             $siswa->orangTuas()->updateOrCreate(
                 ['peran' => $peran],
-                $this->ortuPayload($input, $peran),
+                $payload,
             );
         }
 
@@ -192,8 +214,12 @@ class SiswaController extends Controller
         }
 
         $this->simpanDokumen($request, $siswa, 'file_kk_ayah', 'kk_ayah');
-        $this->simpanDokumen($request, $siswa, 'file_kk_ibu', 'kk_ibu');
-        $this->simpanDokumen($request, $siswa, 'file_kk_wali', 'kk_wali');
+        if (! $ibu['sama_dengan_ayah']) {
+            $this->simpanDokumen($request, $siswa, 'file_kk_ibu', 'kk_ibu');
+        }
+        if ($waliStatus === 'Lainnya') {
+            $this->simpanDokumen($request, $siswa, 'file_kk_wali', 'kk_wali');
+        }
         $this->simpanDokumen($request, $siswa, 'file_kks', 'kks');
         $this->simpanDokumen($request, $siswa, 'file_pkh', 'pkh');
 
@@ -210,6 +236,7 @@ class SiswaController extends Controller
             'kota' => ['nullable', 'string', 'max:80'],
             'kecamatan' => ['nullable', 'string', 'max:80'],
             'desa' => ['nullable', 'string', 'max:80'],
+            'blok' => ['nullable', 'string', 'max:80'],
             'rt' => ['nullable', 'string', 'max:5'],
             'rw' => ['nullable', 'string', 'max:5'],
             'alamat' => ['nullable', 'string', 'max:255'],
@@ -223,11 +250,34 @@ class SiswaController extends Controller
         if ($tahun = TahunAjaran::aktif()) {
             $siswa->periodiks()->updateOrCreate(
                 ['tahun_ajaran_id' => $tahun->id],
-                $request->only([
-                    'tempat_tinggal', 'provinsi', 'kota', 'kecamatan', 'desa',
-                    'rt', 'rw', 'alamat', 'kode_pos', 'koordinat', 'jarak',
-                    'waktu_tempuh', 'transportasi',
-                ]),
+                [
+                    'tempat_tinggal' => $request->input('tempat_tinggal'),
+                    'provinsi' => $request->input('provinsi'),
+                    'kota' => $request->input('kota'),
+                    'kecamatan' => $request->input('kecamatan'),
+                    'desa' => $request->input('desa'),
+                    'blok' => $request->input('blok'),
+                    'rt' => $request->input('rt'),
+                    'rw' => $request->input('rw'),
+                    'kode_pos' => $request->input('kode_pos') ?: Wilayah::kodePos(
+                        (string) $request->input('provinsi'),
+                        (string) $request->input('kota'),
+                        (string) $request->input('kecamatan'),
+                        (string) $request->input('desa'),
+                    ),
+                    'alamat' => Wilayah::formatAlamat(
+                        $request->input('blok'),
+                        $request->input('rt'),
+                        $request->input('rw'),
+                        $request->input('desa'),
+                        $request->input('kecamatan'),
+                        $request->input('kota'),
+                    ),
+                    'koordinat' => $request->input('koordinat'),
+                    'jarak' => $request->input('jarak'),
+                    'waktu_tempuh' => $request->input('waktu_tempuh'),
+                    'transportasi' => $request->input('transportasi'),
+                ],
             );
         }
 
@@ -378,31 +428,21 @@ class SiswaController extends Controller
 
     private function validateDataSiswa(Request $request, ?Siswa $siswa = null): array
     {
-        $punyaNisn = ! $request->boolean('tidak_punya_nisn');
-        $punyaNik = ! $request->boolean('tidak_punya_nik');
         $tidakPunyaHp = $request->boolean('tidak_punya_hp');
-        $wna = $request->input('kewarganegaraan') === 'WNA';
 
         return $request->validate([
             'nama' => ['required', 'string', 'max:255', 'regex:/^[A-Za-zÀ-ÿ\-\'’`., ]+$/u'],
             'nis' => ['nullable', 'string', 'max:20'],
-            'tidak_punya_nisn' => ['sometimes', 'boolean'],
             'nisn' => [
-                Rule::requiredIf($punyaNisn),
-                'nullable',
+                'required',
                 'digits:10',
                 Rule::unique('siswas', 'nisn')->ignore($siswa?->id),
             ],
-            'tidak_punya_nik' => ['sometimes', 'boolean'],
             'nik' => [
-                Rule::requiredIf($punyaNik && ! $wna),
-                'nullable',
+                'required',
                 'digits:16',
                 Rule::unique('siswas', 'nik')->ignore($siswa?->id),
             ],
-            'kewarganegaraan' => ['required', 'in:WNI,WNA'],
-            'kitas' => [Rule::requiredIf($wna), 'nullable', 'string', 'max:30'],
-            'negara_asal' => [Rule::requiredIf($wna), 'nullable', 'string', 'max:80'],
             'tempat_lahir' => ['required', 'string', 'max:100'],
             'tanggal_lahir' => ['required', 'date'],
             'jenis_kelamin' => ['required', 'in:L,P'],
@@ -410,7 +450,6 @@ class SiswaController extends Controller
             'anak_ke' => ['required', 'integer', 'min:1', 'max:21'],
             'agama' => ['required', 'string', 'max:30'],
             'cita_cita' => ['required', 'string', 'max:80'],
-            'cita_cita_lainnya' => [Rule::requiredIf($request->input('cita_cita') === 'Lainnya'), 'nullable', 'string', 'max:80'],
             'hobi' => ['nullable', 'string', 'max:80'],
             'tidak_punya_hp' => ['sometimes', 'boolean'],
             'no_hp' => [
@@ -434,7 +473,6 @@ class SiswaController extends Controller
             'no_hp.regex' => 'Nomor handphone tidak bisa diawali 0, harus kode negara, misal: 62',
             'nisn.required' => 'NISN tidak boleh kosong',
             'nik.required' => 'NIK tidak boleh kosong',
-            'kewarganegaraan.required' => 'Kewarganegaraan tidak boleh kosong',
             'jumlah_saudara.required' => 'Jumlah saudara tidak boleh kosong',
             'anak_ke.required' => 'Anak ke tidak boleh kosong',
             'anak_ke.min' => 'Anak ke tidak boleh NOL',
@@ -446,20 +484,16 @@ class SiswaController extends Controller
 
     private function siswaPayload(Request $request, array $data, ?Siswa $siswa = null): array
     {
-        $punyaNisn = ! $request->boolean('tidak_punya_nisn');
-        $punyaNik = ! $request->boolean('tidak_punya_nik');
         $tidakPunyaHp = $request->boolean('tidak_punya_hp');
 
         $payload = [
             'nama' => $data['nama'],
             'nis' => $data['nis'] ?? null,
-            'punya_nisn' => $punyaNisn,
-            'nisn' => $punyaNisn ? ($data['nisn'] ?? null) : null,
-            'punya_nik' => $punyaNik,
-            'nik' => $punyaNik ? ($data['nik'] ?? null) : null,
-            'kewarganegaraan' => $data['kewarganegaraan'],
-            'kitas' => $data['kewarganegaraan'] === 'WNA' ? ($data['kitas'] ?? null) : null,
-            'negara_asal' => $data['kewarganegaraan'] === 'WNA' ? ($data['negara_asal'] ?? null) : null,
+            'punya_nisn' => true,
+            'nisn' => $data['nisn'],
+            'punya_nik' => true,
+            'nik' => $data['nik'],
+            'kewarganegaraan' => 'WNI',
             'tempat_lahir' => $data['tempat_lahir'],
             'tanggal_lahir' => $data['tanggal_lahir'],
             'jenis_kelamin' => $data['jenis_kelamin'],
@@ -467,7 +501,6 @@ class SiswaController extends Controller
             'anak_ke' => $data['anak_ke'],
             'agama' => $data['agama'],
             'cita_cita' => $data['cita_cita'],
-            'cita_cita_lainnya' => $data['cita_cita'] === 'Lainnya' ? ($data['cita_cita_lainnya'] ?? null) : null,
             'hobi' => $data['hobi'] ?? null,
             'tidak_punya_hp' => $tidakPunyaHp,
             'no_hp' => $tidakPunyaHp ? null : ($data['no_hp'] ?? null),
@@ -506,15 +539,19 @@ class SiswaController extends Controller
     private function ortuPayload(array $input, string $peran): array
     {
         $tidakPunyaHp = (bool) ($input['tidak_punya_hp'] ?? false);
+        $provinsi = $input['provinsi'] ?? null;
+        $kota = $input['kota'] ?? null;
+        $kecamatan = $input['kecamatan'] ?? null;
+        $desa = $input['desa'] ?? null;
+        $blok = $input['blok'] ?? null;
+        $rt = $input['rt'] ?? null;
+        $rw = $input['rw'] ?? null;
 
         return [
             'nama' => $input['nama'] ?? null,
             'status_hidup' => $input['status_hidup'] ?? null,
             'status' => $peran === 'wali' ? ($input['status'] ?? null) : ($input['status_hidup'] ?? null),
             'nik' => $input['nik'] ?? null,
-            'kewarganegaraan' => $input['kewarganegaraan'] ?? 'WNI',
-            'kitas' => $input['kitas'] ?? null,
-            'negara_asal' => $input['negara_asal'] ?? null,
             'tempat_lahir' => $input['tempat_lahir'] ?? null,
             'tanggal_lahir' => $input['tanggal_lahir'] ?: null,
             'pendidikan' => $input['pendidikan'] ?? null,
@@ -522,17 +559,30 @@ class SiswaController extends Controller
             'penghasilan' => $input['penghasilan'] ?? null,
             'tidak_punya_hp' => $tidakPunyaHp,
             'no_hp' => $tidakPunyaHp ? null : ($input['no_hp'] ?? null),
-            'domisili' => $input['domisili'] ?? 'Dalam Negeri',
             'status_tempat_tinggal' => $input['status_tempat_tinggal'] ?? null,
-            'provinsi' => $input['provinsi'] ?? null,
-            'kota' => $input['kota'] ?? null,
-            'kecamatan' => $input['kecamatan'] ?? null,
-            'desa' => $input['desa'] ?? null,
-            'rt' => $input['rt'] ?? null,
-            'rw' => $input['rw'] ?? null,
-            'alamat' => $input['alamat'] ?? null,
-            'kode_pos' => $input['kode_pos'] ?? null,
+            'provinsi' => $provinsi,
+            'kota' => $kota,
+            'kecamatan' => $kecamatan,
+            'desa' => $desa,
+            'blok' => $blok,
+            'rt' => $rt,
+            'rw' => $rw,
+            'kode_pos' => ($input['kode_pos'] ?? null) ?: Wilayah::kodePos(
+                (string) $provinsi,
+                (string) $kota,
+                (string) $kecamatan,
+                (string) $desa,
+            ),
+            'alamat' => Wilayah::formatAlamat($blok, $rt, $rw, $desa, $kecamatan, $kota),
             'sama_dengan_ayah' => $peran === 'ibu' && ! empty($input['sama_dengan_ayah']),
+        ];
+    }
+
+    private function alamatOrtuKeys(): array
+    {
+        return [
+            'status_tempat_tinggal', 'provinsi', 'kota', 'kecamatan', 'desa',
+            'blok', 'rt', 'rw', 'kode_pos', 'alamat',
         ];
     }
 
@@ -558,8 +608,6 @@ class SiswaController extends Controller
                 ['peran' => $peran],
                 [
                     'status' => $peran === 'wali' ? 'Sama dengan ayah kandung' : null,
-                    'domisili' => 'Dalam Negeri',
-                    'kewarganegaraan' => 'WNI',
                 ],
             );
         }

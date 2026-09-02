@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
-    'siswa_id', 'tahun_ajaran_id', 'tempat_tinggal', 'alamat', 'rt', 'rw', 'desa',
+    'siswa_id', 'tahun_ajaran_id', 'tempat_tinggal', 'alamat', 'blok', 'rt', 'rw', 'desa',
     'kecamatan', 'kota', 'provinsi', 'kode_pos', 'kode_wilayah', 'koordinat',
     'transportasi', 'jarak', 'waktu_tempuh', 'pembiaya', 'no_kk', 'kepala_keluarga',
     'no_kip', 'no_kks', 'no_pkh', 'pra_sekolah', 'pernah_tk_ra', 'pernah_paud',

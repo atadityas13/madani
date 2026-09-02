@@ -1,11 +1,6 @@
 <?php
 
 return [
-    'kewarganegaraan' => [
-        'WNI' => 'WNI',
-        'WNA' => 'WNA',
-    ],
-
     'agama' => [
         'Islam' => 'Islam',
         'Kristen' => 'Kristen',
@@ -59,17 +54,23 @@ return [
         'tidak_diketahui' => 'Tidak diketahui',
     ],
 
-    'domisili' => [
-        'Dalam Negeri' => 'Dalam Negeri',
-        'Luar Negeri' => 'Luar Negeri',
+    'status_tempat_tinggal_siswa' => [
+        'Tinggal dengan Orang Tua/Wali' => 'Tinggal dengan Orang Tua/Wali',
+        'Ikut saudara/kerabat' => 'Ikut saudara/kerabat',
+        'Asrama Madrasah' => 'Asrama Madrasah',
+        'Kontrak/Kost' => 'Kontrak/Kost',
+        'Tinggal di Asrama Pesantren' => 'Tinggal di Asrama Pesantren',
+        'Panti Asuhan' => 'Panti Asuhan',
+        'Rumah Singgah' => 'Rumah Singgah',
+        'Lainnya' => 'Lainnya',
     ],
 
-    'status_tempat_tinggal' => [
-        'Tinggal dengan orang tua' => 'Tinggal dengan orang tua',
-        'Wali' => 'Wali',
-        'Kost' => 'Kost',
-        'Asrama' => 'Asrama',
-        'Panti asuhan' => 'Panti asuhan',
+    'status_tempat_tinggal_ortu' => [
+        'Milik sendiri' => 'Milik sendiri',
+        'Rumah orang tua' => 'Rumah orang tua',
+        'Rumah saudara/kerabat' => 'Rumah saudara/kerabat',
+        'Rumah dinas' => 'Rumah dinas',
+        'Sewa/Kontrak' => 'Sewa/Kontrak',
         'Lainnya' => 'Lainnya',
     ],
 
@@ -118,7 +119,7 @@ return [
     'status_wali' => [
         'Sama dengan ayah kandung' => 'Sama dengan ayah kandung',
         'Sama dengan ibu kandung' => 'Sama dengan ibu kandung',
-        'Isi sendiri' => 'Isi sendiri',
+        'Lainnya' => 'Lainnya',
     ],
 
     'transportasi' => [

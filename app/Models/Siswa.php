@@ -13,8 +13,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Fillable([
     'nisn', 'punya_nisn', 'nik', 'punya_nik', 'nism', 'nis', 'nama',
     'tempat_lahir', 'tanggal_lahir', 'jenis_kelamin', 'agama',
-    'kewarganegaraan', 'kitas', 'negara_asal', 'anak_ke', 'jumlah_saudara',
-    'cita_cita', 'cita_cita_lainnya', 'hobi', 'email', 'no_hp',
+    'kewarganegaraan', 'anak_ke', 'jumlah_saudara',
+    'cita_cita', 'hobi', 'email', 'no_hp',
     'tidak_punya_hp', 'foto', 'status_keaktifan', 'tanggal_nonaktif',
     'alasan_nonaktif',
 ])]

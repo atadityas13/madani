@@ -104,44 +104,21 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <label class="form-label">Status tempat tinggal</label>
-                    <x-emis-select name="tempat_tinggal" :options="$emis['status_tempat_tinggal']" :value="old('tempat_tinggal', $periodik?->tempat_tinggal)" />
+                    <x-emis-select name="tempat_tinggal" :options="$emis['status_tempat_tinggal_siswa']" :value="old('tempat_tinggal', $periodik?->tempat_tinggal)" />
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Titik koordinat</label>
                     <input class="form-control" name="koordinat" value="{{ old('koordinat', $periodik?->koordinat) }}" placeholder="-6.83, 108.22">
                     <div class="form-text">Latitude, longitude — peta Leaflet EMIS memakai format ini.</div>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label">Provinsi</label>
-                    <input class="form-control" name="provinsi" value="{{ old('provinsi', $periodik?->provinsi) }}">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Kota/Kabupaten</label>
-                    <input class="form-control" name="kota" value="{{ old('kota', $periodik?->kota) }}">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Kecamatan</label>
-                    <input class="form-control" name="kecamatan" value="{{ old('kecamatan', $periodik?->kecamatan) }}">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Kelurahan/Desa</label>
-                    <input class="form-control" name="desa" value="{{ old('desa', $periodik?->desa) }}">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">RT</label>
-                    <input class="form-control" name="rt" value="{{ old('rt', $periodik?->rt) }}">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">RW</label>
-                    <input class="form-control" name="rw" value="{{ old('rw', $periodik?->rw) }}">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Kode pos</label>
-                    <input class="form-control" name="kode_pos" value="{{ old('kode_pos', $periodik?->kode_pos) }}">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Alamat siswa</label>
-                    <input class="form-control" name="alamat" value="{{ old('alamat', $periodik?->alamat) }}">
+                <div class="col-12">
+                    @include('siswa.partials.form-wilayah', [
+                        'namePrefix' => '',
+                        'oldPrefix' => '',
+                        'record' => $periodik,
+                        'root' => 'siswa',
+                        'wide' => true,
+                    ])
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Jarak tempat tinggal – madrasah</label>
