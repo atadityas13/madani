@@ -47,7 +47,7 @@ Cara yang benar (cPanel → Subdomains → document root):
 
 `/home/mtsnmaja/madani.mtsn11majalengka.sch.id/public`
 
-Jika document root tidak bisa diubah, root `.htaccess` akan meneruskan semua request ke `public/` dan mematikan listing folder. Setelah `git pull`, refresh browser.
+Jika document root tidak bisa diubah, buat file `.htaccess` di **akar proyek** (file ini tidak di-git, agar handler PHP cPanel tidak tertimpa). Gabungkan config PHP hosting dengan rewrite ke `public/` — lihat contoh di catatan deploy. Setelah itu refresh browser.
 
 ```bash
 cd /path/ke/madani
