@@ -91,34 +91,21 @@ a:hover {
 }
 
 .emis-logo {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    min-width: 0;
-    text-decoration: none;
-    color: var(--emis-blue);
-}
-
-.emis-logo-mark {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    object-fit: cover;
-    background: #000;
-    flex-shrink: 0;
     display: block;
+    min-width: 0;
+    flex: 1;
+    text-decoration: none;
 }
 
-.emis-logo-word {
-    font-weight: 800;
-    font-size: 22px;
-    letter-spacing: 0.04em;
-    color: var(--emis-blue);
-    line-height: 1;
-}
-
-.emis-logo:hover .emis-logo-word {
-    color: var(--emis-blue-dark);
+.emis-logo img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 64px;
+    object-fit: contain;
+    object-position: left center;
+    background: #000;
+    border-radius: 8px;
 }
 
 .emis-sidebar-collapse {
@@ -241,21 +228,12 @@ a:hover {
     font-size: 12px;
 }
 
-.madani-shell.is-sidebar-collapsed .emis-logo-word,
+.madani-shell.is-sidebar-collapsed .emis-logo,
 .madani-shell.is-sidebar-collapsed .emis-nav-item span,
 .madani-shell.is-sidebar-collapsed .emis-nav-caret,
 .madani-shell.is-sidebar-collapsed .emis-nav-sub,
 .madani-shell.is-sidebar-collapsed .emis-sidebar-foot {
     display: none;
-}
-
-.madani-shell.is-sidebar-collapsed .emis-logo {
-    justify-content: center;
-}
-
-.madani-shell.is-sidebar-collapsed .emis-logo-mark {
-    width: 28px;
-    height: 28px;
 }
 
 .madani-shell.is-sidebar-collapsed .emis-sidebar-head {

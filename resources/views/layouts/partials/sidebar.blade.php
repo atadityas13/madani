@@ -4,8 +4,7 @@
 
 <div class="emis-sidebar-head">
     <a href="{{ route('dashboard') }}" class="emis-logo" title="MADANI">
-        <img class="emis-logo-mark" src="{{ asset('images/logo-mark.png') }}" alt="MADANI" width="36" height="36">
-        <span class="emis-logo-word">MADANI</span>
+        <img src="{{ asset('images/logo-madani.png') }}" alt="MADANI">
     </a>
     <button class="emis-sidebar-collapse" type="button" data-sidebar-toggle aria-label="Ciutkan menu">
         <i class="bi bi-chevron-left"></i>
