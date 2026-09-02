@@ -27,7 +27,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer('layouts.app', function ($view) {
             $view->with([
                 'tahunAktif' => TahunAjaran::aktif(),
-                'menuEmis' => Navigasi::items(),
+                'menuEmis' => Navigasi::untuk(auth()->user()),
             ]);
         });
     }

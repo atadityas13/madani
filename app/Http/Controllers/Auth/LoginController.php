@@ -30,6 +30,14 @@ class LoginController extends Controller
             ])->onlyInput('login');
         }
 
+        if (! Auth::user()?->is_aktif) {
+            Auth::logout();
+
+            return back()->withErrors([
+                'login' => 'Akun ini tidak aktif. Hubungi super admin.',
+            ])->onlyInput('login');
+        }
+
         $request->session()->regenerate();
 
         return redirect()->intended(route('dashboard'));

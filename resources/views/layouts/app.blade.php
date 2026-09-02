@@ -30,14 +30,18 @@
             </div>
             <div class="d-flex align-items-center gap-3">
                 @if ($tahunAktif)
-                    <a class="emis-semester-chip d-none d-md-flex" href="{{ route('tahun-ajaran.index') }}" title="Kelola tahun ajaran">
-                        {{ $tahunAktif->label() }}
-                    </a>
+                    @if (auth()->user()?->bisaKelola())
+                        <a class="emis-semester-chip d-none d-md-flex" href="{{ route('tahun-ajaran.index') }}" title="Kelola tahun ajaran">
+                            {{ $tahunAktif->label() }}
+                        </a>
+                    @else
+                        <span class="emis-semester-chip d-none d-md-flex">{{ $tahunAktif->label() }}</span>
+                    @endif
                 @endif
                 <div class="emis-userchip">
                     <div class="text-end d-none d-sm-block">
                         <div class="fw-bold" style="font-size: 13px;">{{ $operator?->name ?? $operator?->username }}</div>
-                        <div class="emis-topbar-sub">Operator</div>
+                        <div class="emis-topbar-sub">{{ $operator?->labelPeran() ?? 'Pengguna' }}</div>
                     </div>
                     <div class="emis-userchip-avatar">{{ $inisial }}</div>
                     <form method="POST" action="{{ route('logout') }}">

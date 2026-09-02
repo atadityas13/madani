@@ -847,6 +847,23 @@ function bindOpenModals() {
     });
 }
 
+function bindPeranUser() {
+    document.querySelectorAll('[data-peran-user]').forEach((select) => {
+        const field = document.querySelector('[data-gtk-field]');
+
+        if (! field) {
+            return;
+        }
+
+        const sync = () => {
+            field.hidden = select.value !== 'wali_kelas';
+        };
+
+        select.addEventListener('change', sync);
+        sync();
+    });
+}
+
 document.querySelectorAll('[data-wilayah-root]').forEach(bindWilayahRoot);
 bindOrtuForm();
 bindAlamatOrtu();
@@ -854,3 +871,4 @@ bindAlamatSiswa();
 bindKebutuhanDisabilitas();
 bindIjazahSesuai();
 bindOpenModals();
+bindPeranUser();

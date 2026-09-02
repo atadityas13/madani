@@ -8,13 +8,15 @@
 <div class="d-flex justify-content-between align-items-center mb-3 gap-3 flex-wrap">
     <a class="btn btn-outline-secondary" href="{{ route('rombel.index') }}">Kembali</a>
     <div class="d-flex gap-2">
-        <button class="btn btn-madani" type="button" data-bs-toggle="modal" data-bs-target="#rombelSiswaModal">Tambah siswa</button>
-        <a class="btn btn-outline-secondary" href="{{ route('rombel.edit', $rombel) }}">Ubah rombel</a>
-        <form method="POST" action="{{ route('rombel.destroy', $rombel) }}" onsubmit="return confirm('Hapus rombel ini?')">
-            @csrf
-            @method('DELETE')
-            <button class="btn btn-outline-danger" type="submit">Hapus</button>
-        </form>
+        @can('update', $rombel)
+            <button class="btn btn-madani" type="button" data-bs-toggle="modal" data-bs-target="#rombelSiswaModal">Tambah siswa</button>
+            <a class="btn btn-outline-secondary" href="{{ route('rombel.edit', $rombel) }}">Ubah rombel</a>
+            <form method="POST" action="{{ route('rombel.destroy', $rombel) }}" onsubmit="return confirm('Hapus rombel ini?')">
+                @csrf
+                @method('DELETE')
+                <button class="btn btn-outline-danger" type="submit">Hapus</button>
+            </form>
+        @endcan
     </div>
 </div>
 
@@ -75,11 +77,13 @@
                         <td>{{ $siswa->nisn ?: '—' }}</td>
                         <td>{{ $siswa->jenis_kelamin ?: '—' }}</td>
                         <td class="text-end">
-                            <form method="POST" action="{{ route('rombel.anggota.destroy', [$rombel, $siswa]) }}" onsubmit="return confirm('Keluarkan siswa dari rombel?')">
-                                @csrf
-                                @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger" type="submit">Keluarkan</button>
-                            </form>
+                            @can('update', $rombel)
+                                <form method="POST" action="{{ route('rombel.anggota.destroy', [$rombel, $siswa]) }}" onsubmit="return confirm('Keluarkan siswa dari rombel?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">Keluarkan</button>
+                                </form>
+                            @endcan
                         </td>
                     </tr>
                 @empty
@@ -90,6 +94,7 @@
     </div>
 </div>
 
+@can('update', $rombel)
 <div class="modal fade" id="rombelSiswaModal" tabindex="-1" aria-labelledby="rombelSiswaModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -120,4 +125,5 @@
         </div>
     </div>
 </div>
+@endcan
 @endsection

@@ -17,13 +17,28 @@ class SiswaController extends Controller
 {
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', Siswa::class);
+
         $q = trim((string) $request->query('q', ''));
+        $user = auth()->user();
 
         $siswas = Siswa::query()
             ->with(['rombels' => function ($query) {
                 $query->wherePivot('status', 'aktif')
                     ->when(TahunAjaran::aktif(), fn ($rombel) => $rombel->where('tahun_ajaran_id', TahunAjaran::aktif()->id));
             }])
+            ->when($user?->adalahWali(), function ($query) use ($user) {
+                $ids = $user->rombelIdsAktif();
+                if ($ids === []) {
+                    $query->whereRaw('0 = 1');
+
+                    return;
+                }
+
+                $query->whereHas('rombels', fn ($inner) => $inner
+                    ->whereIn('rombels.id', $ids)
+                    ->where('rombel_siswas.status', 'aktif'));
+            })
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($inner) use ($q) {
                     $inner->where('nama', 'like', "%{$q}%")
@@ -41,6 +56,8 @@ class SiswaController extends Controller
 
     public function create(): View
     {
+        $this->authorize('create', Siswa::class);
+
         return view('siswa.create', [
             'emis' => config('emis'),
         ]);
@@ -48,6 +65,7 @@ class SiswaController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', Siswa::class);
         $data = $this->validateDataSiswa($request);
 
         $siswa = DB::transaction(function () use ($request, $data) {
@@ -76,6 +94,8 @@ class SiswaController extends Controller
 
     public function show(Siswa $siswa): View|RedirectResponse
     {
+        $this->authorize('view', $siswa);
+
         $this->ensureRelasi($siswa);
 
         if (request('tab') === 'kebutuhan-khusus') {
@@ -101,11 +121,15 @@ class SiswaController extends Controller
 
     public function edit(Siswa $siswa): RedirectResponse
     {
+        $this->authorize('view', $siswa);
+
         return redirect()->route('siswa.show', ['siswa' => $siswa, 'tab' => 'data-siswa']);
     }
 
     public function update(Request $request, Siswa $siswa): RedirectResponse
     {
+        $this->authorize('update', $siswa);
+
         $this->ensureRelasi($siswa);
 
         $bagian = (string) $request->input('bagian', 'data-siswa');
@@ -123,6 +147,7 @@ class SiswaController extends Controller
 
     public function destroyRelasi(Request $request, Siswa $siswa): RedirectResponse
     {
+        $this->authorize('update', $siswa);
         $jenis = (string) $request->input('jenis');
         $id = (int) $request->input('id');
 

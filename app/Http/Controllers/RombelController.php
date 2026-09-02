@@ -16,12 +16,16 @@ class RombelController extends Controller
 {
     public function index(): View
     {
+        $this->authorize('viewAny', Rombel::class);
+
         $tahunAktif = TahunAjaran::aktif();
+        $user = auth()->user();
 
         $rombels = Rombel::query()
             ->with(['waliKelas', 'tahunAjaran'])
             ->withCount(['siswas as anggota_count' => fn ($query) => $query->where('rombel_siswas.status', 'aktif')])
             ->when($tahunAktif, fn ($query) => $query->where('tahun_ajaran_id', $tahunAktif->id))
+            ->when($user?->adalahWali(), fn ($query) => $query->where('gtk_id', $user->gtk_id ?: 0))
             ->orderBy('tingkat')
             ->orderBy('nama')
             ->get();
@@ -31,6 +35,7 @@ class RombelController extends Controller
 
     public function create(): View|RedirectResponse
     {
+        $this->authorize('create', Rombel::class);
         if (! TahunAjaran::aktif()) {
             return redirect()
                 ->route('tahun-ajaran.index')
@@ -50,6 +55,7 @@ class RombelController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', Rombel::class);
         $tahun = TahunAjaran::aktif();
 
         if (! $tahun) {
@@ -68,6 +74,7 @@ class RombelController extends Controller
 
     public function show(Rombel $rombel): View
     {
+        $this->authorize('view', $rombel);
         $rombel->load(['waliKelas', 'tahunAjaran', 'anggotaAktif']);
 
         $sudahTerisi = Rombel::query()
@@ -90,6 +97,8 @@ class RombelController extends Controller
 
     public function edit(Rombel $rombel): View
     {
+        $this->authorize('update', $rombel);
+
         return view('rombel.form', [
             'rombel' => $rombel,
             'gtks' => Gtk::query()->where('status', 'aktif')->orderBy('nama')->get(),
@@ -99,6 +108,7 @@ class RombelController extends Controller
 
     public function update(Request $request, Rombel $rombel): RedirectResponse
     {
+        $this->authorize('update', $rombel);
         $rombel->update($this->validated($request, $rombel->tahun_ajaran_id, $rombel));
 
         return redirect()
@@ -108,6 +118,7 @@ class RombelController extends Controller
 
     public function destroy(Rombel $rombel): RedirectResponse
     {
+        $this->authorize('delete', $rombel);
         $rombel->delete();
 
         return redirect()->route('rombel.index')->with('status', 'Rombel dihapus.');
@@ -115,6 +126,7 @@ class RombelController extends Controller
 
     public function storeAnggota(Request $request, Rombel $rombel): RedirectResponse
     {
+        $this->authorize('update', $rombel);
         $data = $request->validate([
             'siswa_ids' => ['required', 'array', 'min:1'],
             'siswa_ids.*' => ['exists:siswas,id'],
@@ -147,6 +159,7 @@ class RombelController extends Controller
 
     public function destroyAnggota(Rombel $rombel, Siswa $siswa): RedirectResponse
     {
+        $this->authorize('update', $rombel);
         $rombel->siswas()->updateExistingPivot($siswa->id, ['status' => 'nonaktif']);
 
         $masihAda = $siswa->rombels()

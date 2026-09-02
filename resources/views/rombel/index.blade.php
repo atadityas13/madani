@@ -7,7 +7,9 @@
 @section('content')
 <div class="d-flex align-items-center mb-3 gap-3 flex-wrap">
     <div class="stat-label mb-0">Daftar rombel</div>
-    <a class="btn btn-madani" href="{{ route('rombel.create') }}">Tambah</a>
+    @can('create', \App\Models\Rombel::class)
+        <a class="btn btn-madani" href="{{ route('rombel.create') }}">Tambah</a>
+    @endcan
 </div>
 
 @unless ($tahunAktif)
@@ -42,9 +44,11 @@
                                 <a class="emis-aksi-btn" href="{{ route('rombel.show', $rombel) }}" title="Detail">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a class="emis-aksi-btn" href="{{ route('rombel.edit', $rombel) }}" title="Ubah">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
+                                @can('update', $rombel)
+                                    <a class="emis-aksi-btn" href="{{ route('rombel.edit', $rombel) }}" title="Ubah">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                @endcan
                             </div>
                         </td>
                     </tr>

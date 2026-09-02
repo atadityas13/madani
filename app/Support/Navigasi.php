@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use App\Models\User;
+
 class Navigasi
 {
     /**
@@ -16,33 +18,37 @@ class Navigasi
                 'label' => 'Ringkasan',
                 'icon' => 'bi-grid',
                 'route' => 'dashboard',
+                'roles' => [Peran::SUPERADMIN, Peran::ADMIN, Peran::WALI_KELAS],
             ],
             [
                 'label' => 'Kelembagaan',
                 'icon' => 'bi-bank',
                 'match' => ['kelembagaan.*', 'tahun-ajaran.*'],
+                'roles' => [Peran::SUPERADMIN, Peran::ADMIN],
                 'children' => [
-                    ['label' => 'Identitas madrasah', 'route' => 'kelembagaan.identitas'],
-                    ['label' => 'Tahun ajaran', 'route' => 'tahun-ajaran.index', 'match' => 'tahun-ajaran.*'],
+                    ['label' => 'Identitas madrasah', 'route' => 'kelembagaan.identitas', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN]],
+                    ['label' => 'Tahun ajaran', 'route' => 'tahun-ajaran.index', 'match' => 'tahun-ajaran.*', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN]],
                 ],
             ],
             [
                 'label' => 'Siswa',
                 'icon' => 'bi-person',
                 'match' => ['siswa.*', 'ppdb.*', 'mutasi.*', 'alumni.*'],
+                'roles' => [Peran::SUPERADMIN, Peran::ADMIN, Peran::WALI_KELAS],
                 'children' => [
-                    ['label' => 'PPDB', 'route' => 'ppdb.index'],
-                    ['label' => 'Data siswa', 'route' => 'siswa.index', 'match' => 'siswa.*'],
-                    ['label' => 'Mutasi', 'route' => 'mutasi.index'],
-                    ['label' => 'Alumni', 'route' => 'alumni.index'],
+                    ['label' => 'PPDB', 'route' => 'ppdb.index', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN]],
+                    ['label' => 'Data siswa', 'route' => 'siswa.index', 'match' => 'siswa.*', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN, Peran::WALI_KELAS]],
+                    ['label' => 'Mutasi', 'route' => 'mutasi.index', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN]],
+                    ['label' => 'Alumni', 'route' => 'alumni.index', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN]],
                 ],
             ],
             [
                 'label' => 'Guru dan Tendik',
                 'icon' => 'bi-people',
                 'match' => 'gtk.*',
+                'roles' => [Peran::SUPERADMIN, Peran::ADMIN],
                 'children' => [
-                    ['label' => 'Data GTK', 'route' => 'gtk.index', 'match' => 'gtk.*'],
+                    ['label' => 'Data GTK', 'route' => 'gtk.index', 'match' => 'gtk.*', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN]],
                 ],
             ],
             [
@@ -50,8 +56,45 @@ class Navigasi
                 'icon' => 'bi-person-video2',
                 'route' => 'rombel.index',
                 'match' => 'rombel.*',
+                'roles' => [Peran::SUPERADMIN, Peran::ADMIN, Peran::WALI_KELAS],
+            ],
+            [
+                'label' => 'Pengguna',
+                'icon' => 'bi-shield-lock',
+                'route' => 'pengguna.index',
+                'match' => 'pengguna.*',
+                'roles' => [Peran::SUPERADMIN],
             ],
         ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public static function untuk(?User $user): array
+    {
+        return collect(self::items())
+            ->map(function (array $item) use ($user) {
+                if (! Peran::cocok($user, $item['roles'] ?? array_keys(Peran::labels()))) {
+                    return null;
+                }
+
+                if (! empty($item['children'])) {
+                    $item['children'] = array_values(array_filter(
+                        $item['children'],
+                        fn (array $child) => Peran::cocok($user, $child['roles'] ?? array_keys(Peran::labels())),
+                    ));
+
+                    if ($item['children'] === []) {
+                        return null;
+                    }
+                }
+
+                return $item;
+            })
+            ->filter()
+            ->values()
+            ->all();
     }
 
     /**

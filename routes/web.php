@@ -7,6 +7,7 @@ use App\Http\Controllers\KelembagaanController;
 use App\Http\Controllers\RombelController;
 use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\TahunAjaranController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -20,30 +21,47 @@ Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')-
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
-    Route::get('/kelembagaan/identitas', [KelembagaanController::class, 'identitas'])->name('kelembagaan.identitas');
-    Route::post('tahun-ajaran/{tahunAjaran}/aktifkan', [TahunAjaranController::class, 'aktifkan'])->name('tahun-ajaran.aktifkan');
-    Route::resource('tahun-ajaran', TahunAjaranController::class)
-        ->parameters(['tahun-ajaran' => 'tahunAjaran'])
-        ->except(['show']);
-    Route::resource('gtk', GtkController::class)->except(['show']);
-    Route::post('rombel/{rombel}/anggota', [RombelController::class, 'storeAnggota'])->name('rombel.anggota.store');
-    Route::delete('rombel/{rombel}/anggota/{siswa}', [RombelController::class, 'destroyAnggota'])->name('rombel.anggota.destroy');
-    Route::resource('rombel', RombelController::class);
-    Route::view('/ppdb', 'pages.soon', [
-        'heading' => 'PPDB',
-        'subheading' => 'Penerimaan peserta didik baru',
-        'keterangan' => 'Menu PPDB disiapkan di sini. Alur pendaftaran akan menyusul.',
-    ])->name('ppdb.index');
-    Route::view('/mutasi', 'pages.soon', [
-        'heading' => 'Mutasi',
-        'subheading' => 'Mutasi masuk dan keluar',
-        'keterangan' => 'Menu mutasi disiapkan di sini. Proses pindah madrasah akan menyusul.',
-    ])->name('mutasi.index');
-    Route::view('/alumni', 'pages.soon', [
-        'heading' => 'Alumni',
-        'subheading' => 'Data lulusan',
-        'keterangan' => 'Menu alumni disiapkan di sini. Rekap lulusan akan menyusul.',
-    ])->name('alumni.index');
-    Route::resource('siswa', SiswaController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
+
+    Route::middleware('role:superadmin|admin|operator|kamad')->group(function () {
+        Route::get('/kelembagaan/identitas', [KelembagaanController::class, 'identitas'])->name('kelembagaan.identitas');
+        Route::post('tahun-ajaran/{tahunAjaran}/aktifkan', [TahunAjaranController::class, 'aktifkan'])->name('tahun-ajaran.aktifkan');
+        Route::resource('tahun-ajaran', TahunAjaranController::class)
+            ->parameters(['tahun-ajaran' => 'tahunAjaran'])
+            ->except(['show']);
+        Route::resource('gtk', GtkController::class)->except(['show']);
+        Route::get('siswa/create', [SiswaController::class, 'create'])->name('siswa.create');
+        Route::post('siswa', [SiswaController::class, 'store'])->name('siswa.store');
+        Route::post('rombel/{rombel}/anggota', [RombelController::class, 'storeAnggota'])->name('rombel.anggota.store');
+        Route::delete('rombel/{rombel}/anggota/{siswa}', [RombelController::class, 'destroyAnggota'])->name('rombel.anggota.destroy');
+        Route::resource('rombel', RombelController::class)->except(['index', 'show']);
+        Route::view('/ppdb', 'pages.soon', [
+            'heading' => 'PPDB',
+            'subheading' => 'Penerimaan peserta didik baru',
+            'keterangan' => 'Menu PPDB disiapkan di sini. Alur pendaftaran akan menyusul.',
+        ])->name('ppdb.index');
+        Route::view('/mutasi', 'pages.soon', [
+            'heading' => 'Mutasi',
+            'subheading' => 'Mutasi masuk dan keluar',
+            'keterangan' => 'Menu mutasi disiapkan di sini. Proses pindah madrasah akan menyusul.',
+        ])->name('mutasi.index');
+        Route::view('/alumni', 'pages.soon', [
+            'heading' => 'Alumni',
+            'subheading' => 'Data lulusan',
+            'keterangan' => 'Menu alumni disiapkan di sini. Rekap lulusan akan menyusul.',
+        ])->name('alumni.index');
+    });
+
+    Route::middleware('role:superadmin')->group(function () {
+        Route::resource('pengguna', UserController::class)
+            ->parameters(['pengguna' => 'user'])
+            ->except(['show']);
+    });
+
+    Route::get('siswa', [SiswaController::class, 'index'])->name('siswa.index');
+    Route::get('siswa/{siswa}', [SiswaController::class, 'show'])->name('siswa.show');
+    Route::get('siswa/{siswa}/edit', [SiswaController::class, 'edit'])->name('siswa.edit');
+    Route::put('siswa/{siswa}', [SiswaController::class, 'update'])->name('siswa.update');
     Route::delete('siswa/{siswa}/relasi', [SiswaController::class, 'destroyRelasi'])->name('siswa.relasi.destroy');
+    Route::get('rombel', [RombelController::class, 'index'])->name('rombel.index');
+    Route::get('rombel/{rombel}', [RombelController::class, 'show'])->name('rombel.show');
 });

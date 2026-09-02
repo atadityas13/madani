@@ -10,7 +10,9 @@
         <input class="form-control" type="search" name="q" value="{{ $q }}" placeholder="Cari nama, NISN, NIS">
         <button class="btn btn-outline-secondary" type="submit">Cari</button>
     </form>
-    <a class="btn btn-madani" href="{{ route('siswa.create') }}">Tambah siswa</a>
+    @can('create', \App\Models\Siswa::class)
+        <a class="btn btn-madani" href="{{ route('siswa.create') }}">Tambah siswa</a>
+    @endcan
 </div>
 <div class="madani-card">
     <div class="table-responsive">
@@ -45,10 +47,12 @@
                                     <i class="bi bi-eye"></i>
                                     <span class="visually-hidden">Detail</span>
                                 </a>
-                                <a class="emis-aksi-btn" href="{{ route('siswa.edit', $siswa) }}" title="Edit">
-                                    <i class="bi bi-pencil"></i>
-                                    <span class="visually-hidden">Edit</span>
-                                </a>
+                                @can('update', $siswa)
+                                    <a class="emis-aksi-btn" href="{{ route('siswa.edit', $siswa) }}" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                        <span class="visually-hidden">Edit</span>
+                                    </a>
+                                @endcan
                             </div>
                         </td>
                     </tr>
