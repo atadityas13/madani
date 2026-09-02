@@ -6,7 +6,7 @@ Bukan pengganti EMIS Kemenag. Ekspor template operator menyusul; tidak ada push 
 
 ## Stack
 
-- Laravel 13 (PHP 8.3+)
+- Laravel 13 (PHP 8.3.33+, dikunci di `composer.json` `config.platform` agar lock file cocok dengan hosting)
 - Bootstrap 5 + Bootstrap Icons
 - Tailwind CSS v4 dengan prefix `tw-` (preflight dimatikan)
 - Livewire 4
