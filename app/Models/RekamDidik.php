@@ -10,9 +10,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'siswa_id', 'nik_kk', 'nama_kk', 'tempat_lahir_kk', 'tanggal_lahir_kk',
     'jenis_kelamin_kk', 'nama_ibu_kk', 'nama_ayah_kk', 'nama_ijazah',
     'tempat_lahir_ijazah', 'tanggal_lahir_ijazah', 'jenis_kelamin_ijazah',
-    'nama_ayah_ijazah', 'nama_sd', 'tahun_ajaran_kelulusan', 'nip_kepala_sekolah',
+    'nama_ayah_ijazah', 'nama_sd', 'npsn', 'tahun_ajaran_kelulusan', 'nip_kepala_sekolah',
     'nama_kepala_sekolah', 'nomor_seri_ijazah', 'tanggal_terbit_ijazah',
-    'status_verval',
+    'status_verval', 'ijazah_sesuai',
 ])]
 class RekamDidik extends Model
 {
@@ -22,6 +22,7 @@ class RekamDidik extends Model
             'tanggal_lahir_kk' => 'date',
             'tanggal_lahir_ijazah' => 'date',
             'tanggal_terbit_ijazah' => 'date',
+            'ijazah_sesuai' => 'boolean',
         ];
     }
 

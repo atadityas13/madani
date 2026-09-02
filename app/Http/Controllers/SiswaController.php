@@ -374,34 +374,45 @@ class SiswaController extends Controller
     private function updateRekamDidik(Request $request, Siswa $siswa): RedirectResponse
     {
         $data = $request->validate([
-            'nik_kk' => ['nullable', 'digits:16'],
-            'nama_kk' => ['nullable', 'string', 'max:255'],
-            'tempat_lahir_kk' => ['nullable', 'string', 'max:100'],
-            'tanggal_lahir_kk' => ['nullable', 'date'],
-            'jenis_kelamin_kk' => ['nullable', 'in:L,P'],
-            'nama_ibu_kk' => ['nullable', 'string', 'max:255'],
-            'nama_ayah_kk' => ['nullable', 'string', 'max:255'],
-            'nama_ijazah' => ['nullable', 'string', 'max:255'],
-            'tempat_lahir_ijazah' => ['nullable', 'string', 'max:100'],
-            'tanggal_lahir_ijazah' => ['nullable', 'date'],
-            'jenis_kelamin_ijazah' => ['nullable', 'in:L,P'],
-            'nama_ayah_ijazah' => ['nullable', 'string', 'max:255'],
             'nama_sd' => ['nullable', 'string', 'max:255'],
+            'npsn' => ['nullable', 'digits:8'],
             'tahun_ajaran_kelulusan' => ['nullable', 'string', 'max:20'],
             'nip_kepala_sekolah' => ['nullable', 'string', 'max:30'],
             'nama_kepala_sekolah' => ['nullable', 'string', 'max:255'],
             'nomor_seri_ijazah' => ['nullable', 'string', 'max:50'],
             'tanggal_terbit_ijazah' => ['nullable', 'date'],
-            'status_verval' => ['nullable', 'in:belum,sudah'],
+            'ijazah_sesuai' => ['sometimes', 'boolean'],
             'file_ijazah' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
         ]);
 
-        unset($data['file_ijazah']);
-        $data['status_verval'] = $data['status_verval'] ?? 'belum';
+        $sesuai = $request->boolean('ijazah_sesuai');
+        $siswa->loadMissing('ayah');
+
+        $payload = [
+            'nama_sd' => $data['nama_sd'] ?? null,
+            'npsn' => $data['npsn'] ?? null,
+            'tahun_ajaran_kelulusan' => $data['tahun_ajaran_kelulusan'] ?? null,
+            'nip_kepala_sekolah' => $data['nip_kepala_sekolah'] ?? null,
+            'nama_kepala_sekolah' => $data['nama_kepala_sekolah'] ?? null,
+            'nomor_seri_ijazah' => $data['nomor_seri_ijazah'] ?? null,
+            'tanggal_terbit_ijazah' => $data['tanggal_terbit_ijazah'] ?? null,
+            'ijazah_sesuai' => $sesuai,
+            'status_verval' => $sesuai ? 'sudah' : 'belum',
+        ];
+
+        if ($sesuai) {
+            $payload['nama_ijazah'] = $siswa->nama;
+            $payload['tempat_lahir_ijazah'] = $siswa->tempat_lahir;
+            $payload['tanggal_lahir_ijazah'] = $siswa->tanggal_lahir;
+            $payload['jenis_kelamin_ijazah'] = $siswa->jenis_kelamin;
+            $payload['nama_ayah_ijazah'] = $siswa->ayah?->nama
+                ?: $siswa->rekamDidik?->nama_ayah_ijazah
+                ?: $siswa->rekamDidik?->nama_ayah_kk;
+        }
 
         $siswa->rekamDidik()->updateOrCreate(
             ['siswa_id' => $siswa->id],
-            $data,
+            $payload,
         );
 
         $this->simpanDokumen($request, $siswa, 'file_ijazah', 'ijazah_sd');
