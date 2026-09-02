@@ -16,6 +16,6 @@ Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')-
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
-    Route::resource('siswa', SiswaController::class)->only(['index', 'create', 'store', 'show', 'update']);
+    Route::resource('siswa', SiswaController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
     Route::delete('siswa/{siswa}/relasi', [SiswaController::class, 'destroyRelasi'])->name('siswa.relasi.destroy');
 });

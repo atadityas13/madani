@@ -18,6 +18,7 @@ class SiswaController extends Controller
         $q = trim((string) $request->query('q', ''));
 
         $siswas = Siswa::query()
+            ->with(['rombels' => fn ($query) => $query->wherePivot('status', 'aktif')])
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($inner) use ($q) {
                     $inner->where('nama', 'like', "%{$q}%")
@@ -94,6 +95,11 @@ class SiswaController extends Controller
             'tab' => $tab,
             'rombels' => $rombels,
         ]);
+    }
+
+    public function edit(Siswa $siswa): RedirectResponse
+    {
+        return redirect()->route('siswa.show', ['siswa' => $siswa, 'tab' => 'data-siswa']);
     }
 
     public function update(Request $request, Siswa $siswa): RedirectResponse

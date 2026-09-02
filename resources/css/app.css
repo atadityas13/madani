@@ -394,3 +394,26 @@ a:hover {
     color: #fff;
     border-radius: 12px;
 }
+
+.emis-aksi {
+    display: flex;
+    gap: 0.35rem;
+    justify-content: flex-end;
+}
+
+.emis-aksi-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--emis-blue);
+    background: var(--emis-blue-soft);
+    text-decoration: none;
+}
+
+.emis-aksi-btn:hover {
+    background: var(--emis-blue);
+    color: #fff;
+}
