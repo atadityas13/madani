@@ -430,6 +430,7 @@ a:hover {
 [data-ortu-hidup][hidden],
 [data-ortu-alamat][hidden],
 [data-ibu-alamat-note][hidden],
+[data-ayah-meninggal-note][hidden],
 [data-alamat-ortu-kosong][hidden] {
     display: none !important;
 }

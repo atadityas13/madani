@@ -173,27 +173,23 @@ return [
     ],
 
     'kebutuhan_khusus' => [
-        'Tidak ada' => 'Tidak ada',
-        'Tunanetra' => 'Tunanetra',
-        'Tunarungu' => 'Tunarungu',
-        'Tunawicara' => 'Tunawicara',
-        'Tunadaksa' => 'Tunadaksa',
-        'Tunagrahita' => 'Tunagrahita',
-        'Tunalaras' => 'Tunalaras',
-        'Lamban belajar' => 'Lamban belajar',
-        'Sulit belajar spesifik' => 'Sulit belajar spesifik',
+        'Tidak Ada' => 'Tidak Ada',
+        'Lamban Belajar' => 'Lamban Belajar',
+        'Kesulitan Belajar spesifik' => 'Kesulitan Belajar spesifik',
         'Gangguan komunikasi' => 'Gangguan komunikasi',
-        'Berbakat / gifted' => 'Berbakat / gifted',
+        'Berbakat/memiliki kemampuan dan kecerdasan luar biasa' => 'Berbakat/memiliki kemampuan dan kecerdasan luar biasa',
         'Lainnya' => 'Lainnya',
     ],
 
     'disabilitas' => [
-        'Tidak ada' => 'Tidak ada',
-        'Fisik' => 'Fisik',
-        'Intelektual' => 'Intelektual',
-        'Mental' => 'Mental',
-        'Sensorik' => 'Sensorik',
+        'Tidak Ada' => 'Tidak Ada',
+        'Tuna Netra' => 'Tuna Netra',
+        'Tuna Rungu' => 'Tuna Rungu',
+        'Tuna Daksa' => 'Tuna Daksa',
+        'Tuna Grahita' => 'Tuna Grahita',
+        'Tuna Laras' => 'Tuna Laras',
         'Lainnya' => 'Lainnya',
+        'Tuna Wicara' => 'Tuna Wicara',
     ],
 
     'alasan_masuk' => [

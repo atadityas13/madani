@@ -9,11 +9,10 @@
         'data-siswa' => 'Data siswa',
         'orang-tua' => 'Data orang tua',
         'alamat' => 'Data alamat',
-        'aktivitas' => 'Aktivitas belajar',
-        'kebutuhan-khusus' => 'Kebutuhan khusus',
-        'beasiswa' => 'Beasiswa & bantuan',
-        'prestasi' => 'Prestasi siswa',
         'rekam-didik' => 'Rekam didik',
+        'aktivitas' => 'Riwayat akademik',
+        'prestasi' => 'Prestasi',
+        'beasiswa' => 'Bantuan pendidikan',
     ];
     $inisialSiswa = collect(preg_split('/\s+/', trim($siswa->nama)))
         ->filter()
@@ -100,7 +99,7 @@
 @endif
 
 @if ($tab === 'alamat')
-    <form method="POST" action="{{ route('siswa.update', $siswa) }}" enctype="multipart/form-data" data-alamat-form>
+    <form method="POST" action="{{ route('siswa.update', $siswa) }}" data-alamat-form>
         @csrf
         @method('PUT')
         <input type="hidden" name="bagian" value="alamat">
@@ -199,35 +198,6 @@
             </div>
             <div class="emis-actions">
                 <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
-                <button class="btn btn-madani" type="submit">Simpan</button>
-            </div>
-        </form>
-    </div>
-@endif
-
-@if ($tab === 'kebutuhan-khusus')
-    <div class="madani-card p-4" style="max-width: 720px;">
-        <form method="POST" action="{{ route('siswa.update', $siswa) }}">
-            @csrf
-            @method('PUT')
-            <input type="hidden" name="bagian" value="kebutuhan-khusus">
-            <div class="mb-3">
-                <label class="form-label">Kebutuhan khusus</label>
-                <x-emis-select name="kebutuhan_khusus" :options="$emis['kebutuhan_khusus']" :value="old('kebutuhan_khusus', $periodik?->kebutuhanKhususLabel())" />
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Kebutuhan khusus lainnya</label>
-                <input class="form-control" name="kebutuhan_khusus_lainnya" value="{{ old('kebutuhan_khusus_lainnya', $periodik?->kebutuhan_khusus_lainnya) }}">
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Kebutuhan disabilitas</label>
-                <x-emis-select name="disabilitas" :options="$emis['disabilitas']" :value="old('disabilitas', $periodik?->disabilitasLabel())" />
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Kebutuhan disabilitas lainnya</label>
-                <input class="form-control" name="disabilitas_lainnya" value="{{ old('disabilitas_lainnya', $periodik?->disabilitas_lainnya) }}">
-            </div>
-            <div class="emis-actions">
                 <button class="btn btn-madani" type="submit">Simpan</button>
             </div>
         </form>

@@ -3,7 +3,7 @@
     $input = "ortu[$peran]";
     $old = "ortu.$peran";
     $judul = ['ayah' => 'Ayah kandung', 'ibu' => 'Ibu kandung', 'wali' => 'Wali'][$peran];
-    $statusWali = old($old.'.status', $ortu?->status ?? 'Sama dengan ayah kandung');
+    $statusWali = old($old.'.status', $ortu?->status);
     if ($statusWali === 'Isi sendiri') {
         $statusWali = 'Lainnya';
     }

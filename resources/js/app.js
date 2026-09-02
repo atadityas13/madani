@@ -309,8 +309,22 @@ function bindAlamatOrtu() {
         const ayahWilayah = ayahBlok.querySelector('[data-wilayah-root]');
         const ibuWilayah = ibuBlok.querySelector('[data-wilayah-root]');
 
+        const ayahMeninggal = ayahBlok.getAttribute('data-status-hidup') === 'meninggal';
+        const ayahMeninggalNote = ibuBlok.querySelector('[data-ayah-meninggal-note]');
+
         const syncIbuAlamat = () => {
-            const same = Boolean(checkbox?.checked);
+            if (checkbox) {
+                checkbox.disabled = ayahMeninggal;
+                if (ayahMeninggal) {
+                    checkbox.checked = false;
+                }
+            }
+
+            if (ayahMeninggalNote) {
+                ayahMeninggalNote.hidden = !ayahMeninggal;
+            }
+
+            const same = Boolean(checkbox?.checked) && !ayahMeninggal;
 
             if (alamat) {
                 alamat.hidden = same;
@@ -348,14 +362,14 @@ function bindAlamatOrtu() {
         const alamat = waliBlok.querySelector('[data-ortu-alamat]');
         const note = waliBlok.querySelector('[data-wali-alamat-note]');
 
-        if (status && status !== 'Lainnya' && status !== 'Isi sendiri') {
-            if (alamat) {
-                alamat.hidden = true;
-            }
+        const mengikuti = status === 'Sama dengan ayah kandung' || status === 'Sama dengan ibu kandung';
 
-            if (note) {
-                note.hidden = false;
-            }
+        if (alamat) {
+            alamat.hidden = mengikuti;
+        }
+
+        if (note) {
+            note.hidden = !mengikuti;
         }
     }
 }
@@ -568,6 +582,12 @@ function bindAlamatSiswa() {
         }
 
         for (const peran of ['ayah', 'ibu', 'wali']) {
+            const blok = document.querySelector(`[data-alamat-ortu="${peran}"]`);
+
+            if (blok?.getAttribute('data-status-hidup') === 'meninggal') {
+                continue;
+            }
+
             const sumber = document.querySelector(`[data-wilayah-root="ortu-${peran}"]`);
             const desa = sumber?.querySelector('[data-wilayah-field="desa"]')?.value?.trim();
 
@@ -745,7 +765,58 @@ function bindAlamatSiswa() {
     }
 }
 
+function bindKebutuhanDisabilitas() {
+    const kebutuhanSelect = document.querySelector('[data-kebutuhan-khusus-select]');
+    const kebutuhanLainnya = document.querySelector('[data-kebutuhan-khusus-lainnya]');
+    const disabilitasRoot = document.querySelector('[data-disabilitas]');
+    const disabilitasLainnya = document.querySelector('[data-disabilitas-lainnya]');
+    const boxes = [...document.querySelectorAll('[data-disabilitas-item]')];
+
+    const syncKebutuhan = () => {
+        if (!kebutuhanLainnya) {
+            return;
+        }
+
+        kebutuhanLainnya.hidden = kebutuhanSelect?.value !== 'Lainnya';
+    };
+
+    const syncDisabilitas = (changed) => {
+        if (!boxes.length) {
+            return;
+        }
+
+        if (changed?.value === 'Tidak Ada' && changed.checked) {
+            boxes.forEach((box) => {
+                if (box !== changed) {
+                    box.checked = false;
+                }
+            });
+        } else if (changed && changed.value !== 'Tidak Ada' && changed.checked) {
+            boxes.forEach((box) => {
+                if (box.value === 'Tidak Ada') {
+                    box.checked = false;
+                }
+            });
+        }
+
+        if (disabilitasLainnya) {
+            disabilitasLainnya.hidden = !boxes.some((box) => box.value === 'Lainnya' && box.checked);
+        }
+    };
+
+    kebutuhanSelect?.addEventListener('change', syncKebutuhan);
+    disabilitasRoot?.addEventListener('change', (event) => {
+        if (event.target?.matches('[data-disabilitas-item]')) {
+            syncDisabilitas(event.target);
+        }
+    });
+
+    syncKebutuhan();
+    syncDisabilitas();
+}
+
 document.querySelectorAll('[data-wilayah-root]').forEach(bindWilayahRoot);
 bindOrtuForm();
 bindAlamatOrtu();
 bindAlamatSiswa();
+bindKebutuhanDisabilitas();

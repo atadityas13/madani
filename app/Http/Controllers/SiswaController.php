@@ -53,7 +53,6 @@ class SiswaController extends Controller
             foreach (['ayah', 'ibu', 'wali'] as $peran) {
                 $siswa->orangTuas()->create([
                     'peran' => $peran,
-                    'status' => $peran === 'wali' ? 'Sama dengan ayah kandung' : null,
                 ]);
             }
 
@@ -72,9 +71,14 @@ class SiswaController extends Controller
             ->with('status', 'Siswa berhasil dicatat. Lengkapi tab lain mengikuti EMIS 4.0.');
     }
 
-    public function show(Siswa $siswa): View
+    public function show(Siswa $siswa): View|RedirectResponse
     {
         $this->ensureRelasi($siswa);
+
+        if (request('tab') === 'kebutuhan-khusus') {
+            return redirect()->route('siswa.show', ['siswa' => $siswa, 'tab' => 'data-siswa']);
+        }
+
         $siswa->load([
             'orangTuas', 'periodiks.tahunAjaran', 'rombels.tahunAjaran',
             'beasiswas', 'prestasis', 'rekamDidik', 'dokumens', 'ayah', 'ibu',
@@ -114,7 +118,6 @@ class SiswaController extends Controller
             'orang-tua' => $this->updateOrangTua($request, $siswa),
             'alamat' => $this->updateAlamat($request, $siswa),
             'aktivitas' => $this->updateAktivitas($request, $siswa),
-            'kebutuhan-khusus' => $this->updateKebutuhanKhusus($request, $siswa),
             'beasiswa' => $this->storeBeasiswa($request, $siswa),
             'prestasi' => $this->storePrestasi($request, $siswa),
             'rekam-didik' => $this->updateRekamDidik($request, $siswa),
@@ -178,7 +181,7 @@ class SiswaController extends Controller
         $ibu = $this->ortuPayload($request->input('ortu.ibu', []), 'ibu');
         $wali = $this->ortuPayload($request->input('ortu.wali', []), 'wali');
 
-        $waliStatus = $wali['status'] ?? 'Sama dengan ayah kandung';
+        $waliStatus = $wali['status'] ?? null;
         if ($waliStatus === 'Isi sendiri') {
             $waliStatus = 'Lainnya';
         }
@@ -192,7 +195,7 @@ class SiswaController extends Controller
             $wali['status'] = $waliStatus;
             $wali['hubungan'] = 'Ibu kandung';
         } else {
-            $wali['status'] = 'Lainnya';
+            $wali['status'] = $waliStatus ?: null;
         }
 
         foreach (['ayah' => $ayah, 'ibu' => $ibu, 'wali' => $wali] as $peran => $payload) {
@@ -238,43 +241,46 @@ class SiswaController extends Controller
             'jarak' => ['nullable', 'string', 'max:40'],
             'waktu_tempuh' => ['nullable', 'string', 'max:40'],
             'transportasi' => ['nullable', 'string', 'max:80'],
-            'file_kk_ayah' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-            'file_kk_ibu' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-            'file_kk_wali' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
         ]);
 
         $siswa->loadMissing('orangTuas');
 
+        $ayahMeninggal = $this->sudahMeninggal($siswa, 'ayah');
+        $ibuMeninggal = $this->sudahMeninggal($siswa, 'ibu');
+        $waliMeninggal = $this->sudahMeninggal($siswa, 'wali');
+
         $ayah = $this->alamatOrtuPayload($request->input('ortu.ayah', []));
         $ibu = $this->alamatOrtuPayload($request->input('ortu.ibu', []));
         $wali = $this->alamatOrtuPayload($request->input('ortu.wali', []));
-        $ibu['sama_dengan_ayah'] = $request->boolean('ortu.ibu.sama_dengan_ayah');
+        $ibu['sama_dengan_ayah'] = ! $ayahMeninggal && $request->boolean('ortu.ibu.sama_dengan_ayah');
 
-        if ($ibu['sama_dengan_ayah']) {
+        if ($ibu['sama_dengan_ayah'] && ! $ayahMeninggal) {
             $ibu = array_merge($ibu, Arr::only($ayah, $this->alamatOrtuKeys()));
         }
 
-        $waliStatus = $siswa->orangTuas->firstWhere('peran', 'wali')?->status ?? 'Sama dengan ayah kandung';
+        $waliStatus = $siswa->orangTuas->firstWhere('peran', 'wali')?->status;
         if ($waliStatus === 'Isi sendiri') {
             $waliStatus = 'Lainnya';
         }
 
-        if ($waliStatus === 'Sama dengan ayah kandung') {
+        if ($waliStatus === 'Sama dengan ayah kandung' && ! $ayahMeninggal) {
             $wali = array_merge($wali, Arr::only($ayah, $this->alamatOrtuKeys()));
-        } elseif ($waliStatus === 'Sama dengan ibu kandung') {
+        } elseif ($waliStatus === 'Sama dengan ibu kandung' && ! $ibuMeninggal) {
             $wali = array_merge($wali, Arr::only($ibu, $this->alamatOrtuKeys()));
         }
 
-        $siswa->orangTuas()->updateOrCreate(['peran' => 'ayah'], $ayah);
-        $siswa->orangTuas()->updateOrCreate(['peran' => 'ibu'], $ibu);
-        $siswa->orangTuas()->updateOrCreate(['peran' => 'wali'], $wali);
-
-        $this->simpanDokumen($request, $siswa, 'file_kk_ayah', 'kk_ayah');
-        if (! $ibu['sama_dengan_ayah']) {
-            $this->simpanDokumen($request, $siswa, 'file_kk_ibu', 'kk_ibu');
+        if (! $ayahMeninggal) {
+            $siswa->orangTuas()->updateOrCreate(['peran' => 'ayah'], $ayah);
         }
-        if ($waliStatus === 'Lainnya') {
-            $this->simpanDokumen($request, $siswa, 'file_kk_wali', 'kk_wali');
+
+        if (! $ibuMeninggal) {
+            $siswa->orangTuas()->updateOrCreate(['peran' => 'ibu'], $ibu);
+        } else {
+            $siswa->orangTuas()->where('peran', 'ibu')->update(['sama_dengan_ayah' => false]);
+        }
+
+        if (! $waliMeninggal) {
+            $siswa->orangTuas()->updateOrCreate(['peran' => 'wali'], $wali);
         }
 
         $alamat = $this->resolveAlamatSiswa($request, $siswa->fresh(['orangTuas']));
@@ -319,32 +325,6 @@ class SiswaController extends Controller
         return redirect()
             ->route('siswa.show', ['siswa' => $siswa, 'tab' => 'aktivitas'])
             ->with('status', 'Aktivitas belajar disimpan.');
-    }
-
-    private function updateKebutuhanKhusus(Request $request, Siswa $siswa): RedirectResponse
-    {
-        $request->validate([
-            'kebutuhan_khusus' => ['nullable', 'string', 'max:80'],
-            'kebutuhan_khusus_lainnya' => ['nullable', 'string', 'max:255'],
-            'disabilitas' => ['nullable', 'string', 'max:80'],
-            'disabilitas_lainnya' => ['nullable', 'string', 'max:255'],
-        ]);
-
-        if ($tahun = TahunAjaran::aktif()) {
-            $siswa->periodiks()->updateOrCreate(
-                ['tahun_ajaran_id' => $tahun->id],
-                [
-                    'kebutuhan_khusus' => $request->filled('kebutuhan_khusus') ? [$request->input('kebutuhan_khusus')] : null,
-                    'kebutuhan_khusus_lainnya' => $request->input('kebutuhan_khusus_lainnya'),
-                    'disabilitas' => $request->filled('disabilitas') ? [$request->input('disabilitas')] : null,
-                    'disabilitas_lainnya' => $request->input('disabilitas_lainnya'),
-                ],
-            );
-        }
-
-        return redirect()
-            ->route('siswa.show', ['siswa' => $siswa, 'tab' => 'kebutuhan-khusus'])
-            ->with('status', 'Kebutuhan khusus disimpan.');
     }
 
     private function storeBeasiswa(Request $request, Siswa $siswa): RedirectResponse
@@ -466,7 +446,11 @@ class SiswaController extends Controller
             'pembiaya' => ['required', 'string', 'max:80'],
             'no_kk' => ['nullable', 'digits:16'],
             'kepala_keluarga' => ['nullable', 'string', 'max:255'],
-            'no_kip' => ['nullable', 'string', 'max:30'],
+            'kebutuhan_khusus' => ['nullable', 'string', Rule::in(array_keys(config('emis.kebutuhan_khusus')))],
+            'kebutuhan_khusus_lainnya' => ['nullable', 'string', 'max:255'],
+            'disabilitas' => ['nullable', 'array'],
+            'disabilitas.*' => ['string', Rule::in(array_keys(config('emis.disabilitas')))],
+            'disabilitas_lainnya' => ['nullable', 'string', 'max:255'],
             'pernah_tk_ra' => ['sometimes', 'boolean'],
             'pernah_paud' => ['sometimes', 'boolean'],
             'imunisasi' => ['nullable', 'array'],
@@ -538,7 +522,30 @@ class SiswaController extends Controller
             'pernah_tk_ra' => $request->boolean('pernah_tk_ra'),
             'pernah_paud' => $request->boolean('pernah_paud'),
             'imunisasi' => array_values($request->input('imunisasi', [])),
+            'kebutuhan_khusus' => $request->filled('kebutuhan_khusus') ? [$request->input('kebutuhan_khusus')] : null,
+            'kebutuhan_khusus_lainnya' => $request->input('kebutuhan_khusus') === 'Lainnya'
+                ? $request->input('kebutuhan_khusus_lainnya')
+                : null,
+            'disabilitas' => $this->disabilitasPayload($request),
+            'disabilitas_lainnya' => in_array('Lainnya', $request->input('disabilitas', []), true)
+                ? $request->input('disabilitas_lainnya')
+                : null,
         ];
+    }
+
+    private function disabilitasPayload(Request $request): ?array
+    {
+        $items = array_values(array_filter($request->input('disabilitas', [])));
+
+        if ($items === []) {
+            return null;
+        }
+
+        if (in_array('Tidak Ada', $items, true)) {
+            return ['Tidak Ada'];
+        }
+
+        return $items;
     }
 
     private function ortuPayload(array $input, string $peran): array
@@ -590,6 +597,11 @@ class SiswaController extends Controller
         ];
     }
 
+    private function sudahMeninggal(Siswa $siswa, string $peran): bool
+    {
+        return $siswa->orangTuas->firstWhere('peran', $peran)?->status_hidup === 'meninggal';
+    }
+
     private function alamatOrtuKeys(): array
     {
         return [
@@ -605,7 +617,7 @@ class SiswaController extends Controller
         foreach (['ayah', 'ibu', 'wali'] as $peran) {
             $ortu = $siswa->orangTuas->firstWhere('peran', $peran);
 
-            if ($ortu && filled($ortu->desa)) {
+            if ($ortu && $ortu->status_hidup !== 'meninggal' && filled($ortu->desa)) {
                 return Arr::only($ortu->toArray(), [
                     'provinsi', 'kota', 'kecamatan', 'desa',
                     'blok', 'rt', 'rw', 'kode_pos', 'alamat',
@@ -688,9 +700,6 @@ class SiswaController extends Controller
         foreach (['ayah', 'ibu', 'wali'] as $peran) {
             $siswa->orangTuas()->firstOrCreate(
                 ['peran' => $peran],
-                [
-                    'status' => $peran === 'wali' ? 'Sama dengan ayah kandung' : null,
-                ],
             );
         }
 

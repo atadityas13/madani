@@ -2,7 +2,10 @@
     $s = $siswa ?? null;
     $p = $periodik ?? null;
     $imunisasiTerpilih = old('imunisasi', $p?->imunisasi ?? []);
-    $valAgama = old('agama', $s?->agama ?? 'Islam');
+    $disabilitasTerpilih = old('disabilitas', $p?->disabilitas ?? []);
+    $disabilitasTerpilih = is_array($disabilitasTerpilih) ? $disabilitasTerpilih : [$disabilitasTerpilih];
+    $valAgama = old('agama', $s?->agama);
+    $kebutuhanKhusus = old('kebutuhan_khusus', $p?->kebutuhanKhususLabel());
 @endphp
 <div class="row g-3">
     <div class="col-md-8">
@@ -133,5 +136,40 @@
         <input class="form-control" name="kepala_keluarga" value="{{ old('kepala_keluarga', $p?->kepala_keluarga) }}">
         <div class="form-text">Unggah Kartu Keluarga maks. 2MB bertipe pdf jpg png</div>
         <input class="form-control mt-1" type="file" name="file_kk" accept=".pdf,.jpg,.jpeg,.png">
+    </div>
+
+    <div class="col-12 pt-2">
+        <div class="stat-label mb-1">Kebutuhan Khusus & Disabilitas</div>
+    </div>
+    <div class="col-md-6" data-kebutuhan-khusus>
+        <label class="form-label">Kebutuhan khusus</label>
+        <x-emis-select name="kebutuhan_khusus" :options="$emis['kebutuhan_khusus']" :value="$kebutuhanKhusus" data-kebutuhan-khusus-select />
+        <div class="mt-2" data-kebutuhan-khusus-lainnya @if ($kebutuhanKhusus !== 'Lainnya') hidden @endif>
+            <input class="form-control" name="kebutuhan_khusus_lainnya" value="{{ old('kebutuhan_khusus_lainnya', $p?->kebutuhan_khusus_lainnya) }}" placeholder="Sebutkan kebutuhan khusus lainnya">
+        </div>
+    </div>
+    <div class="col-12" data-disabilitas>
+        <label class="form-label">Disabilitas</label>
+        <div class="row g-2">
+            @foreach ($emis['disabilitas'] as $key => $label)
+                <div class="col-6 col-md-3">
+                    <div class="form-check">
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            name="disabilitas[]"
+                            value="{{ $key }}"
+                            id="disabilitas_{{ \Illuminate\Support\Str::slug($key) }}"
+                            @checked(in_array($key, $disabilitasTerpilih, true))
+                            data-disabilitas-item
+                        >
+                        <label class="form-check-label" for="disabilitas_{{ \Illuminate\Support\Str::slug($key) }}">{{ $label }}</label>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+        <div class="mt-2" data-disabilitas-lainnya @if (! in_array('Lainnya', $disabilitasTerpilih, true)) hidden @endif>
+            <input class="form-control" name="disabilitas_lainnya" value="{{ old('disabilitas_lainnya', $p?->disabilitas_lainnya) }}" placeholder="Sebutkan disabilitas lainnya" style="max-width: 360px;">
+        </div>
     </div>
 </div>
