@@ -110,4 +110,40 @@ class Siswa extends Model
     {
         return $this->dokumens->firstWhere('jenis', $jenis);
     }
+
+    /**
+     * Status masuk dan sekolah asal, dari Rekam didik (siswa baru) atau Mutasi (pindahan).
+     *
+     * @return array{status: string, alasan: ?string, nama_sekolah_asal: ?string, npsn_asal: ?string}
+     */
+    public function dataMasukAkademik(): array
+    {
+        $this->loadMissing(['rekamDidik', 'periodiks']);
+
+        $periodik = $this->periodikAktif();
+        $rekam = $this->rekamDidik;
+        $mutasi = $this->dataMutasiMasuk();
+        $pindahan = $mutasi !== null || $periodik?->alasan_masuk === 'Pindahan';
+
+        return [
+            'status' => $pindahan ? 'Pindahan' : 'Baru',
+            'alasan' => $pindahan ? ($mutasi['alasan'] ?? null) : null,
+            'nama_sekolah_asal' => $pindahan
+                ? ($mutasi['nama_sekolah'] ?? $periodik?->nama_sekolah_asal)
+                : ($rekam?->nama_sd ?: $periodik?->nama_sekolah_asal),
+            'npsn_asal' => $pindahan
+                ? ($mutasi['npsn'] ?? $periodik?->npsn_asal)
+                : ($rekam?->npsn ?: $periodik?->npsn_asal),
+        ];
+    }
+
+    /**
+     * Mutasi masuk akan diisi setelah modul Mutasi tersedia.
+     *
+     * @return array{alasan: ?string, nama_sekolah: ?string, npsn: ?string}|null
+     */
+    public function dataMutasiMasuk(): ?array
+    {
+        return null;
+    }
 }

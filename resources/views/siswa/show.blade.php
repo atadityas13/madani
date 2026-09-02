@@ -162,46 +162,7 @@
 @endif
 
 @if ($tab === 'aktivitas')
-    <div class="madani-card p-4">
-        <form method="POST" action="{{ route('siswa.update', $siswa) }}">
-            @csrf
-            @method('PUT')
-            <input type="hidden" name="bagian" value="aktivitas">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label">Tanggal masuk</label>
-                    <input class="form-control" type="date" name="tanggal_masuk" value="{{ old('tanggal_masuk', optional($periodik?->tanggal_masuk)->format('Y-m-d')) }}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Alasan masuk</label>
-                    <x-emis-select name="alasan_masuk" :options="$emis['alasan_masuk']" :value="old('alasan_masuk', $periodik?->alasan_masuk)" />
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Rombel</label>
-                    <select class="form-select" name="rombel_id">
-                        <option value="">Aktif tanpa rombel</option>
-                        @foreach ($rombels as $rombel)
-                            <option value="{{ $rombel->id }}" @selected((int) old('rombel_id', $siswa->rombelAktif()?->id) === $rombel->id)>
-                                {{ $rombel->nama }} · tingkat {{ $rombel->tingkat }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">NPSN sekolah asal</label>
-                    <input class="form-control" name="npsn_asal" value="{{ old('npsn_asal', $periodik?->npsn_asal) }}">
-                </div>
-                <div class="col-md-8">
-                    <label class="form-label">Nama sekolah asal</label>
-                    <input class="form-control" name="nama_sekolah_asal" value="{{ old('nama_sekolah_asal', $periodik?->nama_sekolah_asal) }}">
-                </div>
-            </div>
-            <div class="emis-actions">
-                <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
-                <button class="btn btn-madani" type="submit">Simpan</button>
-            </div>
-        </form>
-    </div>
+    @include('siswa.partials.riwayat-akademik')
 @endif
 
 @if ($tab === 'beasiswa')

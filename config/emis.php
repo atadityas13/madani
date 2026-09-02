@@ -198,6 +198,16 @@ return [
         'Kembali bersekolah' => 'Kembali bersekolah',
     ],
 
+    'semester_nilai' => [
+        '1' => 'Semester 1',
+        '2' => 'Semester 2',
+        '3' => 'Semester 3',
+        '4' => 'Semester 4',
+        '5' => 'Semester 5',
+        '6' => 'Semester 6',
+        'uam' => 'UAM',
+    ],
+
     'jenis_beasiswa' => [
         'PIP' => 'PIP',
         'KIP' => 'KIP',

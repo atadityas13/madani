@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Rombel;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Support\Wilayah;
@@ -85,19 +84,12 @@ class SiswaController extends Controller
         ]);
 
         $tab = request('tab', 'data-siswa');
-        $rombels = Rombel::query()
-            ->with('tahunAjaran')
-            ->when(TahunAjaran::aktif(), fn ($q) => $q->where('tahun_ajaran_id', TahunAjaran::aktif()->id))
-            ->orderBy('tingkat')
-            ->orderBy('nama')
-            ->get();
 
         return view('siswa.show', [
             'siswa' => $siswa,
             'periodik' => $siswa->periodikAktif(),
             'emis' => config('emis'),
             'tab' => $tab,
-            'rombels' => $rombels,
             'alamatOrtu' => $this->alamatOrtuUtama($siswa),
             'alamatAsrama' => config('emis.asrama_madrasah'),
         ]);
