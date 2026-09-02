@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -10,29 +9,26 @@ class ExampleTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_the_application_returns_a_successful_response(): void
+    public function test_root_shows_login(): void
     {
-        $response = $this->get('/');
-
-        $response->assertStatus(200);
-        $response->assertSee('MADANI');
+        $this->get('/')->assertOk()->assertSee('Masuk operator');
     }
 
-    public function test_login_page_is_available(): void
+    public function test_legacy_login_path_redirects_home(): void
     {
-        $this->get('/login')->assertStatus(200);
+        $this->get('/login')->assertRedirect('/');
     }
 
     public function test_guest_is_redirected_from_dashboard(): void
     {
-        $this->get('/dashboard')->assertRedirect('/login');
+        $this->get('/dashboard')->assertRedirect('/');
     }
 
     public function test_operator_can_login_with_username(): void
     {
         $this->seed();
 
-        $this->post('/login', [
+        $this->post('/', [
             'login' => 'admin',
             'password' => 'madani-admin',
         ])->assertRedirect('/dashboard');
