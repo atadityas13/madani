@@ -290,17 +290,46 @@ function bindOrtuForm() {
 
     if (waliBlok) {
         const status = waliBlok.querySelector('[data-wali-status]');
+        const locked = waliBlok.querySelector('[data-wali-status-locked]');
+        const wrap = waliBlok.querySelector('[data-wali-status-wrap]');
+        const note = waliBlok.querySelector('[data-wali-wajib-note]');
         const detail = waliBlok.querySelector('[data-ortu-detail]');
+        const ayahStatus = ayahBlok?.querySelector('[data-status-hidup]');
+        const ibuStatus = ibuBlok?.querySelector('[data-status-hidup]');
 
         const syncWali = () => {
-            const lainnya = status?.value === 'Lainnya' || status?.value === 'Isi sendiri';
+            const keduaMeninggal = ayahStatus?.value === 'meninggal' && ibuStatus?.value === 'meninggal';
+
+            if (keduaMeninggal && status) {
+                status.value = 'Lainnya';
+            }
+
+            if (wrap) {
+                wrap.hidden = keduaMeninggal;
+            }
+
+            if (status) {
+                status.disabled = keduaMeninggal;
+            }
+
+            if (locked) {
+                locked.disabled = ! keduaMeninggal;
+            }
+
+            if (note) {
+                note.hidden = ! keduaMeninggal;
+            }
+
+            const lainnya = keduaMeninggal || status?.value === 'Lainnya' || status?.value === 'Isi sendiri';
 
             if (detail) {
-                detail.hidden = !lainnya;
+                detail.hidden = ! lainnya;
             }
         };
 
         status?.addEventListener('change', syncWali);
+        ayahStatus?.addEventListener('change', syncWali);
+        ibuStatus?.addEventListener('change', syncWali);
         syncWali();
     }
 
@@ -611,6 +640,22 @@ function bindAlamatSiswa() {
         map.setView(latlng, zoom);
     };
 
+    const ensureMap = () => {
+        if (map || !mapEl || mapEl.closest('[hidden]')) {
+            return;
+        }
+
+        const initial = parseKoordinat(koordinat?.value) || defaultCenter;
+        map = L.map(mapEl, { scrollWheelZoom: true }).setView(initial, koordinat?.value ? 16 : 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap',
+        }).addTo(map);
+        setMarker(initial, koordinat?.value ? 16 : 13);
+        setTimeout(() => map.invalidateSize(), 80);
+        setTimeout(() => map.invalidateSize(), 350);
+    };
+
     const applyAsramaPin = () => {
         const parsed = parseKoordinat(alamatAsrama.koordinat);
 
@@ -685,7 +730,12 @@ function bindAlamatSiswa() {
         }
 
         if (map && status !== '') {
-            setTimeout(() => map.invalidateSize(), 150);
+            setTimeout(() => {
+                ensureMap();
+                map?.invalidateSize();
+            }, 50);
+        } else if (status !== '') {
+            setTimeout(() => ensureMap(), 50);
         }
 
         if (status === 'Asrama Madrasah' && root?._wilayah) {
@@ -793,17 +843,6 @@ function bindAlamatSiswa() {
             { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
         );
     };
-
-    if (mapEl) {
-        const initial = parseKoordinat(koordinat?.value) || defaultCenter;
-        map = L.map(mapEl).setView(initial, koordinat?.value ? 16 : 12);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; OpenStreetMap',
-        }).addTo(map);
-        setMarker(initial, koordinat?.value ? 16 : 12);
-        setTimeout(() => map.invalidateSize(), 150);
-    }
 
     applyStatus();
 

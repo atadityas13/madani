@@ -636,17 +636,26 @@ a:hover {
 [data-ortu-alamat][hidden],
 [data-ibu-alamat-note][hidden],
 [data-ayah-meninggal-note][hidden],
-[data-alamat-ortu-kosong][hidden] {
+[data-alamat-ortu-kosong][hidden],
+[data-siswa-alamat-isi][hidden],
+[data-wali-status-wrap][hidden],
+[data-wali-wajib-note][hidden] {
     display: none !important;
 }
 
 .madani-map {
-    height: 160px;
+    height: 260px;
+    min-height: 260px;
     width: 100%;
     border: 1px solid var(--emis-line, #e5e7eb);
     border-radius: 12px;
     overflow: hidden;
     background: #eef2f7;
+}
+
+.madani-map .leaflet-container {
+    height: 100%;
+    width: 100%;
 }
 
 .offcanvas .emis-nav-link {

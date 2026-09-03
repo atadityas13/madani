@@ -221,6 +221,44 @@ class SiswaPortalTest extends TestCase
         $this->assertTrue((bool) $siswa->fresh()->periodikAktif()?->tidak_punya_pkh);
     }
 
+    public function test_api_orang_tua_forces_wali_lainnya_when_both_parents_deceased(): void
+    {
+        $this->seed();
+        $siswa = $this->buatSiswa();
+        $token = $this->tokenSiswa($siswa);
+        $payload = $this->payloadOrangTua();
+        $payload['ortu']['ayah']['status_hidup'] = 'meninggal';
+        $payload['ortu']['ibu']['status_hidup'] = 'meninggal';
+        $payload['tidak_punya_kks'] = true;
+        $payload['tidak_punya_pkh'] = true;
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/orang-tua', $payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['ortu.wali.nama', 'ortu.wali.hubungan']);
+
+        $payload['ortu']['wali'] = [
+            'status' => 'Sama dengan ayah kandung',
+            'hubungan' => 'Kakek',
+            'nama' => 'Wali Contoh',
+            'status_hidup' => 'hidup',
+            'nik' => '3210010101600003',
+            'tempat_lahir' => 'Majalengka',
+            'tanggal_lahir' => '1960-01-01',
+            'pendidikan' => 'SMA/Sederajat',
+            'pekerjaan' => 'Wiraswasta',
+            'penghasilan' => '1.000.000 - 1.999.999',
+            'no_hp' => '628123456780',
+            'tidak_punya_hp' => false,
+        ];
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/orang-tua', $payload)
+            ->assertOk();
+
+        $this->assertSame('Lainnya', $siswa->fresh()->orangTuas->firstWhere('peran', 'wali')?->status);
+    }
+
     public function test_api_data_siswa_requires_kk_and_gates_pengajuan(): void
     {
         Storage::fake('public');
@@ -319,17 +357,36 @@ class SiswaPortalTest extends TestCase
 
     public function test_api_rekam_didik_and_prestasi(): void
     {
+        Storage::fake('public');
         $this->seed();
         $siswa = $this->buatSiswa();
         $token = $this->tokenSiswa($siswa);
 
         $this->withToken($token)
-            ->putJson('/api/v1/siswa/rekam-didik', [
-                'nama_sd' => 'SD Negeri 1 Maniis',
-                'npsn' => '20241234',
-                'tahun_ajaran_kelulusan' => '2023/2024',
-                'ijazah_sesuai' => ['nama', 'nisn'],
-            ])
+            ->putJson('/api/v1/siswa/rekam-didik', [])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['nama_sd', 'file_ijazah']);
+
+        $payload = [
+            'nama_sd' => 'SD Negeri 1 Maniis',
+            'npsn' => '20241234',
+            'tahun_ajaran_kelulusan' => '2023/2024',
+            'nip_kepala_sekolah' => '197001011990031001',
+            'nama_kepala_sekolah' => 'Kepala Sekolah',
+            'nomor_seri_ijazah' => 'DN-123456',
+            'tanggal_terbit_ijazah' => '2024-06-15',
+            'ijazah_sesuai' => ['nama', 'nisn'],
+        ];
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/rekam-didik', $payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('file_ijazah');
+
+        $this->withToken($token)
+            ->put('/api/v1/siswa/rekam-didik', array_merge($payload, [
+                'file_ijazah' => UploadedFile::fake()->image('ijazah.jpg'),
+            ]), ['Accept' => 'application/json'])
             ->assertOk();
 
         $this->assertSame('SD Negeri 1 Maniis', $siswa->fresh()->rekamDidik?->nama_sd);

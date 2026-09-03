@@ -34,38 +34,44 @@
     <div class="stat-label mb-3">Data jenjang sebelumnya</div>
     <div class="row g-3">
         <div class="col-md-6">
-            <label class="form-label">Nama sekolah</label>
-            <input class="form-control" name="nama_sd" value="{{ $namaSekolah }}">
+            <label class="form-label">Nama sekolah <span class="text-danger">*</span></label>
+            <input class="form-control @error('nama_sd') is-invalid @enderror" name="nama_sd" value="{{ $namaSekolah }}" required>
+            @error('nama_sd') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
         <div class="col-md-3">
-            <label class="form-label">NPSN</label>
-            <input class="form-control @error('npsn') is-invalid @enderror" name="npsn" value="{{ $npsn }}" maxlength="8" inputmode="numeric">
+            <label class="form-label">NPSN <span class="text-danger">*</span></label>
+            <input class="form-control @error('npsn') is-invalid @enderror" name="npsn" value="{{ $npsn }}" maxlength="8" inputmode="numeric" required>
             @error('npsn') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
         <div class="col-md-3">
-            <label class="form-label">Tahun ajaran lulusan</label>
-            <input class="form-control" name="tahun_ajaran_kelulusan" value="{{ $tahunAjaranLulusan }}" placeholder="2023/2024">
+            <label class="form-label">Tahun ajaran lulusan <span class="text-danger">*</span></label>
+            <input class="form-control @error('tahun_ajaran_kelulusan') is-invalid @enderror" name="tahun_ajaran_kelulusan" value="{{ $tahunAjaranLulusan }}" placeholder="2023/2024" required>
+            @error('tahun_ajaran_kelulusan') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
         <div class="col-md-4">
-            <label class="form-label">NIP kepala sekolah</label>
-            <input class="form-control" name="nip_kepala_sekolah" value="{{ $nipKepala }}">
+            <label class="form-label">NIP kepala sekolah <span class="text-danger">*</span></label>
+            <input class="form-control @error('nip_kepala_sekolah') is-invalid @enderror" name="nip_kepala_sekolah" value="{{ $nipKepala }}" required>
+            @error('nip_kepala_sekolah') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
         <div class="col-md-8">
-            <label class="form-label">Nama kepala sekolah</label>
-            <input class="form-control" name="nama_kepala_sekolah" value="{{ $namaKepala }}">
+            <label class="form-label">Nama kepala sekolah <span class="text-danger">*</span></label>
+            <input class="form-control @error('nama_kepala_sekolah') is-invalid @enderror" name="nama_kepala_sekolah" value="{{ $namaKepala }}" required>
+            @error('nama_kepala_sekolah') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
         <div class="col-md-4">
-            <label class="form-label">Nomor seri ijazah</label>
-            <input class="form-control" name="nomor_seri_ijazah" value="{{ $nomorSeri }}">
+            <label class="form-label">Nomor seri ijazah <span class="text-danger">*</span></label>
+            <input class="form-control @error('nomor_seri_ijazah') is-invalid @enderror" name="nomor_seri_ijazah" value="{{ $nomorSeri }}" required>
+            @error('nomor_seri_ijazah') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
         <div class="col-md-4">
-            <label class="form-label">Tanggal terbit ijazah</label>
-            <input class="form-control" type="date" name="tanggal_terbit_ijazah" value="{{ $tanggalTerbit }}">
+            <label class="form-label">Tanggal terbit ijazah <span class="text-danger">*</span></label>
+            <input class="form-control @error('tanggal_terbit_ijazah') is-invalid @enderror" type="date" name="tanggal_terbit_ijazah" value="{{ $tanggalTerbit }}" required>
+            @error('tanggal_terbit_ijazah') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
         <div class="col-md-4">
-            <label class="form-label">Unggah ijazah</label>
-            <input class="form-control @error('file_ijazah') is-invalid @enderror" type="file" name="file_ijazah" accept=".pdf,.jpg,.jpeg,.png">
-            <div class="form-text">Maks. 2MB, pdf / jpg / png</div>
+            <label class="form-label">Unggah ijazah <span class="text-danger">*</span></label>
+            <input class="form-control @error('file_ijazah') is-invalid @enderror" type="file" name="file_ijazah" accept=".pdf,.jpg,.jpeg,.png" @required(! $ijazahSd)>
+            <div class="form-text">Maks. 2MB, pdf / jpg / png. Wajib diunggah.</div>
             @error('file_ijazah') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
             @if ($ijazahSd)
                 <div class="form-text">Berkas saat ini: {{ $ijazahSd->nama_asli }}</div>
@@ -79,19 +85,21 @@
     <div class="row g-3">
         @foreach ($ijazahItems as $item)
             <div class="{{ $item['col'] }}">
-                <label class="form-label">{{ $item['label'] }}</label>
-                <input class="form-control bg-light" value="{{ $item['value'] }}" readonly>
-                <div class="form-check mt-2">
-                    <input
-                        class="form-check-input"
-                        type="checkbox"
-                        name="ijazah_sesuai[]"
-                        value="{{ $item['key'] }}"
-                        id="ijazah_sesuai_{{ $item['key'] }}"
-                        @checked(in_array($item['key'], $sesuaiFields, true))
-                        data-ijazah-sesuai
-                    >
-                    <label class="form-check-label" for="ijazah_sesuai_{{ $item['key'] }}">Sesuai</label>
+                <label class="form-label" for="ijazah_sesuai_{{ $item['key'] }}">{{ $item['label'] }}</label>
+                <div class="input-group">
+                    <input class="form-control bg-light" value="{{ $item['value'] }}" readonly>
+                    <div class="input-group-text gap-2">
+                        <input
+                            class="form-check-input mt-0"
+                            type="checkbox"
+                            name="ijazah_sesuai[]"
+                            value="{{ $item['key'] }}"
+                            id="ijazah_sesuai_{{ $item['key'] }}"
+                            @checked(in_array($item['key'], $sesuaiFields, true))
+                            data-ijazah-sesuai
+                        >
+                        <label class="form-check-label" for="ijazah_sesuai_{{ $item['key'] }}">Sesuai</label>
+                    </div>
                 </div>
             </div>
         @endforeach

@@ -136,7 +136,16 @@ class KelengkapanSiswa
 
     private static function rekamDidik(Siswa $siswa): bool
     {
-        return filled($siswa->rekamDidik?->nama_sd);
+        $rd = $siswa->rekamDidik;
+
+        return filled($rd?->nama_sd)
+            && filled($rd?->npsn)
+            && filled($rd?->tahun_ajaran_kelulusan)
+            && filled($rd?->nip_kepala_sekolah)
+            && filled($rd?->nama_kepala_sekolah)
+            && filled($rd?->nomor_seri_ijazah)
+            && $rd?->tanggal_terbit_ijazah !== null
+            && $siswa->dokumenJenis('ijazah_sd') !== null;
     }
 
     private static function aktivitas(Siswa $siswa): bool

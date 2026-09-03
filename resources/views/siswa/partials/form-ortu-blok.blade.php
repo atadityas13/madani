@@ -7,6 +7,12 @@
     if ($statusWali === 'Isi sendiri') {
         $statusWali = 'Lainnya';
     }
+    $ayahHidupNow = (string) old('ortu.ayah.status_hidup', $siswa->orangTuas->firstWhere('peran', 'ayah')?->status_hidup);
+    $ibuHidupNow = (string) old('ortu.ibu.status_hidup', $siswa->orangTuas->firstWhere('peran', 'ibu')?->status_hidup);
+    $keduaMeninggal = $ayahHidupNow === 'meninggal' && $ibuHidupNow === 'meninggal';
+    if ($peran === 'wali' && $keduaMeninggal) {
+        $statusWali = 'Lainnya';
+    }
     $statusHidup = old($old.'.status_hidup', $ortu?->status_hidup);
     $waliLainnya = $statusWali === 'Lainnya';
     $tampilHidup = $statusHidup === 'hidup';
@@ -14,11 +20,13 @@
 <div class="madani-card p-4 h-100" data-ortu-blok="{{ $peran }}">
     <div class="stat-label mb-3">{{ $judul }}</div>
     @if ($peran === 'wali')
-        <div class="mb-3">
+        <div class="mb-3" data-wali-status-wrap @if ($keduaMeninggal) hidden @endif>
             <label class="form-label">Status <span class="text-danger">*</span></label>
-            <x-emis-select :name="$input.'[status]'" :options="$emis['status_wali']" :value="$statusWali" required data-wali-status />
+            <x-emis-select :name="$input.'[status]'" :options="$emis['status_wali']" :value="$statusWali" :required="! $keduaMeninggal" :disabled="$keduaMeninggal" data-wali-status />
             <div class="form-text">Isian wali hanya muncul jika statusnya selain ayah atau ibu kandung.</div>
         </div>
+        <input type="hidden" name="{{ $input }}[status]" value="Lainnya" data-wali-status-locked @disabled(! $keduaMeninggal)>
+        <p class="form-text mb-3" data-wali-wajib-note @if (! $keduaMeninggal) hidden @endif>Ayah dan ibu kandung sudah meninggal dunia. Data wali wajib diisi.</p>
     @endif
 
     <div @if ($peran === 'wali' && ! $waliLainnya) hidden @endif data-ortu-detail>

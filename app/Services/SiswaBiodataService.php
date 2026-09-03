@@ -365,17 +365,35 @@ class SiswaBiodataService
 
     public function updateRekamDidik(Request $request, Siswa $siswa): string
     {
+        $siswa->loadMissing('dokumens');
+
         $data = $request->validate([
-            'nama_sd' => ['nullable', 'string', 'max:255'],
-            'npsn' => ['nullable', 'digits:8'],
-            'tahun_ajaran_kelulusan' => ['nullable', 'string', 'max:20'],
-            'nip_kepala_sekolah' => ['nullable', 'string', 'max:30'],
-            'nama_kepala_sekolah' => ['nullable', 'string', 'max:255'],
-            'nomor_seri_ijazah' => ['nullable', 'string', 'max:50'],
-            'tanggal_terbit_ijazah' => ['nullable', 'date'],
+            'nama_sd' => ['required', 'string', 'max:255'],
+            'npsn' => ['required', 'digits:8'],
+            'tahun_ajaran_kelulusan' => ['required', 'string', 'max:20'],
+            'nip_kepala_sekolah' => ['required', 'string', 'max:30'],
+            'nama_kepala_sekolah' => ['required', 'string', 'max:255'],
+            'nomor_seri_ijazah' => ['required', 'string', 'max:50'],
+            'tanggal_terbit_ijazah' => ['required', 'date'],
             'ijazah_sesuai' => ['nullable', 'array'],
             'ijazah_sesuai.*' => ['in:nama,nisn,tempat_lahir,tanggal_lahir,jenis_kelamin,nama_ayah'],
-            'file_ijazah' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+            'file_ijazah' => [
+                Rule::requiredIf(fn () => $siswa->dokumens()->where('jenis', 'ijazah_sd')->doesntExist()),
+                'nullable',
+                'file',
+                'mimes:pdf,jpg,jpeg,png',
+                'max:2048',
+            ],
+        ], [
+            'nama_sd.required' => 'Nama sekolah wajib diisi',
+            'npsn.required' => 'NPSN wajib diisi',
+            'npsn.digits' => 'NPSN harus 8 digit',
+            'tahun_ajaran_kelulusan.required' => 'Tahun ajaran lulusan wajib diisi',
+            'nip_kepala_sekolah.required' => 'NIP kepala sekolah wajib diisi',
+            'nama_kepala_sekolah.required' => 'Nama kepala sekolah wajib diisi',
+            'nomor_seri_ijazah.required' => 'Nomor seri ijazah wajib diisi',
+            'tanggal_terbit_ijazah.required' => 'Tanggal terbit ijazah wajib diisi',
+            'file_ijazah.required' => 'Unggah ijazah wajib dilampirkan',
         ]);
 
         $keys = ['nama', 'nisn', 'tempat_lahir', 'tanggal_lahir', 'jenis_kelamin', 'nama_ayah'];
@@ -660,6 +678,14 @@ class SiswaBiodataService
     private function validateOrangTua(Request $request, Siswa $siswa): void
     {
         $siswa->loadMissing('dokumens');
+
+        $ayahMeninggal = $request->input('ortu.ayah.status_hidup') === 'meninggal';
+        $ibuMeninggal = $request->input('ortu.ibu.status_hidup') === 'meninggal';
+        if ($ayahMeninggal && $ibuMeninggal) {
+            $ortu = $request->input('ortu', []);
+            $ortu['wali'] = array_merge($ortu['wali'] ?? [], ['status' => 'Lainnya']);
+            $request->merge(['ortu' => $ortu]);
+        }
 
         $waliStatus = $request->input('ortu.wali.status');
         $waliLainnya = in_array($waliStatus, ['Lainnya', 'Isi sendiri'], true);
