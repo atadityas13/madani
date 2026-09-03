@@ -25,7 +25,7 @@ class SiswaController extends Controller
             ], 403);
         }
 
-        $pesan = $this->biodata->updateBagian($request, $siswa, $bagian);
+        $pesan = $this->biodata->updateBagian($request, $siswa, $bagian, kunciIdentitas: true);
 
         return response()->json([
             'success' => true,

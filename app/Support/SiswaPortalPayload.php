@@ -43,6 +43,7 @@ class SiswaPortalPayload
             'email' => $siswa->email,
             'no_hp' => $siswa->no_hp,
             'tidak_punya_hp' => (bool) $siswa->tidak_punya_hp,
+            'tidak_punya_email' => (bool) $siswa->tidak_punya_email,
             'status_keaktifan' => $siswa->status_keaktifan,
             'must_change_password' => (bool) $siswa->must_change_password,
             'foto_url' => $siswa->foto ? Storage::disk('public')->url($siswa->foto) : null,

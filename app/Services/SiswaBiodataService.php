@@ -37,7 +37,7 @@ class SiswaBiodataService
         });
     }
 
-    public function updateBagian(Request $request, Siswa $siswa, string $bagian): string
+    public function updateBagian(Request $request, Siswa $siswa, string $bagian, bool $kunciIdentitas = false): string
     {
         $this->ensureRelasi($siswa);
 
@@ -48,7 +48,7 @@ class SiswaBiodataService
             'beasiswa' => $this->storeBeasiswa($request, $siswa),
             'prestasi' => $this->storePrestasi($request, $siswa),
             'rekam-didik' => $this->updateRekamDidik($request, $siswa),
-            default => $this->updateDataSiswa($request, $siswa),
+            default => $this->updateDataSiswa($request, $siswa, $kunciIdentitas),
         };
     }
 
@@ -63,8 +63,19 @@ class SiswaBiodataService
         return $jenis === 'prestasi' ? 'prestasi' : 'beasiswa';
     }
 
-    public function updateDataSiswa(Request $request, Siswa $siswa): string
+    public function updateDataSiswa(Request $request, Siswa $siswa, bool $kunciIdentitas = false): string
     {
+        if ($kunciIdentitas) {
+            $request->merge([
+                'nama' => $siswa->nama,
+                'nis' => $siswa->nis,
+                'nisn' => $siswa->nisn,
+                'nik' => $siswa->nik,
+                'tempat_lahir' => $siswa->tempat_lahir,
+                'tanggal_lahir' => $siswa->tanggal_lahir?->toDateString(),
+                'jenis_kelamin' => $siswa->jenis_kelamin,
+            ]);
+        }
         $data = $this->validateDataSiswa($request, $siswa);
 
         $siswa->update($this->siswaPayload($request, $data, $siswa));
@@ -85,16 +96,7 @@ class SiswaBiodataService
 
     public function updateOrangTua(Request $request, Siswa $siswa): string
     {
-        $request->validate([
-            'ortu' => ['required', 'array'],
-            'ortu.ayah.nama' => ['nullable', 'string', 'max:255'],
-            'ortu.ibu.nama' => ['nullable', 'string', 'max:255'],
-            'ortu.wali.nama' => ['nullable', 'string', 'max:255'],
-            'ortu.wali.hubungan' => ['nullable', 'string', 'max:80'],
-            'penghasilan_gabungan' => ['nullable', 'string', 'max:80'],
-            'file_kks' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-            'file_pkh' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-        ]);
+        $this->validateOrangTua($request, $siswa);
 
         $ayah = $this->ortuPayload($request->input('ortu.ayah', []), 'ayah');
         $ibu = $this->ortuPayload($request->input('ortu.ibu', []), 'ibu');
@@ -124,13 +126,18 @@ class SiswaBiodataService
             );
         }
 
+        $tidakPunyaKks = $request->boolean('tidak_punya_kks');
+        $tidakPunyaPkh = $request->boolean('tidak_punya_pkh');
+
         if ($tahun = TahunAjaran::aktif()) {
             $siswa->periodiks()->updateOrCreate(
                 ['tahun_ajaran_id' => $tahun->id],
                 [
                     'penghasilan_gabungan' => $request->input('penghasilan_gabungan'),
-                    'no_kks' => $request->input('no_kks'),
-                    'no_pkh' => $request->input('no_pkh'),
+                    'tidak_punya_kks' => $tidakPunyaKks,
+                    'tidak_punya_pkh' => $tidakPunyaPkh,
+                    'no_kks' => $tidakPunyaKks ? null : $request->input('no_kks'),
+                    'no_pkh' => $tidakPunyaPkh ? null : $request->input('no_pkh'),
                 ],
             );
         }
@@ -347,6 +354,8 @@ class SiswaBiodataService
     public function validateDataSiswa(Request $request, ?Siswa $siswa = null): array
     {
         $tidakPunyaHp = $request->boolean('tidak_punya_hp');
+        $tidakPunyaEmail = $request->boolean('tidak_punya_email');
+        $tidakPunyaKip = $request->boolean('tidak_punya_kip');
 
         return $request->validate([
             'nama' => ['required', 'string', 'max:255', 'regex:/^[A-Za-zÀ-ÿ\-\'’`., ]+$/u'],
@@ -368,18 +377,31 @@ class SiswaBiodataService
             'anak_ke' => ['required', 'integer', 'min:1', 'max:21'],
             'agama' => ['required', 'string', 'max:30'],
             'cita_cita' => ['required', 'string', 'max:80'],
-            'hobi' => ['nullable', 'string', 'max:80'],
+            'hobi' => ['required', 'string', 'max:80'],
             'tidak_punya_hp' => ['sometimes', 'boolean'],
+            'tidak_punya_email' => ['sometimes', 'boolean'],
+            'tidak_punya_kip' => ['sometimes', 'boolean'],
             'no_hp' => [
                 Rule::requiredIf(! $tidakPunyaHp),
                 'nullable',
                 'regex:/^62[0-9]{8,15}$/',
             ],
-            'email' => ['nullable', 'email', 'max:255'],
+            'email' => [
+                Rule::requiredIf(! $tidakPunyaEmail),
+                'nullable',
+                'email',
+                'max:255',
+            ],
             'pembiaya' => ['required', 'string', 'max:80'],
-            'no_kk' => ['nullable', 'digits:16'],
-            'kepala_keluarga' => ['nullable', 'string', 'max:255'],
-            'kebutuhan_khusus' => ['nullable', 'string', Rule::in(array_keys(config('emis.kebutuhan_khusus')))],
+            'no_kk' => ['required', 'digits:16'],
+            'kepala_keluarga' => ['required', 'string', 'max:255'],
+            'no_kip' => [
+                Rule::requiredIf(! $tidakPunyaKip),
+                'nullable',
+                'string',
+                'max:40',
+            ],
+            'kebutuhan_khusus' => ['required', 'string', Rule::in(array_keys(config('emis.kebutuhan_khusus')))],
             'kebutuhan_khusus_lainnya' => ['nullable', 'string', 'max:255'],
             'disabilitas' => ['nullable', 'array'],
             'disabilitas.*' => ['string', Rule::in(array_keys(config('emis.disabilitas')))],
@@ -401,7 +423,13 @@ class SiswaBiodataService
             'anak_ke.min' => 'Anak ke tidak boleh NOL',
             'pembiaya.required' => 'Yang membiayai sekolah tidak boleh kosong',
             'no_hp.required' => 'Nomor HP/Whatsapp tidak boleh kosong',
+            'email.required' => 'Email tidak boleh kosong',
             'email.email' => 'Email harus valid',
+            'hobi.required' => 'Hobi wajib diisi',
+            'no_kk.required' => 'Nomor KK wajib diisi',
+            'kepala_keluarga.required' => 'Nama kepala keluarga wajib diisi',
+            'no_kip.required' => 'Nomor KIP wajib diisi',
+            'kebutuhan_khusus.required' => 'Kebutuhan khusus wajib dipilih',
         ]);
     }
 
@@ -412,6 +440,7 @@ class SiswaBiodataService
     public function siswaPayload(Request $request, array $data, ?Siswa $siswa = null): array
     {
         $tidakPunyaHp = $request->boolean('tidak_punya_hp');
+        $tidakPunyaEmail = $request->boolean('tidak_punya_email');
 
         $payload = [
             'nama' => $data['nama'],
@@ -431,7 +460,8 @@ class SiswaBiodataService
             'hobi' => $data['hobi'] ?? null,
             'tidak_punya_hp' => $tidakPunyaHp,
             'no_hp' => $tidakPunyaHp ? null : ($data['no_hp'] ?? null),
-            'email' => $data['email'] ?? null,
+            'tidak_punya_email' => $tidakPunyaEmail,
+            'email' => $tidakPunyaEmail ? null : ($data['email'] ?? null),
         ];
 
         if (! $siswa) {
@@ -454,12 +484,15 @@ class SiswaBiodataService
      */
     public function periodikIdentitasPayload(Request $request, int $tahunId): array
     {
+        $tidakPunyaKip = $request->boolean('tidak_punya_kip');
+
         return [
             'tahun_ajaran_id' => $tahunId,
             'pembiaya' => $request->input('pembiaya'),
             'no_kk' => $request->input('no_kk'),
             'kepala_keluarga' => $request->input('kepala_keluarga'),
-            'no_kip' => $request->input('no_kip'),
+            'tidak_punya_kip' => $tidakPunyaKip,
+            'no_kip' => $tidakPunyaKip ? null : $request->input('no_kip'),
             'pernah_tk_ra' => $request->boolean('pernah_tk_ra'),
             'pernah_paud' => $request->boolean('pernah_paud'),
             'imunisasi' => array_values($request->input('imunisasi', [])),
@@ -530,6 +563,132 @@ class SiswaBiodataService
         return $items;
     }
 
+    private function validateOrangTua(Request $request, Siswa $siswa): void
+    {
+        $siswa->loadMissing('dokumens');
+
+        $waliStatus = $request->input('ortu.wali.status');
+        $waliLainnya = in_array($waliStatus, ['Lainnya', 'Isi sendiri'], true);
+        $tidakPunyaKks = $request->boolean('tidak_punya_kks');
+        $tidakPunyaPkh = $request->boolean('tidak_punya_pkh');
+        $noKks = $tidakPunyaKks ? null : $request->input('no_kks');
+        $noPkh = $tidakPunyaPkh ? null : $request->input('no_pkh');
+
+        $request->validate(array_merge(
+            [
+                'ortu' => ['required', 'array'],
+                'ortu.wali.status' => ['required', 'string', Rule::in(array_keys(config('emis.status_wali')))],
+                'ortu.wali.hubungan' => [Rule::requiredIf($waliLainnya), 'nullable', 'string', Rule::in(array_keys(config('emis.hubungan_wali')))],
+                'penghasilan_gabungan' => ['required', 'string', Rule::in(array_keys(config('emis.penghasilan_gabungan')))],
+                'tidak_punya_kks' => ['sometimes', 'boolean'],
+                'tidak_punya_pkh' => ['sometimes', 'boolean'],
+                'no_kks' => [Rule::requiredIf(! $tidakPunyaKks), 'nullable', 'string', 'max:30'],
+                'no_pkh' => [Rule::requiredIf(! $tidakPunyaPkh), 'nullable', 'string', 'max:30'],
+                'file_kks' => [
+                    Rule::requiredIf(filled($noKks) && $siswa->dokumenJenis('kks') === null),
+                    'nullable',
+                    'file',
+                    'mimes:pdf,jpg,jpeg,png',
+                    'max:2048',
+                ],
+                'file_pkh' => [
+                    Rule::requiredIf(filled($noPkh) && $siswa->dokumenJenis('pkh') === null),
+                    'nullable',
+                    'file',
+                    'mimes:pdf,jpg,jpeg,png',
+                    'max:2048',
+                ],
+            ],
+            $this->aturanDataOrtu($request, 'ortu.ayah', true),
+            $this->aturanDataOrtu($request, 'ortu.ibu', true),
+            $this->aturanDataOrtu($request, 'ortu.wali', $waliLainnya),
+        ), [
+            'ortu.ayah.nama.required' => 'Nama ayah wajib diisi',
+            'ortu.ayah.status_hidup.required' => 'Status ayah wajib dipilih',
+            'ortu.ayah.nik.required' => 'NIK ayah wajib diisi',
+            'ortu.ayah.tempat_lahir.required' => 'Tempat lahir ayah wajib diisi',
+            'ortu.ayah.tanggal_lahir.required' => 'Tanggal lahir ayah wajib diisi',
+            'ortu.ayah.pendidikan.required' => 'Pendidikan ayah wajib dipilih',
+            'ortu.ayah.pekerjaan.required' => 'Pekerjaan ayah wajib dipilih',
+            'ortu.ayah.penghasilan.required' => 'Penghasilan ayah wajib dipilih',
+            'ortu.ayah.no_hp.required' => 'Nomor HP ayah wajib diisi',
+            'ortu.ayah.no_hp.regex' => 'Nomor HP ayah harus diawali 62, tanpa 0 di depan',
+            'ortu.ibu.nama.required' => 'Nama ibu wajib diisi',
+            'ortu.ibu.status_hidup.required' => 'Status ibu wajib dipilih',
+            'ortu.ibu.nik.required' => 'NIK ibu wajib diisi',
+            'ortu.ibu.tempat_lahir.required' => 'Tempat lahir ibu wajib diisi',
+            'ortu.ibu.tanggal_lahir.required' => 'Tanggal lahir ibu wajib diisi',
+            'ortu.ibu.pendidikan.required' => 'Pendidikan ibu wajib dipilih',
+            'ortu.ibu.pekerjaan.required' => 'Pekerjaan ibu wajib dipilih',
+            'ortu.ibu.penghasilan.required' => 'Penghasilan ibu wajib dipilih',
+            'ortu.ibu.no_hp.required' => 'Nomor HP ibu wajib diisi',
+            'ortu.ibu.no_hp.regex' => 'Nomor HP ibu harus diawali 62, tanpa 0 di depan',
+            'ortu.wali.status.required' => 'Status wali wajib dipilih',
+            'ortu.wali.hubungan.required' => 'Hubungan wali wajib dipilih',
+            'ortu.wali.nama.required' => 'Nama wali wajib diisi',
+            'ortu.wali.status_hidup.required' => 'Status hidup wali wajib dipilih',
+            'ortu.wali.nik.required' => 'NIK wali wajib diisi',
+            'ortu.wali.tempat_lahir.required' => 'Tempat lahir wali wajib diisi',
+            'ortu.wali.tanggal_lahir.required' => 'Tanggal lahir wali wajib diisi',
+            'ortu.wali.pendidikan.required' => 'Pendidikan wali wajib dipilih',
+            'ortu.wali.pekerjaan.required' => 'Pekerjaan wali wajib dipilih',
+            'ortu.wali.penghasilan.required' => 'Penghasilan wali wajib dipilih',
+            'ortu.wali.no_hp.required' => 'Nomor HP wali wajib diisi',
+            'penghasilan_gabungan.required' => 'Penghasilan gabungan wajib dipilih',
+            'no_kks.required' => 'Nomor KKS wajib diisi, atau centang tidak memiliki KKS',
+            'no_pkh.required' => 'Nomor PKH wajib diisi, atau centang tidak memiliki PKH',
+            'file_kks.required' => 'Unggah kartu KKS karena nomor KKS diisi',
+            'file_pkh.required' => 'Unggah kartu PKH karena nomor PKH diisi',
+        ]);
+    }
+
+    /**
+     * @return array<string, list<mixed>>
+     */
+    private function aturanDataOrtu(Request $request, string $prefix, bool $wajibIdentitas): array
+    {
+        $hidup = $request->input("{$prefix}.status_hidup") === 'hidup';
+        $wajibHidup = $wajibIdentitas && $hidup;
+        $tidakPunyaHp = $request->boolean("{$prefix}.tidak_punya_hp");
+
+        return [
+            "{$prefix}.nama" => [Rule::requiredIf($wajibIdentitas), 'nullable', 'string', 'max:255'],
+            "{$prefix}.status_hidup" => [
+                Rule::requiredIf($wajibIdentitas),
+                'nullable',
+                'string',
+                Rule::in(array_keys(config('emis.status_hidup'))),
+            ],
+            "{$prefix}.nik" => [Rule::requiredIf($wajibHidup), 'nullable', 'digits:16'],
+            "{$prefix}.tempat_lahir" => [Rule::requiredIf($wajibHidup), 'nullable', 'string', 'max:100'],
+            "{$prefix}.tanggal_lahir" => [Rule::requiredIf($wajibHidup), 'nullable', 'date'],
+            "{$prefix}.pendidikan" => [
+                Rule::requiredIf($wajibHidup),
+                'nullable',
+                'string',
+                Rule::in(array_keys(config('emis.pendidikan'))),
+            ],
+            "{$prefix}.pekerjaan" => [
+                Rule::requiredIf($wajibHidup),
+                'nullable',
+                'string',
+                Rule::in(array_keys(config('emis.pekerjaan'))),
+            ],
+            "{$prefix}.penghasilan" => [
+                Rule::requiredIf($wajibHidup),
+                'nullable',
+                'string',
+                Rule::in(array_keys(config('emis.penghasilan'))),
+            ],
+            "{$prefix}.tidak_punya_hp" => ['sometimes', 'boolean'],
+            "{$prefix}.no_hp" => [
+                Rule::requiredIf($wajibHidup && ! $tidakPunyaHp),
+                'nullable',
+                'regex:/^62[0-9]{8,15}$/',
+            ],
+        ];
+    }
+
     /**
      * @param  array<string, mixed>  $input
      * @return array<string, mixed>
@@ -537,19 +696,21 @@ class SiswaBiodataService
     private function ortuPayload(array $input, string $peran): array
     {
         $tidakPunyaHp = (bool) ($input['tidak_punya_hp'] ?? false);
+        $statusHidup = $input['status_hidup'] ?? null;
+        $hidup = $statusHidup === 'hidup';
 
         return [
             'nama' => $input['nama'] ?? null,
-            'status_hidup' => $input['status_hidup'] ?? null,
-            'status' => $peran === 'wali' ? ($input['status'] ?? null) : ($input['status_hidup'] ?? null),
-            'nik' => $input['nik'] ?? null,
-            'tempat_lahir' => $input['tempat_lahir'] ?? null,
-            'tanggal_lahir' => ($input['tanggal_lahir'] ?? '') !== '' ? $input['tanggal_lahir'] : null,
-            'pendidikan' => $input['pendidikan'] ?? null,
-            'pekerjaan' => $input['pekerjaan'] ?? null,
-            'penghasilan' => $input['penghasilan'] ?? null,
-            'tidak_punya_hp' => $tidakPunyaHp,
-            'no_hp' => $tidakPunyaHp ? null : ($input['no_hp'] ?? null),
+            'status_hidup' => $statusHidup,
+            'status' => $peran === 'wali' ? ($input['status'] ?? null) : $statusHidup,
+            'nik' => $hidup ? ($input['nik'] ?? null) : null,
+            'tempat_lahir' => $hidup ? ($input['tempat_lahir'] ?? null) : null,
+            'tanggal_lahir' => $hidup && ($input['tanggal_lahir'] ?? '') !== '' ? $input['tanggal_lahir'] : null,
+            'pendidikan' => $hidup ? ($input['pendidikan'] ?? null) : null,
+            'pekerjaan' => $hidup ? ($input['pekerjaan'] ?? null) : null,
+            'penghasilan' => $hidup ? ($input['penghasilan'] ?? null) : null,
+            'tidak_punya_hp' => $hidup ? $tidakPunyaHp : false,
+            'no_hp' => $hidup && ! $tidakPunyaHp ? ($input['no_hp'] ?? null) : null,
             'hubungan' => $peran === 'wali' ? ($input['hubungan'] ?? null) : null,
         ];
     }

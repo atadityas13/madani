@@ -135,8 +135,14 @@ class SiswaPortalTest extends TestCase
                 'anak_ke' => 1,
                 'agama' => 'Islam',
                 'cita_cita' => 'Guru',
+                'hobi' => 'Membaca',
                 'pembiaya' => 'Orang Tua',
                 'tidak_punya_hp' => true,
+                'tidak_punya_email' => true,
+                'tidak_punya_kip' => true,
+                'no_kk' => '3210010101120001',
+                'kepala_keluarga' => 'Ayah Contoh',
+                'kebutuhan_khusus' => 'Tidak Ada',
             ])
             ->assertForbidden()
             ->assertJsonPath('must_change_password', true);
@@ -162,8 +168,14 @@ class SiswaPortalTest extends TestCase
                 'anak_ke' => 1,
                 'agama' => 'Islam',
                 'cita_cita' => 'Guru',
+                'hobi' => 'Membaca',
                 'pembiaya' => 'Orang Tua',
                 'tidak_punya_hp' => true,
+                'tidak_punya_email' => true,
+                'tidak_punya_kip' => true,
+                'no_kk' => '3210010101120001',
+                'kepala_keluarga' => 'Ayah Contoh',
+                'kebutuhan_khusus' => 'Tidak Ada',
             ])
             ->assertOk()
             ->assertJsonPath('success', true);
@@ -173,6 +185,168 @@ class SiswaPortalTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.id', $siswa->id)
             ->assertJsonPath('data.nisn', '1234567890');
+    }
+
+    public function test_api_orang_tua_requires_complete_fields_and_kks_pkh_rules(): void
+    {
+        $this->seed();
+        $siswa = $this->buatSiswa();
+        $siswa->gantiPassword('sandibaru1');
+
+        $token = $this->postJson('/api/v1/siswa/login', [
+            'nisn' => '1234567890',
+            'password' => 'sandibaru1',
+        ])->assertOk()->json('token');
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/orang-tua', [])
+            ->assertUnprocessable();
+
+        $payload = $this->payloadOrangTua();
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/orang-tua', array_merge($payload, [
+                'tidak_punya_kks' => false,
+                'no_kks' => '1234567890',
+                'tidak_punya_pkh' => true,
+            ]))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('file_kks');
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/orang-tua', array_merge($payload, [
+                'tidak_punya_kks' => true,
+                'tidak_punya_pkh' => true,
+            ]))
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertTrue((bool) $siswa->fresh()->periodikAktif()?->tidak_punya_kks);
+        $this->assertTrue((bool) $siswa->fresh()->periodikAktif()?->tidak_punya_pkh);
+    }
+
+    public function test_api_alamat_copies_parent_and_asrama(): void
+    {
+        $this->seed();
+        $siswa = $this->buatSiswa();
+        $token = $this->tokenSiswa($siswa);
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/orang-tua', array_merge($this->payloadOrangTua(), [
+                'tidak_punya_kks' => true,
+                'tidak_punya_pkh' => true,
+            ]))
+            ->assertOk();
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/alamat', [
+                'ortu' => [
+                    'ayah' => [
+                        'status_tempat_tinggal' => 'Milik sendiri',
+                        'provinsi' => 'Jawa Barat',
+                        'kota' => 'Majalengka',
+                        'kecamatan' => 'Cingambul',
+                        'desa' => 'Maniis',
+                        'blok' => 'Sindanghurip',
+                        'rt' => '001',
+                        'rw' => '002',
+                    ],
+                    'ibu' => ['sama_dengan_ayah' => true],
+                    'wali' => [],
+                ],
+                'tempat_tinggal' => 'Tinggal dengan Orang Tua/Wali',
+                'jarak' => '< 1 km',
+                'waktu_tempuh' => '< 15 menit',
+                'transportasi' => 'Jalan kaki',
+            ])
+            ->assertOk();
+
+        $siswa->refresh();
+        $this->assertSame('Maniis', $siswa->periodikAktif()?->desa);
+        $this->assertSame('Maniis', $siswa->orangTuas->firstWhere('peran', 'ibu')?->desa);
+        $this->assertTrue((bool) $siswa->orangTuas->firstWhere('peran', 'ibu')?->sama_dengan_ayah);
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/alamat', [
+                'tempat_tinggal' => 'Asrama Madrasah',
+            ])
+            ->assertOk();
+
+        $periodik = $siswa->fresh()->periodikAktif();
+        $this->assertSame('Maniis', $periodik?->desa);
+        $this->assertSame('Sindanghurip', $periodik?->blok);
+        $this->assertSame('-7.043314, 108.353711', $periodik?->koordinat);
+    }
+
+    public function test_api_rekam_didik_and_prestasi(): void
+    {
+        $this->seed();
+        $siswa = $this->buatSiswa();
+        $token = $this->tokenSiswa($siswa);
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/rekam-didik', [
+                'nama_sd' => 'SD Negeri 1 Maniis',
+                'npsn' => '20241234',
+                'tahun_ajaran_kelulusan' => '2023/2024',
+                'ijazah_sesuai' => ['nama', 'nisn'],
+            ])
+            ->assertOk();
+
+        $this->assertSame('SD Negeri 1 Maniis', $siswa->fresh()->rekamDidik?->nama_sd);
+        $this->assertFalse((bool) $siswa->fresh()->rekamDidik?->ijazah_sesuai);
+
+        $this->withToken($token)
+            ->postJson('/api/v1/siswa/prestasi', [
+                'nama' => 'Juara 1 MTQ',
+                'jenis' => 'Keagamaan',
+                'tahun' => 2026,
+                'tingkat' => 'Kabupaten/Kota',
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertSame(1, $siswa->fresh()->prestasis()->count());
+    }
+
+    public function test_wilayah_returns_kode_pos(): void
+    {
+        $this->seed();
+        $siswa = $this->buatSiswa();
+        $token = $this->tokenSiswa($siswa);
+
+        $this->withToken($token)
+            ->getJson('/api/v1/wilayah?provinsi=Jawa Barat&kota=Majalengka&kecamatan=Cingambul&desa=Maniis')
+            ->assertOk()
+            ->assertJsonPath('kode_pos', '45467');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function payloadOrangTua(): array
+    {
+        $hidup = [
+            'nama' => 'Orang Tua Contoh',
+            'status_hidup' => 'hidup',
+            'nik' => '3210010101700001',
+            'tempat_lahir' => 'Majalengka',
+            'tanggal_lahir' => '1970-01-01',
+            'pendidikan' => 'SMA/Sederajat',
+            'pekerjaan' => 'Wiraswasta',
+            'penghasilan' => '1.000.000 - 1.999.999',
+            'no_hp' => '628123456789',
+            'tidak_punya_hp' => false,
+        ];
+
+        return [
+            'ortu' => [
+                'ayah' => array_merge($hidup, ['nama' => 'Ayah Contoh']),
+                'ibu' => array_merge($hidup, ['nama' => 'Ibu Contoh', 'nik' => '3210010101720002']),
+                'wali' => ['status' => 'Sama dengan ayah kandung'],
+            ],
+            'penghasilan_gabungan' => 'dibawah 800.000',
+        ];
     }
 
     public function test_password_awal_command_fills_missing_passwords(): void
@@ -190,6 +364,16 @@ class SiswaPortalTest extends TestCase
 
         $siswa->refresh();
         $this->assertTrue(Hash::check(SiswaPassword::dariTanggalLahir('2011-01-15'), $siswa->getAuthPassword()));
+    }
+
+    private function tokenSiswa(Siswa $siswa): string
+    {
+        $siswa->gantiPassword('sandibaru1');
+
+        return $this->postJson('/api/v1/siswa/login', [
+            'nisn' => $siswa->nisn,
+            'password' => 'sandibaru1',
+        ])->assertOk()->json('token');
     }
 
     /**

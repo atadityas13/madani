@@ -90,20 +90,34 @@
             <div class="stat-label mb-3">Penghasilan Gabungan Orang tua & Data Bantuan</div>
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label">Nominal penghasilan gabungan orang tua</label>
-                    <x-emis-select name="penghasilan_gabungan" :options="$emis['penghasilan_gabungan']" :value="old('penghasilan_gabungan', $periodik?->penghasilan_gabungan)" />
+                    <label class="form-label">Nominal penghasilan gabungan orang tua <span class="text-danger">*</span></label>
+                    <x-emis-select name="penghasilan_gabungan" :options="$emis['penghasilan_gabungan']" :value="old('penghasilan_gabungan', $periodik?->penghasilan_gabungan)" required />
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label">Nomor KKS</label>
-                    <input class="form-control" name="no_kks" value="{{ old('no_kks', $periodik?->no_kks) }}">
-                    <div class="form-text">Unggah KKS maks. 2MB pdf jpg png</div>
-                    <input class="form-control mt-1" type="file" name="file_kks" accept=".pdf,.jpg,.jpeg,.png">
+                <div class="col-md-4" data-bantuan-kartu="kks">
+                    <label class="form-label">Nomor KKS <span class="text-danger">*</span></label>
+                    <input class="form-control" name="no_kks" value="{{ old('no_kks', $periodik?->no_kks) }}" data-nomor>
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" name="tidak_punya_kks" value="1" id="tidak_punya_kks" @checked(old('tidak_punya_kks', $periodik?->tidak_punya_kks)) data-tidak-punya>
+                        <label class="form-check-label small" for="tidak_punya_kks">Tidak memiliki KKS</label>
+                    </div>
+                    <div class="form-text mt-2">Unggah kartu KKS (wajib jika nomor diisi), maks. 2MB pdf/jpg/png</div>
+                    @if ($kks = $siswa->dokumenJenis('kks'))
+                        <div class="form-text">Berkas tersimpan: {{ $kks->nama_asli }}</div>
+                    @endif
+                    <input class="form-control mt-1" type="file" name="file_kks" accept=".pdf,.jpg,.jpeg,.png" data-berkas>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label">Nomor PKH</label>
-                    <input class="form-control" name="no_pkh" value="{{ old('no_pkh', $periodik?->no_pkh) }}">
-                    <div class="form-text">Unggah PKH maks. 2MB pdf jpg png</div>
-                    <input class="form-control mt-1" type="file" name="file_pkh" accept=".pdf,.jpg,.jpeg,.png">
+                <div class="col-md-4" data-bantuan-kartu="pkh">
+                    <label class="form-label">Nomor PKH <span class="text-danger">*</span></label>
+                    <input class="form-control" name="no_pkh" value="{{ old('no_pkh', $periodik?->no_pkh) }}" data-nomor>
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" name="tidak_punya_pkh" value="1" id="tidak_punya_pkh" @checked(old('tidak_punya_pkh', $periodik?->tidak_punya_pkh)) data-tidak-punya>
+                        <label class="form-check-label small" for="tidak_punya_pkh">Tidak memiliki PKH</label>
+                    </div>
+                    <div class="form-text mt-2">Unggah kartu PKH (wajib jika nomor diisi), maks. 2MB pdf/jpg/png</div>
+                    @if ($pkh = $siswa->dokumenJenis('pkh'))
+                        <div class="form-text">Berkas tersimpan: {{ $pkh->nama_asli }}</div>
+                    @endif
+                    <input class="form-control mt-1" type="file" name="file_pkh" accept=".pdf,.jpg,.jpeg,.png" data-berkas>
                 </div>
             </div>
         </div>

@@ -303,6 +303,33 @@ function bindOrtuForm() {
         status?.addEventListener('change', syncWali);
         syncWali();
     }
+
+    document.querySelectorAll('[data-bantuan-kartu]').forEach((root) => {
+        const check = root.querySelector('[data-tidak-punya]');
+        const nomor = root.querySelector('[data-nomor]');
+        const berkas = root.querySelector('[data-berkas]');
+
+        const sync = () => {
+            const skip = Boolean(check?.checked);
+
+            if (nomor) {
+                nomor.disabled = skip;
+                if (skip) {
+                    nomor.value = '';
+                }
+            }
+
+            if (berkas) {
+                berkas.disabled = skip;
+                if (skip) {
+                    berkas.value = '';
+                }
+            }
+        };
+
+        check?.addEventListener('change', sync);
+        sync();
+    });
 }
 
 function bindAlamatOrtu() {

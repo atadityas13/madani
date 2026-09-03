@@ -52,7 +52,7 @@ class SiswaPortalController extends Controller
                 ->with('status', 'Riwayat akademik hanya dapat diubah oleh madrasah.');
         }
 
-        $pesan = $this->biodata->updateBagian($request, $siswa, $bagian);
+        $pesan = $this->biodata->updateBagian($request, $siswa, $bagian, kunciIdentitas: true);
         $tab = in_array($bagian, ['orang-tua', 'alamat', 'beasiswa', 'prestasi', 'rekam-didik'], true)
             ? $bagian
             : 'data-siswa';

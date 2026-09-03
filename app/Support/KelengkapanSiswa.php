@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\OrangTua;
 use App\Models\Siswa;
 
 class KelengkapanSiswa
@@ -11,7 +12,7 @@ class KelengkapanSiswa
      */
     public static function ringkasan(Siswa $siswa): array
     {
-        $siswa->loadMissing(['orangTuas', 'periodiks', 'rekamDidik', 'rombels.tahunAjaran', 'prestasis', 'beasiswas']);
+        $siswa->loadMissing(['orangTuas', 'periodiks', 'rekamDidik', 'rombels.tahunAjaran', 'prestasis', 'beasiswas', 'dokumens']);
 
         $tabs = [
             ['id' => 'data-siswa', 'label' => 'Data siswa', 'wajib' => true, 'selesai' => self::dataSiswa($siswa)],
@@ -38,6 +39,15 @@ class KelengkapanSiswa
     private static function dataSiswa(Siswa $siswa): bool
     {
         $periodik = $siswa->periodikAktif();
+        $siswa->loadMissing('dokumens');
+
+        $hpOk = $siswa->tidak_punya_hp || filled($siswa->no_hp);
+        $emailOk = $siswa->tidak_punya_email || filled($siswa->email);
+        $kipOk = $periodik?->tidak_punya_kip || filled($periodik?->no_kip);
+        $kkDokumen = $siswa->dokumenJenis('kk') !== null;
+        $kipDokumen = $periodik?->tidak_punya_kip
+            || blank($periodik?->no_kip)
+            || $siswa->dokumenJenis('kip') !== null;
 
         return filled($siswa->nama)
             && filled($siswa->nisn)
@@ -47,17 +57,74 @@ class KelengkapanSiswa
             && filled($siswa->jenis_kelamin)
             && filled($siswa->agama)
             && filled($siswa->cita_cita)
+            && filled($siswa->hobi)
             && $siswa->anak_ke !== null
             && $siswa->jumlah_saudara !== null
-            && filled($periodik?->pembiaya);
+            && $hpOk
+            && $emailOk
+            && filled($periodik?->pembiaya)
+            && filled($periodik?->no_kk)
+            && filled($periodik?->kepala_keluarga)
+            && $kipOk
+            && filled($periodik?->kebutuhanKhususLabel())
+            && $kkDokumen
+            && $kipDokumen;
     }
 
     private static function orangTua(Siswa $siswa): bool
     {
+        $periodik = $siswa->periodikAktif();
         $ayah = $siswa->orangTuas->firstWhere('peran', 'ayah');
         $ibu = $siswa->orangTuas->firstWhere('peran', 'ibu');
+        $wali = $siswa->orangTuas->firstWhere('peran', 'wali');
 
-        return filled($ayah?->nama) && filled($ibu?->nama);
+        $kksOk = $periodik?->tidak_punya_kks
+            || (filled($periodik?->no_kks) && $siswa->dokumenJenis('kks') !== null);
+        $pkhOk = $periodik?->tidak_punya_pkh
+            || (filled($periodik?->no_pkh) && $siswa->dokumenJenis('pkh') !== null);
+
+        return self::orangTuaWajib($ayah)
+            && self::orangTuaWajib($ibu)
+            && self::waliWajib($wali)
+            && filled($periodik?->penghasilan_gabungan)
+            && $kksOk
+            && $pkhOk;
+    }
+
+    private static function orangTuaWajib(?OrangTua $ortu): bool
+    {
+        if (! filled($ortu?->nama) || ! filled($ortu?->status_hidup)) {
+            return false;
+        }
+
+        if ($ortu->status_hidup !== 'hidup') {
+            return true;
+        }
+
+        $hpOk = $ortu->tidak_punya_hp || filled($ortu->no_hp);
+
+        return filled($ortu->nik)
+            && filled($ortu->tempat_lahir)
+            && $ortu->tanggal_lahir !== null
+            && filled($ortu->pendidikan)
+            && filled($ortu->pekerjaan)
+            && filled($ortu->penghasilan)
+            && $hpOk;
+    }
+
+    private static function waliWajib(?OrangTua $wali): bool
+    {
+        $status = $wali?->status;
+
+        if ($status === 'Sama dengan ayah kandung' || $status === 'Sama dengan ibu kandung') {
+            return true;
+        }
+
+        if ($status === 'Lainnya' || $status === 'Isi sendiri') {
+            return filled($wali?->hubungan) && self::orangTuaWajib($wali);
+        }
+
+        return false;
     }
 
     private static function alamat(Siswa $siswa): bool

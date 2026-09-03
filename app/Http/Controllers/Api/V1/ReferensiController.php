@@ -28,6 +28,7 @@ class ReferensiController extends Controller
         $provinsi = (string) $request->query('provinsi', '');
         $kota = (string) $request->query('kota', '');
         $kecamatan = (string) $request->query('kecamatan', '');
+        $desa = (string) $request->query('desa', '');
 
         if ($provinsi === '') {
             return response()->json([
@@ -47,6 +48,14 @@ class ReferensiController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => Wilayah::kecamatan($provinsi, $kota),
+            ]);
+        }
+
+        if ($desa !== '') {
+            return response()->json([
+                'success' => true,
+                'data' => [],
+                'kode_pos' => Wilayah::kodePos($provinsi, $kota, $kecamatan, $desa),
             ]);
         }
 

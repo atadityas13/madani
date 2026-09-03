@@ -19,7 +19,7 @@ use Laravel\Sanctum\HasApiTokens;
     'tempat_lahir', 'tanggal_lahir', 'jenis_kelamin', 'agama',
     'kewarganegaraan', 'anak_ke', 'jumlah_saudara',
     'cita_cita', 'hobi', 'email', 'no_hp',
-    'tidak_punya_hp', 'foto', 'status_keaktifan', 'tanggal_nonaktif',
+    'tidak_punya_hp', 'tidak_punya_email', 'foto', 'status_keaktifan', 'tanggal_nonaktif',
     'alasan_nonaktif', 'must_change_password',
 ])]
 #[Hidden(['password', 'remember_token'])]
@@ -35,6 +35,7 @@ class Siswa extends Authenticatable
             'punya_nisn' => 'boolean',
             'punya_nik' => 'boolean',
             'tidak_punya_hp' => 'boolean',
+            'tidak_punya_email' => 'boolean',
             'must_change_password' => 'boolean',
             'password' => 'hashed',
         ];
@@ -143,6 +144,11 @@ class Siswa extends Authenticatable
     public function dokumens(): HasMany
     {
         return $this->hasMany(Dokumen::class);
+    }
+
+    public function pengajuanPerubahans(): HasMany
+    {
+        return $this->hasMany(PengajuanPerubahanSiswa::class);
     }
 
     public function beasiswas(): HasMany
