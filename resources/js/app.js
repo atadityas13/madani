@@ -286,12 +286,11 @@ function bindOrtuForm() {
     const ayahBlok = document.querySelector('[data-ortu-blok="ayah"]');
     const waliBlok = document.querySelector('[data-ortu-blok="wali"]');
 
-    [ayahBlok, ibuBlok, waliBlok].filter(Boolean).forEach(bindHidupFields);
+    [ayahBlok, ibuBlok].filter(Boolean).forEach(bindHidupFields);
 
     if (waliBlok) {
         const status = waliBlok.querySelector('[data-wali-status]');
         const locked = waliBlok.querySelector('[data-wali-status-locked]');
-        const wrap = waliBlok.querySelector('[data-wali-status-wrap]');
         const note = waliBlok.querySelector('[data-wali-wajib-note]');
         const detail = waliBlok.querySelector('[data-ortu-detail]');
         const ayahStatus = ayahBlok?.querySelector('[data-status-hidup]');
@@ -304,12 +303,9 @@ function bindOrtuForm() {
                 status.value = 'Lainnya';
             }
 
-            if (wrap) {
-                wrap.hidden = keduaMeninggal;
-            }
-
             if (status) {
                 status.disabled = keduaMeninggal;
+                status.classList.toggle('bg-light', keduaMeninggal);
             }
 
             if (locked) {

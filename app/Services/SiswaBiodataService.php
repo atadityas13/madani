@@ -689,6 +689,12 @@ class SiswaBiodataService
 
         $waliStatus = $request->input('ortu.wali.status');
         $waliLainnya = in_array($waliStatus, ['Lainnya', 'Isi sendiri'], true);
+
+        if ($waliLainnya) {
+            $ortu = $request->input('ortu', []);
+            $ortu['wali'] = array_merge($ortu['wali'] ?? [], ['status_hidup' => 'hidup']);
+            $request->merge(['ortu' => $ortu]);
+        }
         $tidakPunyaKks = $request->boolean('tidak_punya_kks');
         $tidakPunyaPkh = $request->boolean('tidak_punya_pkh');
         $noKks = $tidakPunyaKks ? null : $request->input('no_kks');
@@ -746,7 +752,6 @@ class SiswaBiodataService
             'ortu.wali.status.required' => 'Status wali wajib dipilih',
             'ortu.wali.hubungan.required' => 'Hubungan wali wajib dipilih',
             'ortu.wali.nama.required' => 'Nama wali wajib diisi',
-            'ortu.wali.status_hidup.required' => 'Status hidup wali wajib dipilih',
             'ortu.wali.nik.required' => 'NIK wali wajib diisi',
             'ortu.wali.tempat_lahir.required' => 'Tempat lahir wali wajib diisi',
             'ortu.wali.tanggal_lahir.required' => 'Tanggal lahir wali wajib diisi',

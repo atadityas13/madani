@@ -20,13 +20,13 @@
 <div class="madani-card p-4 h-100" data-ortu-blok="{{ $peran }}">
     <div class="stat-label mb-3">{{ $judul }}</div>
     @if ($peran === 'wali')
-        <div class="mb-3" data-wali-status-wrap @if ($keduaMeninggal) hidden @endif>
-            <label class="form-label">Status <span class="text-danger">*</span></label>
-            <x-emis-select :name="$input.'[status]'" :options="$emis['status_wali']" :value="$statusWali" :required="! $keduaMeninggal" :disabled="$keduaMeninggal" data-wali-status />
+        <div class="mb-3" data-wali-status-wrap>
+            <label class="form-label">Status wali <span class="text-danger">*</span></label>
+            <x-emis-select :name="$input.'[status]'" :options="$emis['status_wali']" :value="$statusWali" :required="! $keduaMeninggal" :disabled="$keduaMeninggal" class="{{ $keduaMeninggal ? 'bg-light' : '' }}" data-wali-status />
             <div class="form-text">Isian wali hanya muncul jika statusnya selain ayah atau ibu kandung.</div>
         </div>
         <input type="hidden" name="{{ $input }}[status]" value="Lainnya" data-wali-status-locked @disabled(! $keduaMeninggal)>
-        <p class="form-text mb-3" data-wali-wajib-note @if (! $keduaMeninggal) hidden @endif>Ayah dan ibu kandung sudah meninggal dunia. Data wali wajib diisi.</p>
+        <p class="form-text mb-3" data-wali-wajib-note @if (! $keduaMeninggal) hidden @endif>Ayah dan ibu kandung sudah meninggal dunia. Status wali otomatis Lainnya dan tidak dapat diubah.</p>
     @endif
 
     <div @if ($peran === 'wali' && ! $waliLainnya) hidden @endif data-ortu-detail>
@@ -40,12 +40,16 @@
             <label class="form-label">Nama lengkap {{ $judul }} <span class="text-danger">*</span></label>
             <input class="form-control" name="{{ $input }}[nama]" value="{{ old($old.'.nama', $ortu?->nama) }}" @required($peran !== 'wali')>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Status <span class="text-danger">*</span></label>
-            <x-emis-select :name="$input.'[status_hidup]'" :options="$emis['status_hidup']" :value="$statusHidup" :required="$peran !== 'wali'" data-status-hidup />
-        </div>
+        @if ($peran === 'wali')
+            <input type="hidden" name="{{ $input }}[status_hidup]" value="hidup">
+        @else
+            <div class="mb-3">
+                <label class="form-label">Status <span class="text-danger">*</span></label>
+                <x-emis-select :name="$input.'[status_hidup]'" :options="$emis['status_hidup']" :value="$statusHidup" required data-status-hidup />
+            </div>
+        @endif
 
-        <div class="row g-2" data-ortu-hidup @if (! $tampilHidup) hidden @endif>
+        <div class="row g-2" data-ortu-hidup @if ($peran !== 'wali' && ! $tampilHidup) hidden @endif>
             <div class="col-12">
                 <label class="form-label">NIK <span class="text-danger">*</span></label>
                 <input class="form-control" name="{{ $input }}[nik]" value="{{ old($old.'.nik', $ortu?->nik) }}" maxlength="16">
