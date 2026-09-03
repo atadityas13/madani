@@ -6,9 +6,15 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['nama', 'semester', 'tanggal_mulai', 'tanggal_selesai', 'is_aktif'])]
+#[Fillable(['nama', 'tanggal_mulai', 'tanggal_selesai', 'is_aktif', 'status'])]
 class TahunAjaran extends Model
 {
+    public const STATUS_AKTIF = 'aktif';
+
+    public const STATUS_BELUM_AKTIF = 'belum_aktif';
+
+    public const STATUS_ARSIP = 'arsip';
+
     protected function casts(): array
     {
         return [
@@ -23,18 +29,47 @@ class TahunAjaran extends Model
         return $this->hasMany(Rombel::class);
     }
 
-    public function labelSemester(): string
+    public function periodiks(): HasMany
     {
-        return $this->semester === 'genap' ? 'Genap' : 'Ganjil';
+        return $this->hasMany(SiswaPeriodik::class);
     }
 
     public function label(): string
     {
-        return trim($this->nama.' '.$this->labelSemester());
+        return (string) $this->nama;
+    }
+
+    public function labelStatus(): string
+    {
+        return match ($this->status) {
+            self::STATUS_AKTIF => 'Aktif',
+            self::STATUS_ARSIP => 'Arsip',
+            default => 'Belum Aktif',
+        };
+    }
+
+    public function adalahAktif(): bool
+    {
+        return $this->status === self::STATUS_AKTIF || $this->is_aktif;
+    }
+
+    public function punyaData(): bool
+    {
+        return $this->rombels()->exists() || $this->periodiks()->exists();
+    }
+
+    public function bisaDihapus(): bool
+    {
+        return ! $this->adalahAktif() && ! $this->punyaData();
     }
 
     public static function aktif(): ?self
     {
-        return static::query()->where('is_aktif', true)->first();
+        return static::query()
+            ->where(function ($query) {
+                $query->where('status', self::STATUS_AKTIF)
+                    ->orWhere('is_aktif', true);
+            })
+            ->first();
     }
 }

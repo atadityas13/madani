@@ -40,6 +40,11 @@ class User extends Authenticatable
         return $this->hasRole(Peran::SUPERADMIN);
     }
 
+    public function bisaUbahIdentitas(): bool
+    {
+        return $this->hasRole(Peran::SUPERADMIN);
+    }
+
     public function bisaKelola(): bool
     {
         return Peran::cocok($this, Peran::pengelola());

@@ -39,7 +39,8 @@ class MenuAkademikTest extends TestCase
         $tahun = TahunAjaran::aktif();
 
         $this->assertNotNull($tahun);
-        $this->assertSame('ganjil', $tahun->semester);
+        $this->assertSame('2026/2027', $tahun->nama);
+        $this->assertSame('Aktif', $tahun->labelStatus());
 
         $this->post('/rombel', [
             'tingkat' => 7,

@@ -2,7 +2,7 @@
 
 @section('title', 'Tahun ajaran')
 @section('heading', 'Tahun ajaran')
-@section('subheading', 'Kelembagaan · semester aktif')
+@section('subheading', 'Kelembagaan')
 
 @section('content')
 <div class="d-flex align-items-center mb-3 gap-3 flex-wrap">
@@ -15,8 +15,6 @@
             <thead>
                 <tr>
                     <th>Tahun ajaran</th>
-                    <th>Semester</th>
-                    <th>Periode</th>
                     <th>Status</th>
                     <th></th>
                 </tr>
@@ -25,12 +23,10 @@
                 @forelse ($tahunAjarans as $item)
                     <tr>
                         <td>{{ $item->nama }}</td>
-                        <td>{{ $item->labelSemester() }}</td>
-                        <td>{{ $item->tanggal_mulai?->format('d/m/Y') }} – {{ $item->tanggal_selesai?->format('d/m/Y') }}</td>
-                        <td>{{ $item->is_aktif ? 'Aktif' : 'Tidak aktif' }}</td>
+                        <td>{{ $item->labelStatus() }}</td>
                         <td class="text-end">
                             <div class="emis-aksi">
-                                @unless ($item->is_aktif)
+                                @unless ($item->adalahAktif())
                                     <form method="POST" action="{{ route('tahun-ajaran.aktifkan', $item) }}">
                                         @csrf
                                         <button class="btn btn-sm btn-outline-secondary" type="submit">Aktifkan</button>
@@ -39,7 +35,7 @@
                                 <a class="emis-aksi-btn" href="{{ route('tahun-ajaran.edit', $item) }}" title="Ubah">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                @unless ($item->is_aktif)
+                                @if ($item->bisaDihapus())
                                     <form method="POST" action="{{ route('tahun-ajaran.destroy', $item) }}" onsubmit="return confirm('Hapus tahun ajaran ini?')">
                                         @csrf
                                         @method('DELETE')
@@ -47,12 +43,12 @@
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
-                                @endunless
+                                @endif
                             </div>
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="5" class="text-secondary p-3">Belum ada tahun ajaran.</td></tr>
+                    <tr><td colspan="3" class="text-secondary p-3">Belum ada tahun ajaran.</td></tr>
                 @endforelse
             </tbody>
         </table>

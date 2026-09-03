@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Madrasah;
 use App\Models\TahunAjaran;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -30,12 +31,15 @@ class DatabaseSeeder extends Seeder
         );
         $admin->syncRoles(['superadmin']);
 
+        Madrasah::saatIni();
+
         TahunAjaran::query()->updateOrCreate(
-            ['nama' => '2026/2027', 'semester' => 'ganjil'],
+            ['nama' => '2026/2027'],
             [
                 'tanggal_mulai' => '2026-07-13',
-                'tanggal_selesai' => '2026-12-19',
+                'tanggal_selesai' => '2027-06-12',
                 'is_aktif' => true,
+                'status' => TahunAjaran::STATUS_AKTIF,
             ]
         );
     }

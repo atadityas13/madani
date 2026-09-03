@@ -14,7 +14,7 @@ class TahunAjaranController extends Controller
     public function index(): View
     {
         return view('tahun-ajaran.index', [
-            'tahunAjarans' => TahunAjaran::query()->orderByDesc('tanggal_mulai')->get(),
+            'tahunAjarans' => TahunAjaran::query()->orderByDesc('tanggal_mulai')->orderByDesc('nama')->get(),
         ]);
     }
 
@@ -22,20 +22,19 @@ class TahunAjaranController extends Controller
     {
         return view('tahun-ajaran.form', [
             'tahunAjaran' => new TahunAjaran([
-                'semester' => 'ganjil',
                 'tanggal_mulai' => now()->startOfYear()->month(7)->day(13),
                 'tanggal_selesai' => now()->addYear()->month(6)->day(12),
+                'status' => TahunAjaran::STATUS_BELUM_AKTIF,
             ]),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $tahun = TahunAjaran::query()->create($this->validated($request));
-
-        if ($tahun->is_aktif) {
-            $this->jadikanAktif($tahun);
-        }
+        TahunAjaran::query()->create($this->validated($request) + [
+            'status' => TahunAjaran::STATUS_BELUM_AKTIF,
+            'is_aktif' => false,
+        ]);
 
         return redirect()
             ->route('tahun-ajaran.index')
@@ -51,10 +50,6 @@ class TahunAjaranController extends Controller
     {
         $tahunAjaran->update($this->validated($request, $tahunAjaran));
 
-        if ($tahunAjaran->is_aktif) {
-            $this->jadikanAktif($tahunAjaran);
-        }
-
         return redirect()
             ->route('tahun-ajaran.index')
             ->with('status', 'Tahun ajaran diperbarui.');
@@ -66,17 +61,13 @@ class TahunAjaranController extends Controller
 
         return redirect()
             ->route('tahun-ajaran.index')
-            ->with('status', $tahunAjaran->label().' dijadikan semester aktif.');
+            ->with('status', $tahunAjaran->label().' dijadikan tahun ajaran aktif.');
     }
 
     public function destroy(TahunAjaran $tahunAjaran): RedirectResponse
     {
-        if ($tahunAjaran->rombels()->exists()) {
-            return back()->with('status', 'Tahun ajaran tidak dapat dihapus karena masih dipakai rombel.');
-        }
-
-        if ($tahunAjaran->is_aktif) {
-            return back()->with('status', 'Semester aktif tidak dapat dihapus.');
+        if (! $tahunAjaran->bisaDihapus()) {
+            return back()->with('status', 'Tahun ajaran tidak dapat dihapus karena sudah dipakai data aktif.');
         }
 
         $tahunAjaran->delete();
@@ -86,34 +77,36 @@ class TahunAjaranController extends Controller
             ->with('status', 'Tahun ajaran dihapus.');
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function validated(Request $request, ?TahunAjaran $tahunAjaran = null): array
     {
-        $data = $request->validate([
-            'nama' => ['required', 'string', 'max:20'],
-            'semester' => ['required', Rule::in(['ganjil', 'genap'])],
+        return $request->validate([
+            'nama' => ['required', 'string', 'max:20', Rule::unique('tahun_ajarans', 'nama')->ignore($tahunAjaran?->id)],
             'tanggal_mulai' => ['required', 'date'],
             'tanggal_selesai' => ['required', 'date', 'after:tanggal_mulai'],
-            'is_aktif' => ['sometimes', 'boolean'],
         ]);
-
-        $data['is_aktif'] = $request->boolean('is_aktif');
-
-        $request->validate([
-            'nama' => [
-                Rule::unique('tahun_ajarans', 'nama')
-                    ->where('semester', $data['semester'])
-                    ->ignore($tahunAjaran?->id),
-            ],
-        ]);
-
-        return $data;
     }
 
     private function jadikanAktif(TahunAjaran $tahunAjaran): void
     {
         DB::transaction(function () use ($tahunAjaran) {
-            TahunAjaran::query()->whereKeyNot($tahunAjaran->id)->update(['is_aktif' => false]);
-            $tahunAjaran->update(['is_aktif' => true]);
+            TahunAjaran::query()
+                ->whereKeyNot($tahunAjaran->id)
+                ->where(function ($query) {
+                    $query->where('status', TahunAjaran::STATUS_AKTIF)
+                        ->orWhere('is_aktif', true);
+                })
+                ->update([
+                    'is_aktif' => false,
+                    'status' => TahunAjaran::STATUS_ARSIP,
+                ]);
+
+            $tahunAjaran->update([
+                'is_aktif' => true,
+                'status' => TahunAjaran::STATUS_AKTIF,
+            ]);
         });
     }
 }

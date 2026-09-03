@@ -53,7 +53,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="7" class="text-secondary p-3">Belum ada rombel pada semester ini.</td></tr>
+                    <tr><td colspan="7" class="text-secondary p-3">Belum ada rombel pada tahun ajaran ini.</td></tr>
                 @endforelse
             </tbody>
         </table>

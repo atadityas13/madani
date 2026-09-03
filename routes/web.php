@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware('role:superadmin')->group(function () {
+        Route::put('/kelembagaan/identitas', [KelembagaanController::class, 'updateIdentitas'])->name('kelembagaan.identitas.update');
         Route::resource('pengguna', UserController::class)
             ->parameters(['pengguna' => 'user'])
             ->except(['show']);
