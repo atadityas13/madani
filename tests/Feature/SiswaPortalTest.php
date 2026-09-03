@@ -83,6 +83,53 @@ class SiswaPortalTest extends TestCase
             ->assertSee('Data saya');
     }
 
+    public function test_portal_requires_tabs_in_order_until_required_ones_are_complete(): void
+    {
+        Storage::fake('public');
+        $this->seed();
+        $siswa = $this->buatSiswa();
+        $siswa->gantiPassword('sandibaru1');
+
+        $this->actingAs($siswa, 'siswa')
+            ->get('/siswa/portal?tab=orang-tua')
+            ->assertRedirect(route('siswa.portal', ['tab' => 'data-siswa']));
+
+        $this->actingAs($siswa, 'siswa')
+            ->get('/siswa/portal?tab=prestasi')
+            ->assertRedirect(route('siswa.portal', ['tab' => 'data-siswa']));
+
+        $this->actingAs($siswa, 'siswa')
+            ->get('/siswa/portal')
+            ->assertOk()
+            ->assertSee('Identitas')
+            ->assertSee('biodata-path', false);
+
+        $token = $this->tokenSiswa($siswa);
+        $this->withToken($token)
+            ->getJson('/api/v1/siswa/me')
+            ->assertOk()
+            ->assertJsonPath('data.kelengkapan.wajib_total', 4)
+            ->assertJsonPath('data.kelengkapan.tab.0.terbuka', true)
+            ->assertJsonPath('data.kelengkapan.tab.1.terbuka', false)
+            ->assertJsonPath('data.kelengkapan.tab.4.wajib', false);
+
+        $this->unggahKk($token);
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/data-siswa', $this->payloadDataSiswa())
+            ->assertOk();
+
+        $siswa->refresh();
+
+        $this->actingAs($siswa, 'siswa')
+            ->get('/siswa/portal?tab=orang-tua')
+            ->assertOk()
+            ->assertSee('Data orang tua');
+
+        $this->actingAs($siswa, 'siswa')
+            ->get('/siswa/portal?tab=prestasi')
+            ->assertRedirect(route('siswa.portal', ['tab' => 'orang-tua']));
+    }
+
     public function test_gtk_can_reset_siswa_password(): void
     {
         $this->seed();

@@ -89,7 +89,7 @@ class Siswa extends Authenticatable
     }
 
     /**
-     * @return array{persen: int, wajib_selesai: int, wajib_total: int, tab: list<array{id: string, label: string, selesai: bool, wajib: bool}>}
+     * @return array{persen: int, wajib_selesai: int, wajib_total: int, wajib_semua_selesai: bool, tab: list<array{id: string, label: string, selesai: bool, wajib: bool, terbuka: bool}>}
      */
     public function kelengkapan(): array
     {

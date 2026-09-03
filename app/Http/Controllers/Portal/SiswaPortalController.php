@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Portal;
 use App\Http\Controllers\Controller;
 use App\Models\Siswa;
 use App\Services\SiswaBiodataService;
+use App\Support\KelengkapanSiswa;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,13 +30,19 @@ class SiswaPortalController extends Controller
             'pengajuanPerubahans',
         ]);
 
-        $tab = $request->query('tab', 'data-siswa');
+        $diminta = $request->query('tab', 'data-siswa');
+        $tab = KelengkapanSiswa::tabAman($siswa, is_string($diminta) ? $diminta : 'data-siswa');
+
+        if ($tab !== $diminta) {
+            return redirect()->route('siswa.portal', ['tab' => $tab]);
+        }
 
         return view('siswa.show', [
             'siswa' => $siswa,
             'periodik' => $siswa->periodikAktif(),
             'emis' => config('emis'),
             'tab' => $tab,
+            'navigasi' => KelengkapanSiswa::navigasi($siswa, $tab),
             'alamatOrtu' => $this->biodata->alamatOrtuUtama($siswa),
             'alamatAsrama' => config('emis.asrama_madrasah'),
             'portal' => true,

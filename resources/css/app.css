@@ -630,6 +630,170 @@ a:hover {
     margin-top: 1.25rem;
 }
 
+.biodata-path {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    overflow-x: auto;
+    padding: 1rem 0.35rem 0.85rem;
+}
+
+.biodata-path-item {
+    position: relative;
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    align-items: center;
+    min-width: 88px;
+    text-align: center;
+}
+
+.biodata-path-item:not(:first-child)::before {
+    content: '';
+    position: absolute;
+    top: 17px;
+    right: calc(50% + 20px);
+    width: calc(100% - 40px);
+    height: 2px;
+    background: #e5e7eb;
+    z-index: 0;
+}
+
+.biodata-path-item.is-done:not(:first-child)::before,
+.biodata-path-item.is-current:not(:first-child)::before {
+    background: #22c55e;
+}
+
+.biodata-path-node {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid #d1d5db;
+    background: #fff;
+    color: #9aa0a6;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    text-decoration: none;
+}
+
+.biodata-path-item.is-done .biodata-path-node {
+    background: #16a34a;
+    border-color: #16a34a;
+    color: #fff;
+}
+
+.biodata-path-item.is-todo .biodata-path-node {
+    background: #fff;
+    border-color: #f13a59;
+    color: #f13a59;
+}
+
+.biodata-path-item.is-current .biodata-path-node {
+    border: 2px dashed var(--emis-blue);
+    background: #fff;
+    color: var(--emis-blue);
+}
+
+.biodata-path-item.is-current .biodata-path-node i {
+    animation: biodata-spin 0.9s linear infinite;
+}
+
+.biodata-path-item.is-locked .biodata-path-node {
+    cursor: not-allowed;
+    opacity: 0.72;
+}
+
+.biodata-path-item.is-open .biodata-path-node:hover {
+    color: var(--emis-blue-dark);
+}
+
+.biodata-path-label {
+    margin-top: 0.4rem;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: #6b7280;
+    line-height: 1.25;
+}
+
+.biodata-path-item.is-current .biodata-path-label,
+.biodata-path-item.is-active .biodata-path-label {
+    color: var(--emis-blue);
+}
+
+.biodata-path-item.is-done .biodata-path-label {
+    color: #15803d;
+}
+
+@keyframes biodata-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .biodata-path-item.is-current .biodata-path-node i {
+        animation: none;
+    }
+}
+
+.biodata-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+}
+
+.biodata-actions-save {
+    min-width: 132px;
+    padding: 0.55rem 1.6rem;
+}
+
+.biodata-actions-nav {
+    background: #fff;
+    border: 1px solid #d7dbe0;
+    color: #3f4650;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    padding: 0.35rem 0.75rem;
+    justify-self: start;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.biodata-actions-nav-next {
+    justify-self: end;
+}
+
+.biodata-actions-nav:hover,
+.biodata-actions-nav:focus {
+    background: #fff;
+    border-color: var(--emis-blue);
+    color: var(--emis-blue);
+}
+
+.biodata-actions-nav:disabled {
+    background: #fff;
+    color: #9aa0a6;
+    border-color: #e5e7eb;
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.biodata-actions-nav-placeholder,
+.biodata-actions-save-placeholder {
+    min-height: 1px;
+}
+
 [data-wilayah-step][hidden],
 [data-ortu-detail][hidden],
 [data-ortu-hidup][hidden],

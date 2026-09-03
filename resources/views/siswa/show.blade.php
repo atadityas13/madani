@@ -1,14 +1,6 @@
 @php
     $portal = $portal ?? false;
-    $tabs = [
-        'data-siswa' => 'Data siswa',
-        'orang-tua' => 'Data orang tua',
-        'alamat' => 'Data alamat',
-        'rekam-didik' => 'Rekam didik',
-        'aktivitas' => 'Riwayat akademik',
-        'prestasi' => 'Prestasi',
-        'beasiswa' => 'Bantuan pendidikan',
-    ];
+    $navigasi = $navigasi ?? \App\Support\KelengkapanSiswa::navigasi($siswa, $tab ?? 'data-siswa');
     $inisialSiswa = collect(preg_split('/\s+/', trim($siswa->nama)))
         ->filter()
         ->take(2)
@@ -46,13 +38,7 @@
 </div>
 
 <div class="madani-card px-2 mb-3">
-    <ul class="nav nav-pills flex-nowrap overflow-auto mb-0">
-        @foreach ($tabs as $id => $label)
-            <li class="nav-item">
-                <a class="nav-link {{ $tab === $id ? 'active' : '' }}" href="{{ $tabUrl($id) }}">{{ $label }}</a>
-            </li>
-        @endforeach
-    </ul>
+    @include('siswa.partials.tab-path')
 </div>
 
 @if ($tab === 'data-siswa')
@@ -86,12 +72,7 @@
             @method('PUT')
             <input type="hidden" name="bagian" value="data-siswa">
             @include('siswa.partials.form-data-siswa', ['siswa' => $siswa, 'periodik' => $periodik, 'emis' => $emis])
-            <div class="emis-actions">
-                @unless ($portal)
-                    <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
-                @endunless
-                <button class="btn btn-madani" type="submit">Simpan</button>
-            </div>
+            @include('siswa.partials.tab-actions')
         </form>
     </div>
     @if ($portal)
@@ -185,12 +166,7 @@
                 </div>
             </div>
         </div>
-        <div class="emis-actions">
-            @unless ($portal)
-                <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
-            @endunless
-            <button class="btn btn-madani" type="submit">Simpan</button>
-        </div>
+        @include('siswa.partials.tab-actions')
     </form>
 @endif
 
@@ -250,25 +226,23 @@
         </div>
         <script type="application/json" id="madani-alamat-ortu">@json($alamatOrtu ?? [])</script>
         <script type="application/json" id="madani-alamat-asrama">@json($alamatAsrama ?? [])</script>
-        <div class="emis-actions">
-            @unless ($portal)
-                <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
-            @endunless
-            <button class="btn btn-madani" type="submit">Simpan</button>
-        </div>
+        @include('siswa.partials.tab-actions')
     </form>
 @endif
 
 @if ($tab === 'aktivitas')
     @include('siswa.partials.riwayat-akademik')
+    @include('siswa.partials.tab-actions', ['showSave' => false])
 @endif
 
 @if ($tab === 'beasiswa')
     @include('siswa.partials.beasiswa')
+    @include('siswa.partials.tab-actions', ['showSave' => false])
 @endif
 
 @if ($tab === 'prestasi')
     @include('siswa.partials.prestasi')
+    @include('siswa.partials.tab-actions', ['showSave' => false])
 @endif
 
 @if ($tab === 'rekam-didik')
@@ -277,12 +251,7 @@
         @method('PUT')
         <input type="hidden" name="bagian" value="rekam-didik">
         @include('siswa.partials.form-rekam-didik')
-        <div class="emis-actions">
-            @unless ($portal)
-                <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
-            @endunless
-            <button class="btn btn-madani" type="submit">Simpan</button>
-        </div>
+        @include('siswa.partials.tab-actions')
     </form>
 @endif
 @endsection

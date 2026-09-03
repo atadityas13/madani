@@ -8,32 +8,110 @@ use App\Models\Siswa;
 class KelengkapanSiswa
 {
     /**
-     * @return array{persen: int, wajib_selesai: int, wajib_total: int, tab: list<array{id: string, label: string, selesai: bool, wajib: bool}>}
+     * @return array{persen: int, wajib_selesai: int, wajib_total: int, wajib_semua_selesai: bool, tab: list<array{id: string, label: string, selesai: bool, wajib: bool, terbuka: bool}>}
      */
     public static function ringkasan(Siswa $siswa): array
     {
         $siswa->loadMissing(['orangTuas', 'periodiks', 'rekamDidik', 'rombels.tahunAjaran', 'prestasis', 'beasiswas', 'dokumens']);
 
         $tabs = [
-            ['id' => 'data-siswa', 'label' => 'Data siswa', 'wajib' => true, 'selesai' => self::dataSiswa($siswa)],
+            ['id' => 'data-siswa', 'label' => 'Identitas', 'wajib' => true, 'selesai' => self::dataSiswa($siswa)],
             ['id' => 'orang-tua', 'label' => 'Data orang tua', 'wajib' => true, 'selesai' => self::orangTua($siswa)],
             ['id' => 'alamat', 'label' => 'Data alamat', 'wajib' => true, 'selesai' => self::alamat($siswa)],
             ['id' => 'rekam-didik', 'label' => 'Rekam didik', 'wajib' => true, 'selesai' => self::rekamDidik($siswa)],
-            ['id' => 'aktivitas', 'label' => 'Riwayat akademik', 'wajib' => true, 'selesai' => self::aktivitas($siswa)],
+            ['id' => 'aktivitas', 'label' => 'Riwayat', 'wajib' => false, 'selesai' => self::aktivitas($siswa)],
             ['id' => 'prestasi', 'label' => 'Prestasi', 'wajib' => false, 'selesai' => $siswa->prestasis->isNotEmpty()],
-            ['id' => 'beasiswa', 'label' => 'Bantuan pendidikan', 'wajib' => false, 'selesai' => $siswa->beasiswas->isNotEmpty()],
+            ['id' => 'beasiswa', 'label' => 'Bantuan', 'wajib' => false, 'selesai' => $siswa->beasiswas->isNotEmpty()],
         ];
 
         $wajib = array_values(array_filter($tabs, fn (array $tab) => $tab['wajib']));
         $wajibSelesai = count(array_filter($wajib, fn (array $tab) => $tab['selesai']));
         $wajibTotal = count($wajib);
+        $wajibSemuaSelesai = $wajibTotal === 0 || $wajibSelesai === $wajibTotal;
+
+        foreach ($tabs as $index => $tab) {
+            $tabs[$index]['terbuka'] = self::tabTerbuka($tabs, $tab['id'], $wajibSemuaSelesai);
+        }
 
         return [
             'persen' => $wajibTotal === 0 ? 0 : (int) round(($wajibSelesai / $wajibTotal) * 100),
             'wajib_selesai' => $wajibSelesai,
             'wajib_total' => $wajibTotal,
+            'wajib_semua_selesai' => $wajibSemuaSelesai,
             'tab' => $tabs,
         ];
+    }
+
+    /**
+     * @return array{
+     *     persen: int,
+     *     wajib_selesai: int,
+     *     wajib_total: int,
+     *     wajib_semua_selesai: bool,
+     *     tab: list<array{id: string, label: string, selesai: bool, wajib: bool, terbuka: bool}>,
+     *     tab_terbuka: bool,
+     *     tab_selesai: bool,
+     *     tab_wajib: bool,
+     *     sebelumnya: array{id: string, label: string, selesai: bool, wajib: bool, terbuka: bool}|null,
+     *     berikutnya: array{id: string, label: string, selesai: bool, wajib: bool, terbuka: bool}|null,
+     *     tab_aman: string
+     * }
+     */
+    public static function navigasi(Siswa $siswa, string $tab = 'data-siswa'): array
+    {
+        $ringkasan = self::ringkasan($siswa);
+        $tabs = $ringkasan['tab'];
+        $ids = array_column($tabs, 'id');
+        $index = array_search($tab, $ids, true);
+        $current = $index === false ? null : $tabs[$index];
+        $pertamaBelum = collect($tabs)->first(fn (array $item) => $item['wajib'] && ! $item['selesai']);
+        $tabAman = $tab;
+
+        if ($current === null || ! ($current['terbuka'] ?? false)) {
+            $tabAman = $pertamaBelum['id'] ?? ($tabs[0]['id'] ?? 'data-siswa');
+        }
+
+        return array_merge($ringkasan, [
+            'tab_terbuka' => (bool) ($current['terbuka'] ?? false),
+            'tab_selesai' => (bool) ($current['selesai'] ?? false),
+            'tab_wajib' => (bool) ($current['wajib'] ?? true),
+            'sebelumnya' => ($index !== false && $index > 0) ? $tabs[$index - 1] : null,
+            'berikutnya' => ($index !== false && $index < count($tabs) - 1) ? $tabs[$index + 1] : null,
+            'tab_aman' => $tabAman,
+        ]);
+    }
+
+    public static function tabAman(Siswa $siswa, string $tab): string
+    {
+        return self::navigasi($siswa, $tab)['tab_aman'];
+    }
+
+    /**
+     * @param  list<array{id: string, label: string, selesai: bool, wajib: bool}>  $tabs
+     */
+    private static function tabTerbuka(array $tabs, string $id, bool $wajibSemuaSelesai): bool
+    {
+        if ($wajibSemuaSelesai) {
+            return true;
+        }
+
+        $target = collect($tabs)->firstWhere('id', $id);
+
+        if ($target === null || ! ($target['wajib'] ?? false)) {
+            return false;
+        }
+
+        foreach ($tabs as $tab) {
+            if ($tab['id'] === $id) {
+                return true;
+            }
+
+            if (($tab['wajib'] ?? false) && ! ($tab['selesai'] ?? false)) {
+                return false;
+            }
+        }
+
+        return false;
     }
 
     private static function dataSiswa(Siswa $siswa): bool
