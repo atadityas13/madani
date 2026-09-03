@@ -102,7 +102,11 @@ class SiswaPortalTest extends TestCase
             ->get('/siswa/portal')
             ->assertOk()
             ->assertSee('Identitas')
-            ->assertSee('biodata-path', false);
+            ->assertSee('biodata-path', false)
+            ->assertSee('bi-arrow-right', false)
+            ->assertDontSee('tab=orang-tua', false)
+            ->assertDontSee('tab=alamat', false)
+            ->assertDontSee('tab=prestasi', false);
 
         $token = $this->tokenSiswa($siswa);
         $this->withToken($token)
@@ -128,6 +132,30 @@ class SiswaPortalTest extends TestCase
         $this->actingAs($siswa, 'siswa')
             ->get('/siswa/portal?tab=prestasi')
             ->assertRedirect(route('siswa.portal', ['tab' => 'orang-tua']));
+    }
+
+    public function test_gtk_can_open_any_siswa_tab_without_sequential_lock(): void
+    {
+        $this->seed();
+        $siswa = $this->buatSiswa();
+        $admin = User::query()->where('username', 'admin')->first();
+
+        $this->actingAs($admin)
+            ->get('/siswa/'.$siswa->id.'?tab=orang-tua')
+            ->assertOk()
+            ->assertSee('Data orang tua');
+
+        $this->actingAs($admin)
+            ->get('/siswa/'.$siswa->id.'?tab=prestasi')
+            ->assertOk()
+            ->assertSee('Prestasi');
+
+        $this->actingAs($admin)
+            ->get('/siswa/'.$siswa->id)
+            ->assertOk()
+            ->assertSee('tab=orang-tua', false)
+            ->assertSee('tab=prestasi', false)
+            ->assertSee('bi-arrow-right', false);
     }
 
     public function test_gtk_can_reset_siswa_password(): void

@@ -30,8 +30,9 @@ class SiswaPortalController extends Controller
             'pengajuanPerubahans',
         ]);
 
-        $diminta = $request->query('tab', 'data-siswa');
-        $tab = KelengkapanSiswa::tabAman($siswa, is_string($diminta) ? $diminta : 'data-siswa');
+        $diminta = $request->query('tab');
+        $diminta = is_string($diminta) && $diminta !== '' ? $diminta : 'data-siswa';
+        $tab = KelengkapanSiswa::tabAman($siswa, $diminta);
 
         if ($tab !== $diminta) {
             return redirect()->route('siswa.portal', ['tab' => $tab]);

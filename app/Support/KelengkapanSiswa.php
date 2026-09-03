@@ -81,9 +81,22 @@ class KelengkapanSiswa
         ]);
     }
 
+    /**
+     * Tab yang boleh dibuka siswa: mengikuti urutan kelengkapan wajib.
+     */
     public static function tabAman(Siswa $siswa, string $tab): string
     {
         return self::navigasi($siswa, $tab)['tab_aman'];
+    }
+
+    /**
+     * Tab yang dikenali untuk operator GTK: semua tab bebas dibuka.
+     */
+    public static function tabDikenal(Siswa $siswa, string $tab): string
+    {
+        $ids = array_column(self::ringkasan($siswa)['tab'], 'id');
+
+        return in_array($tab, $ids, true) ? $tab : ($ids[0] ?? 'data-siswa');
     }
 
     /**

@@ -37,7 +37,7 @@
     @endif
 </div>
 
-<div class="madani-card px-2 mb-3">
+<div class="madani-card biodata-path-wrap px-2 mb-3">
     @include('siswa.partials.tab-path')
 </div>
 

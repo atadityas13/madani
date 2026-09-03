@@ -90,8 +90,9 @@ class SiswaController extends Controller
             'pengajuanPerubahans',
         ]);
 
-        $diminta = request('tab', 'data-siswa');
-        $tab = KelengkapanSiswa::tabAman($siswa, is_string($diminta) ? $diminta : 'data-siswa');
+        $diminta = request('tab');
+        $diminta = is_string($diminta) && $diminta !== '' ? $diminta : 'data-siswa';
+        $tab = KelengkapanSiswa::tabDikenal($siswa, $diminta);
 
         if ($tab !== $diminta) {
             return redirect()->route('siswa.show', ['siswa' => $siswa, 'tab' => $tab]);

@@ -432,6 +432,12 @@ a:hover {
     box-shadow: none;
 }
 
+.biodata-path-wrap {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+}
+
 .btn-madani,
 .btn-emis {
     background: var(--emis-blue);
@@ -633,38 +639,61 @@ a:hover {
 .biodata-path {
     display: flex;
     align-items: flex-start;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     gap: 0;
     overflow-x: auto;
-    padding: 1rem 0.35rem 0.85rem;
+    padding: 1rem 0 0.85rem;
 }
 
 .biodata-path-item {
-    position: relative;
     display: flex;
     flex: 1 1 0;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     min-width: 88px;
     text-align: center;
+    text-decoration: none;
+    color: inherit;
 }
 
-.biodata-path-item:not(:first-child)::before {
-    content: '';
-    position: absolute;
-    top: 17px;
-    right: calc(50% + 20px);
-    width: calc(100% - 40px);
+a.biodata-path-item:hover {
+    color: inherit;
+}
+
+.biodata-path-track {
+    display: flex;
+    align-items: center;
+    position: relative;
+    width: 100%;
+    height: 34px;
+}
+
+.biodata-path-line {
+    flex: 1 1 0;
     height: 2px;
-    background: #e5e7eb;
-    z-index: 0;
+    min-width: 0;
+    background: #d1d5db;
 }
 
-.biodata-path-item.is-done:not(:first-child)::before,
-.biodata-path-item.is-current:not(:first-child)::before {
+.biodata-path-item:first-child .biodata-path-line.is-start,
+.biodata-path-item:last-child .biodata-path-line.is-end {
+    visibility: hidden;
+}
+
+.biodata-path-item.is-done .biodata-path-line.is-end,
+.biodata-path-item.is-done + .biodata-path-item .biodata-path-line.is-start,
+.biodata-path-item.is-current .biodata-path-line.is-start {
     background: #22c55e;
 }
 
 .biodata-path-node {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
     width: 34px;
     height: 34px;
     border-radius: 50%;
@@ -674,10 +703,8 @@ a:hover {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    position: relative;
-    z-index: 1;
-    flex-shrink: 0;
     text-decoration: none;
+    pointer-events: none;
 }
 
 .biodata-path-item.is-done .biodata-path-node {
@@ -702,17 +729,19 @@ a:hover {
     animation: biodata-spin 0.9s linear infinite;
 }
 
-.biodata-path-item.is-locked .biodata-path-node {
+.biodata-path-item.is-locked {
     cursor: not-allowed;
-    opacity: 0.72;
+    pointer-events: none;
+    opacity: 0.78;
 }
 
-.biodata-path-item.is-open .biodata-path-node:hover {
+.biodata-path-item.is-open:hover .biodata-path-label {
     color: var(--emis-blue-dark);
 }
 
 .biodata-path-label {
     margin-top: 0.4rem;
+    padding: 0 0.2rem;
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.02em;
@@ -747,6 +776,9 @@ a:hover {
     align-items: center;
     gap: 0.75rem;
     margin-top: 1.25rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .biodata-actions-save {
@@ -755,6 +787,9 @@ a:hover {
 }
 
 .biodata-actions-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     background: #fff;
     border: 1px solid #d7dbe0;
     color: #3f4650;
@@ -765,9 +800,13 @@ a:hover {
     padding: 0.35rem 0.75rem;
     justify-self: start;
     max-width: 100%;
-    white-space: nowrap;
+}
+
+.biodata-actions-nav span {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .biodata-actions-nav-next {
@@ -792,6 +831,21 @@ a:hover {
 .biodata-actions-nav-placeholder,
 .biodata-actions-save-placeholder {
     min-height: 1px;
+}
+
+@media (max-width: 576px) {
+    .biodata-actions {
+        grid-template-columns: 1fr;
+        justify-items: stretch;
+    }
+
+    .biodata-actions-nav,
+    .biodata-actions-nav-next,
+    .biodata-actions-save {
+        justify-self: stretch;
+        justify-content: center;
+        max-width: none;
+    }
 }
 
 [data-wilayah-step][hidden],

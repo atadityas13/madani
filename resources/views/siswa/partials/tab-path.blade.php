@@ -1,10 +1,13 @@
 @php
     $navigasi = $navigasi ?? ['tab' => []];
     $tabAktif = $tab ?? 'data-siswa';
+    $items = $navigasi['tab'] ?? [];
+    $portal = $portal ?? false;
 @endphp
 <nav class="biodata-path" aria-label="Langkah kelengkapan data">
-    @foreach ($navigasi['tab'] as $item)
+    @foreach ($items as $item)
         @php
+            $terbuka = ! $portal || (bool) ($item['terbuka'] ?? false);
             $state = 'optional';
             if ($item['wajib']) {
                 if ($item['id'] === $tabAktif) {
@@ -15,18 +18,18 @@
                     $state = 'todo';
                 }
             }
+            $itemClass = 'biodata-path-item is-'.$state
+                .($item['id'] === $tabAktif ? ' is-active' : '')
+                .($terbuka ? ' is-open' : ' is-locked');
         @endphp
-        <div class="biodata-path-item is-{{ $state }} {{ $item['id'] === $tabAktif ? 'is-active' : '' }} {{ ($item['terbuka'] ?? false) ? 'is-open' : 'is-locked' }}">
-            @if ($item['terbuka'] ?? false)
-                <a class="biodata-path-node" href="{{ $tabUrl($item['id']) }}" aria-current="{{ $item['id'] === $tabAktif ? 'step' : 'false' }}">
-                    @include('siswa.partials.tab-path-icon', ['state' => $state])
-                </a>
-            @else
-                <span class="biodata-path-node" aria-disabled="true">
-                    @include('siswa.partials.tab-path-icon', ['state' => $state])
-                </span>
-            @endif
-            <span class="biodata-path-label">{{ $item['label'] }}</span>
-        </div>
+        @if ($terbuka)
+            <a class="{{ $itemClass }}" href="{{ $tabUrl($item['id']) }}" aria-current="{{ $item['id'] === $tabAktif ? 'step' : 'false' }}">
+                @include('siswa.partials.tab-path-step', ['state' => $state, 'item' => $item])
+            </a>
+        @else
+            <div class="{{ $itemClass }}" aria-disabled="true" title="Lengkapi langkah sebelumnya terlebih dahulu">
+                @include('siswa.partials.tab-path-step', ['state' => $state, 'item' => $item])
+            </div>
+        @endif
     @endforeach
 </nav>
