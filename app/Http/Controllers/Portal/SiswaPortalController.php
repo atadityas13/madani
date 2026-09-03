@@ -26,6 +26,7 @@ class SiswaPortalController extends Controller
         $siswa->load([
             'orangTuas', 'periodiks.tahunAjaran', 'rombels.tahunAjaran',
             'beasiswas', 'prestasis', 'rekamDidik', 'dokumens', 'ayah', 'ibu',
+            'pengajuanPerubahans',
         ]);
 
         $tab = $request->query('tab', 'data-siswa');
@@ -59,6 +60,16 @@ class SiswaPortalController extends Controller
 
         return redirect()
             ->route('siswa.portal', ['tab' => $tab])
+            ->with('status', $pesan);
+    }
+
+    public function storePengajuan(Request $request): RedirectResponse
+    {
+        $siswa = $this->siswa();
+        $pesan = $this->biodata->ajukanPerubahan($request, $siswa);
+
+        return redirect()
+            ->route('siswa.portal', ['tab' => 'data-siswa'])
             ->with('status', $pesan);
     }
 

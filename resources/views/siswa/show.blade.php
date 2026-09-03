@@ -56,6 +56,30 @@
 </div>
 
 @if ($tab === 'data-siswa')
+    @if (! $portal && $siswa->pengajuanPerubahans->where('status', 'pending')->isNotEmpty())
+        <div class="madani-card p-4 mb-3">
+            <div class="stat-label mb-3">Pengajuan perubahan identitas</div>
+            @foreach ($siswa->pengajuanPerubahans->where('status', 'pending') as $pengajuan)
+                <div class="border rounded p-3 mb-2">
+                    <div class="fw-semibold">{{ \App\Models\PengajuanPerubahanSiswa::FIELDS[$pengajuan->field] ?? $pengajuan->field }}</div>
+                    <div class="small text-secondary">Dari: {{ $pengajuan->nilai_lama ?: '—' }} → {{ $pengajuan->nilai_baru }}</div>
+                    <div class="small mb-2">Alasan: {{ $pengajuan->alasan }}</div>
+                    <div class="d-flex gap-2">
+                        <form method="POST" action="{{ route('siswa.pengajuan.proses', [$siswa, $pengajuan]) }}">
+                            @csrf
+                            <input type="hidden" name="aksi" value="terima">
+                            <button class="btn btn-sm btn-madani" type="submit">Terima</button>
+                        </form>
+                        <form method="POST" action="{{ route('siswa.pengajuan.proses', [$siswa, $pengajuan]) }}">
+                            @csrf
+                            <input type="hidden" name="aksi" value="tolak">
+                            <button class="btn btn-sm btn-outline-secondary" type="submit">Tolak</button>
+                        </form>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @endif
     <div class="madani-card p-4">
         <form method="POST" action="{{ $updateAction }}" enctype="multipart/form-data">
             @csrf
@@ -64,14 +88,48 @@
             @include('siswa.partials.form-data-siswa', ['siswa' => $siswa, 'periodik' => $periodik, 'emis' => $emis])
             <div class="emis-actions">
                 @unless ($portal)
-                    @unless ($portal)
-                <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
-            @endunless
+                    <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
                 @endunless
                 <button class="btn btn-madani" type="submit">Simpan</button>
             </div>
         </form>
     </div>
+    @if ($portal)
+        <div class="modal fade" id="modalAjukanPerubahan" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="POST" action="{{ route('siswa.portal.pengajuan.store') }}" class="modal-content">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title">Ajukan perubahan <span data-ajukan-judul></span></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="field" data-ajukan-field-input>
+                        <div class="mb-3">
+                            <label class="form-label">Data saat ini</label>
+                            <input class="form-control" data-ajukan-lama readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Data baru</label>
+                            <input class="form-control" name="nilai_baru" data-ajukan-baru required>
+                            <select class="form-select d-none" data-ajukan-jk>
+                                <option value="L">Laki-laki</option>
+                                <option value="P">Perempuan</option>
+                            </select>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label">Alasan perubahan</label>
+                            <textarea class="form-control" name="alasan" rows="3" minlength="10" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Batal</button>
+                        <button class="btn btn-madani" type="submit">Kirim pengajuan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
 @endif
 
 @if ($tab === 'orang-tua')

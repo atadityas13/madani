@@ -24,6 +24,7 @@ Route::prefix('v1')->group(function () {
                 ->where('jenis', 'prestasi|beasiswa');
             Route::post('siswa/dokumen/{jenis}', [SiswaController::class, 'uploadDokumen'])
                 ->where('jenis', 'kk|kip|kks|pkh|ijazah_sd|foto');
+            Route::post('siswa/pengajuan-perubahan', [SiswaController::class, 'storePengajuan']);
         });
     });
 });

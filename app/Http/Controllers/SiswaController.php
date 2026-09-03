@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PengajuanPerubahanSiswa;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Services\SiswaBiodataService;
@@ -85,6 +86,7 @@ class SiswaController extends Controller
         $siswa->load([
             'orangTuas', 'periodiks.tahunAjaran', 'rombels.tahunAjaran',
             'beasiswas', 'prestasis', 'rekamDidik', 'dokumens', 'ayah', 'ibu',
+            'pengajuanPerubahans',
         ]);
 
         $tab = request('tab', 'data-siswa');
@@ -119,6 +121,17 @@ class SiswaController extends Controller
 
         return redirect()
             ->route('siswa.show', ['siswa' => $siswa, 'tab' => $tab])
+            ->with('status', $pesan);
+    }
+
+    public function prosesPengajuan(Request $request, Siswa $siswa, PengajuanPerubahanSiswa $pengajuan): RedirectResponse
+    {
+        $this->authorize('update', $siswa);
+        $aksi = (string) $request->input('aksi', 'terima');
+        $pesan = $this->biodata->prosesPengajuan($siswa, $pengajuan, $aksi);
+
+        return redirect()
+            ->route('siswa.show', ['siswa' => $siswa, 'tab' => 'data-siswa'])
             ->with('status', $pesan);
     }
 

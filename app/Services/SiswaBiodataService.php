@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\PengajuanPerubahanSiswa;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Support\Wilayah;
@@ -92,6 +93,70 @@ class SiswaBiodataService
         $this->simpanFoto($request, $siswa);
 
         return 'Data siswa disimpan.';
+    }
+
+    public function ajukanPerubahan(Request $request, Siswa $siswa): string
+    {
+        $siswa->unsetRelation('periodiks');
+        $siswa->unsetRelation('dokumens');
+        $siswa->refresh();
+
+        $tabDataSiswa = collect($siswa->kelengkapan()['tab'])->firstWhere('id', 'data-siswa');
+
+        if (! ($tabDataSiswa['selesai'] ?? false)) {
+            throw ValidationException::withMessages([
+                'kelengkapan' => 'Lengkapi semua data dan dokumen terlebih dahulu.',
+            ]);
+        }
+
+        $data = $request->validate([
+            'field' => ['required', 'string', Rule::in(array_keys(PengajuanPerubahanSiswa::FIELDS))],
+            'nilai_baru' => ['required', 'string', 'max:255'],
+            'alasan' => ['required', 'string', 'min:10', 'max:500'],
+        ]);
+
+        $this->assertNilaiPerubahan($siswa, $data['field'], $data['nilai_baru']);
+
+        if ($siswa->pengajuanPerubahans()->where('field', $data['field'])->where('status', 'pending')->exists()) {
+            throw ValidationException::withMessages([
+                'field' => 'Pengajuan untuk data ini masih menunggu konfirmasi madrasah.',
+            ]);
+        }
+
+        $siswa->pengajuanPerubahans()->create([
+            'field' => $data['field'],
+            'nilai_lama' => $this->nilaiIdentitas($siswa, $data['field']),
+            'nilai_baru' => $data['nilai_baru'],
+            'alasan' => $data['alasan'],
+            'status' => 'pending',
+        ]);
+
+        return 'Pengajuan perubahan dikirim. Menunggu konfirmasi madrasah.';
+    }
+
+    public function prosesPengajuan(Siswa $siswa, PengajuanPerubahanSiswa $pengajuan, string $aksi): string
+    {
+        if ($pengajuan->siswa_id !== $siswa->id) {
+            abort(404);
+        }
+
+        if ($pengajuan->status !== 'pending') {
+            throw ValidationException::withMessages([
+                'pengajuan' => 'Pengajuan ini sudah diproses.',
+            ]);
+        }
+
+        if ($aksi === 'tolak') {
+            $pengajuan->update(['status' => 'ditolak']);
+
+            return 'Pengajuan perubahan ditolak.';
+        }
+
+        $this->assertNilaiPerubahan($siswa, $pengajuan->field, $pengajuan->nilai_baru);
+        $siswa->update([$pengajuan->field => $pengajuan->nilai_baru]);
+        $pengajuan->update(['status' => 'diterima']);
+
+        return 'Pengajuan perubahan diterima.';
     }
 
     public function updateOrangTua(Request $request, Siswa $siswa): string
@@ -353,9 +418,12 @@ class SiswaBiodataService
 
     public function validateDataSiswa(Request $request, ?Siswa $siswa = null): array
     {
+        $siswa?->load('dokumens');
+
         $tidakPunyaHp = $request->boolean('tidak_punya_hp');
         $tidakPunyaEmail = $request->boolean('tidak_punya_email');
         $tidakPunyaKip = $request->boolean('tidak_punya_kip');
+        $noKip = $tidakPunyaKip ? null : $request->input('no_kip');
 
         return $request->validate([
             'nama' => ['required', 'string', 'max:255', 'regex:/^[A-Za-zÀ-ÿ\-\'’`., ]+$/u'],
@@ -402,16 +470,38 @@ class SiswaBiodataService
                 'max:40',
             ],
             'kebutuhan_khusus' => ['required', 'string', Rule::in(array_keys(config('emis.kebutuhan_khusus')))],
-            'kebutuhan_khusus_lainnya' => ['nullable', 'string', 'max:255'],
+            'kebutuhan_khusus_lainnya' => [
+                Rule::requiredIf($request->input('kebutuhan_khusus') === 'Lainnya'),
+                'nullable',
+                'string',
+                'max:255',
+            ],
             'disabilitas' => ['nullable', 'array'],
             'disabilitas.*' => ['string', Rule::in(array_keys(config('emis.disabilitas')))],
-            'disabilitas_lainnya' => ['nullable', 'string', 'max:255'],
+            'disabilitas_lainnya' => [
+                Rule::requiredIf(in_array('Lainnya', $request->input('disabilitas', []), true)),
+                'nullable',
+                'string',
+                'max:255',
+            ],
             'pernah_tk_ra' => ['sometimes', 'boolean'],
             'pernah_paud' => ['sometimes', 'boolean'],
             'imunisasi' => ['nullable', 'array'],
             'imunisasi.*' => ['string'],
-            'file_kk' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-            'file_kip' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+            'file_kk' => [
+                Rule::requiredIf($siswa === null || $siswa->dokumenJenis('kk') === null),
+                'nullable',
+                'file',
+                'mimes:pdf,jpg,jpeg,png',
+                'max:2048',
+            ],
+            'file_kip' => [
+                Rule::requiredIf(filled($noKip) && ($siswa === null || $siswa->dokumenJenis('kip') === null)),
+                'nullable',
+                'file',
+                'mimes:pdf,jpg,jpeg,png',
+                'max:2048',
+            ],
             'foto' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
         ], [
             'nama.regex' => 'Nama lengkap hanya dapat diisi huruf dan simbol -\'.,',
@@ -430,6 +520,10 @@ class SiswaBiodataService
             'kepala_keluarga.required' => 'Nama kepala keluarga wajib diisi',
             'no_kip.required' => 'Nomor KIP wajib diisi',
             'kebutuhan_khusus.required' => 'Kebutuhan khusus wajib dipilih',
+            'kebutuhan_khusus_lainnya.required' => 'Sebutkan kebutuhan khusus lainnya',
+            'disabilitas_lainnya.required' => 'Sebutkan disabilitas lainnya',
+            'file_kk.required' => 'Unggah Kartu Keluarga',
+            'file_kip.required' => 'Unggah kartu KIP karena nomor KIP diisi',
         ]);
     }
 
@@ -838,5 +932,40 @@ class SiswaBiodataService
             'waktu_tempuh' => $request->input('waktu_tempuh'),
             'transportasi' => $request->input('transportasi'),
         ];
+    }
+
+    private function nilaiIdentitas(Siswa $siswa, string $field): ?string
+    {
+        $nilai = $siswa->getAttribute($field);
+
+        if ($nilai instanceof \DateTimeInterface) {
+            return $nilai->format('Y-m-d');
+        }
+
+        return $nilai === null ? null : (string) $nilai;
+    }
+
+    private function assertNilaiPerubahan(Siswa $siswa, string $field, string $nilaiBaru): void
+    {
+        $aturan = match ($field) {
+            'nama' => ['required', 'string', 'max:255', 'regex:/^[A-Za-zÀ-ÿ\-\'’`., ]+$/u'],
+            'jenis_kelamin' => ['required', 'in:L,P'],
+            'nisn' => ['required', 'digits:10', Rule::unique('siswas', 'nisn')->ignore($siswa->id)],
+            'nis' => ['required', 'string', 'max:20'],
+            'nik' => ['required', 'digits:16', Rule::unique('siswas', 'nik')->ignore($siswa->id)],
+            'tempat_lahir' => ['required', 'string', 'max:100'],
+            'tanggal_lahir' => ['required', 'date'],
+            default => ['required', 'string', 'max:255'],
+        };
+
+        validator(
+            ['nilai_baru' => $nilaiBaru],
+            ['nilai_baru' => $aturan],
+            [
+                'nilai_baru.regex' => 'Nama lengkap hanya dapat diisi huruf dan simbol -\'.,',
+                'nilai_baru.digits' => $field === 'nisn' ? 'NISN harus 10 digit' : 'NIK harus 16 digit',
+                'nilai_baru.unique' => 'Nilai ini sudah dipakai siswa lain',
+            ],
+        )->validate();
     }
 }

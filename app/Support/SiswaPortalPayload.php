@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\OrangTua;
+use App\Models\PengajuanPerubahanSiswa;
 use App\Models\RekamDidik;
 use App\Models\Siswa;
 use App\Models\SiswaPeriodik;
@@ -19,6 +20,7 @@ class SiswaPortalPayload
         $siswa->load([
             'orangTuas', 'periodiks.tahunAjaran', 'rombels.tahunAjaran',
             'beasiswas', 'prestasis', 'rekamDidik', 'dokumens', 'ayah', 'ibu', 'wali',
+            'pengajuanPerubahans',
         ]);
 
         $periodik = $siswa->periodikAktif();
@@ -55,6 +57,20 @@ class SiswaPortalPayload
                 'program' => $rombel->program,
             ] : null,
             'kelengkapan' => $siswa->kelengkapan(),
+            'pengajuan_perubahan' => $siswa->pengajuanPerubahans()
+                ->where('status', 'pending')
+                ->latest()
+                ->get()
+                ->map(fn ($item) => [
+                    'id' => $item->id,
+                    'field' => $item->field,
+                    'label' => PengajuanPerubahanSiswa::FIELDS[$item->field] ?? $item->field,
+                    'nilai_lama' => $item->nilai_lama,
+                    'nilai_baru' => $item->nilai_baru,
+                    'alasan' => $item->alasan,
+                    'status' => $item->status,
+                ])
+                ->values(),
             'periodik' => self::periodik($periodik),
             'orang_tua' => [
                 'ayah' => self::ortu($siswa->ayah),

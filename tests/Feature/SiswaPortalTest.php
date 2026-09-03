@@ -6,7 +6,9 @@ use App\Models\Siswa;
 use App\Models\User;
 use App\Support\SiswaPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class SiswaPortalTest extends TestCase
@@ -99,6 +101,7 @@ class SiswaPortalTest extends TestCase
 
     public function test_api_login_me_and_password_change(): void
     {
+        Storage::fake('public');
         $this->seed();
         $siswa = $this->buatSiswa();
 
@@ -157,34 +160,27 @@ class SiswaPortalTest extends TestCase
             ->assertJsonPath('must_change_password', false);
 
         $this->withToken($token)
-            ->putJson('/api/v1/siswa/data-siswa', [
-                'nama' => 'Siswa Contoh',
-                'nisn' => '1234567890',
-                'nik' => '3210010101120001',
-                'tempat_lahir' => 'Majalengka',
-                'tanggal_lahir' => '2012-09-02',
-                'jenis_kelamin' => 'L',
-                'jumlah_saudara' => 1,
-                'anak_ke' => 1,
-                'agama' => 'Islam',
-                'cita_cita' => 'Guru',
-                'hobi' => 'Membaca',
-                'pembiaya' => 'Orang Tua',
-                'tidak_punya_hp' => true,
-                'tidak_punya_email' => true,
-                'tidak_punya_kip' => true,
-                'no_kk' => '3210010101120001',
-                'kepala_keluarga' => 'Ayah Contoh',
-                'kebutuhan_khusus' => 'Tidak Ada',
-            ])
+            ->putJson('/api/v1/siswa/data-siswa', $this->payloadDataSiswa())
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('file_kk');
+
+        $this->unggahKk($token);
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/data-siswa', $this->payloadDataSiswa([
+                'nama' => 'Nama Tidak Boleh Berubah',
+            ]))
             ->assertOk()
             ->assertJsonPath('success', true);
+
+        $this->assertSame('Siswa Contoh', $siswa->fresh()->nama);
 
         $this->withToken($token)
             ->getJson('/api/v1/siswa/me')
             ->assertOk()
             ->assertJsonPath('data.id', $siswa->id)
-            ->assertJsonPath('data.nisn', '1234567890');
+            ->assertJsonPath('data.nisn', '1234567890')
+            ->assertJsonPath('data.tidak_punya_email', true);
     }
 
     public function test_api_orang_tua_requires_complete_fields_and_kks_pkh_rules(): void
@@ -223,6 +219,49 @@ class SiswaPortalTest extends TestCase
 
         $this->assertTrue((bool) $siswa->fresh()->periodikAktif()?->tidak_punya_kks);
         $this->assertTrue((bool) $siswa->fresh()->periodikAktif()?->tidak_punya_pkh);
+    }
+
+    public function test_api_data_siswa_requires_kk_and_gates_pengajuan(): void
+    {
+        Storage::fake('public');
+        $this->seed();
+        $siswa = $this->buatSiswa();
+        $token = $this->tokenSiswa($siswa);
+
+        $this->withToken($token)
+            ->postJson('/api/v1/siswa/pengajuan-perubahan', [
+                'field' => 'nama',
+                'nilai_baru' => 'Siswa Baru',
+                'alasan' => 'Nama di ijazah berbeda dengan data madrasah.',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('kelengkapan');
+
+        $this->unggahKk($token);
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/data-siswa', $this->payloadDataSiswa([
+                'tidak_punya_kip' => false,
+                'no_kip' => 'KIP123',
+            ]))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('file_kip');
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/data-siswa', $this->payloadDataSiswa())
+            ->assertOk();
+
+        $this->withToken($token)
+            ->postJson('/api/v1/siswa/pengajuan-perubahan', [
+                'field' => 'nama',
+                'nilai_baru' => 'Siswa Baru',
+                'alasan' => 'Nama di ijazah berbeda dengan data madrasah.',
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertSame('pending', $siswa->fresh()->pengajuanPerubahans()->first()?->status);
+        $this->assertSame('Siswa Contoh', $siswa->fresh()->nama);
     }
 
     public function test_api_alamat_copies_parent_and_asrama(): void
@@ -374,6 +413,43 @@ class SiswaPortalTest extends TestCase
             'nisn' => $siswa->nisn,
             'password' => 'sandibaru1',
         ])->assertOk()->json('token');
+    }
+
+    private function unggahKk(string $token): void
+    {
+        $this->withToken($token)
+            ->post('/api/v1/siswa/dokumen/kk', [
+                'file_kk' => UploadedFile::fake()->image('kk.jpg'),
+            ], ['Accept' => 'application/json'])
+            ->assertOk();
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function payloadDataSiswa(array $overrides = []): array
+    {
+        return array_merge([
+            'nama' => 'Siswa Contoh',
+            'nisn' => '1234567890',
+            'nik' => '3210010101120001',
+            'tempat_lahir' => 'Majalengka',
+            'tanggal_lahir' => '2012-09-02',
+            'jenis_kelamin' => 'L',
+            'jumlah_saudara' => 1,
+            'anak_ke' => 1,
+            'agama' => 'Islam',
+            'cita_cita' => 'Guru',
+            'hobi' => 'Membaca',
+            'pembiaya' => 'Orang Tua',
+            'tidak_punya_hp' => true,
+            'tidak_punya_email' => true,
+            'tidak_punya_kip' => true,
+            'no_kk' => '3210010101120001',
+            'kepala_keluarga' => 'Ayah Contoh',
+            'kebutuhan_khusus' => 'Tidak Ada',
+        ], $overrides);
     }
 
     /**

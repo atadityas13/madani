@@ -304,7 +304,7 @@ function bindOrtuForm() {
         syncWali();
     }
 
-    document.querySelectorAll('[data-bantuan-kartu]').forEach((root) => {
+    document.querySelectorAll('[data-bantuan-kartu], [data-kontak-bypass]').forEach((root) => {
         const check = root.querySelector('[data-tidak-punya]');
         const nomor = root.querySelector('[data-nomor]');
         const berkas = root.querySelector('[data-berkas]');
@@ -325,9 +325,17 @@ function bindOrtuForm() {
                     berkas.value = '';
                 }
             }
+
+            if (root.getAttribute('data-bantuan-kartu') === 'kip') {
+                const kipUpload = document.querySelector('[data-kip-upload]');
+                if (kipUpload) {
+                    kipUpload.hidden = skip || ! String(nomor?.value || '').trim();
+                }
+            }
         };
 
         check?.addEventListener('change', sync);
+        nomor?.addEventListener('input', sync);
         sync();
     });
 }
@@ -832,12 +840,25 @@ function bindKebutuhanDisabilitas() {
             boxes.forEach((box) => {
                 if (box !== changed) {
                     box.checked = false;
+                    box.disabled = true;
                 }
             });
         } else if (changed && changed.value !== 'Tidak Ada' && changed.checked) {
             boxes.forEach((box) => {
                 if (box.value === 'Tidak Ada') {
                     box.checked = false;
+                }
+                box.disabled = false;
+            });
+        } else {
+            const tidakAda = boxes.find((box) => box.value === 'Tidak Ada');
+            const kunci = Boolean(tidakAda?.checked);
+            boxes.forEach((box) => {
+                if (box.value !== 'Tidak Ada') {
+                    box.disabled = kunci;
+                    if (kunci) {
+                        box.checked = false;
+                    }
                 }
             });
         }
@@ -864,6 +885,64 @@ function bindIjazahSesuai() {
             if (box.checked && !window.confirm('Apakah anda yakin data ini sesuai?')) {
                 box.checked = false;
             }
+        });
+    });
+}
+
+function bindAjukanPerubahan() {
+    const modalEl = document.querySelector('#modalAjukanPerubahan');
+
+    if (! modalEl) {
+        return;
+    }
+
+    const modal = window.bootstrap.Modal.getOrCreateInstance(modalEl);
+    const judul = modalEl.querySelector('[data-ajukan-judul]');
+    const fieldInput = modalEl.querySelector('[data-ajukan-field-input]');
+    const lama = modalEl.querySelector('[data-ajukan-lama]');
+    const baru = modalEl.querySelector('[data-ajukan-baru]');
+    const jk = modalEl.querySelector('[data-ajukan-jk]');
+
+    document.querySelectorAll('[data-ajukan-field]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            if (btn.hasAttribute('data-ajukan-terkunci')) {
+                window.alert('Lengkapi semua data dan dokumen terlebih dahulu.');
+
+                return;
+            }
+
+            const field = btn.getAttribute('data-ajukan-field') || '';
+            const label = btn.getAttribute('data-ajukan-label') || '';
+            const nilai = btn.getAttribute('data-ajukan-nilai') || '';
+
+            if (judul) {
+                judul.textContent = label;
+            }
+
+            if (fieldInput) {
+                fieldInput.value = field;
+            }
+
+            if (lama) {
+                lama.value = field === 'jenis_kelamin'
+                    ? (nilai === 'P' ? 'Perempuan' : nilai === 'L' ? 'Laki-laki' : nilai)
+                    : nilai;
+            }
+
+            if (jk && baru) {
+                const isJk = field === 'jenis_kelamin';
+                jk.classList.toggle('d-none', ! isJk);
+                baru.classList.toggle('d-none', isJk);
+                jk.disabled = ! isJk;
+                baru.disabled = isJk;
+                jk.name = isJk ? 'nilai_baru' : '';
+                baru.name = isJk ? '' : 'nilai_baru';
+                baru.type = field === 'tanggal_lahir' ? 'date' : 'text';
+                baru.value = isJk ? '' : nilai;
+                jk.value = nilai === 'P' ? 'P' : 'L';
+            }
+
+            modal.show();
         });
     });
 }
@@ -897,5 +976,6 @@ bindAlamatOrtu();
 bindAlamatSiswa();
 bindKebutuhanDisabilitas();
 bindIjazahSesuai();
+bindAjukanPerubahan();
 bindOpenModals();
 bindPeranUser();

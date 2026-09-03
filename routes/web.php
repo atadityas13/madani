@@ -34,6 +34,7 @@ Route::middleware('auth:siswa')->group(function () {
     Route::middleware('siswa.password')->group(function () {
         Route::get('/siswa/portal', [SiswaPortalController::class, 'show'])->name('siswa.portal');
         Route::put('/siswa/portal', [SiswaPortalController::class, 'update'])->name('siswa.portal.update');
+        Route::post('/siswa/portal/pengajuan', [SiswaPortalController::class, 'storePengajuan'])->name('siswa.portal.pengajuan.store');
         Route::delete('/siswa/portal/relasi', [SiswaPortalController::class, 'destroyRelasi'])->name('siswa.portal.relasi.destroy');
     });
 });
@@ -81,6 +82,7 @@ Route::middleware('auth')->group(function () {
     Route::get('siswa/{siswa}', [SiswaController::class, 'show'])->name('siswa.show')->whereUuid('siswa');
     Route::get('siswa/{siswa}/edit', [SiswaController::class, 'edit'])->name('siswa.edit')->whereUuid('siswa');
     Route::put('siswa/{siswa}', [SiswaController::class, 'update'])->name('siswa.update')->whereUuid('siswa');
+    Route::post('siswa/{siswa}/pengajuan/{pengajuan}', [SiswaController::class, 'prosesPengajuan'])->name('siswa.pengajuan.proses')->whereUuid('siswa');
     Route::post('siswa/{siswa}/reset-password', [SiswaController::class, 'resetPassword'])->name('siswa.reset-password')->whereUuid('siswa');
     Route::delete('siswa/{siswa}/relasi', [SiswaController::class, 'destroyRelasi'])->name('siswa.relasi.destroy')->whereUuid('siswa');
     Route::get('rombel', [RombelController::class, 'index'])->name('rombel.index');

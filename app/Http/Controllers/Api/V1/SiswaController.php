@@ -112,4 +112,17 @@ class SiswaController extends Controller
             'data' => SiswaPortalPayload::make($siswa->fresh()),
         ]);
     }
+
+    public function storePengajuan(Request $request): JsonResponse
+    {
+        /** @var Siswa $siswa */
+        $siswa = $request->user();
+        $pesan = $this->biodata->ajukanPerubahan($request, $siswa);
+
+        return response()->json([
+            'success' => true,
+            'message' => $pesan,
+            'data' => SiswaPortalPayload::make($siswa->fresh()),
+        ]);
+    }
 }
