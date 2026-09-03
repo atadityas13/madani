@@ -85,7 +85,7 @@ class KelengkapanSiswa
 
         return self::orangTuaWajib($ayah)
             && self::orangTuaWajib($ibu)
-            && self::waliWajib($wali)
+            && self::waliWajib($wali, $ayah, $ibu)
             && filled($periodik?->penghasilan_gabungan)
             && $kksOk
             && $pkhOk;
@@ -112,12 +112,18 @@ class KelengkapanSiswa
             && $hpOk;
     }
 
-    private static function waliWajib(?OrangTua $wali): bool
+    private static function waliWajib(?OrangTua $wali, ?OrangTua $ayah, ?OrangTua $ibu): bool
     {
         $status = $wali?->status;
+        $ayahMeninggal = $ayah?->status_hidup === 'meninggal';
+        $ibuMeninggal = $ibu?->status_hidup === 'meninggal';
 
-        if ($status === 'Sama dengan ayah kandung' || $status === 'Sama dengan ibu kandung') {
-            return true;
+        if ($status === 'Sama dengan ayah kandung') {
+            return ! $ayahMeninggal;
+        }
+
+        if ($status === 'Sama dengan ibu kandung') {
+            return ! $ibuMeninggal;
         }
 
         if ($status === 'Lainnya' || $status === 'Isi sendiri') {

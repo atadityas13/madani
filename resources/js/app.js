@@ -292,18 +292,38 @@ function bindOrtuForm() {
         const status = waliBlok.querySelector('[data-wali-status]');
         const locked = waliBlok.querySelector('[data-wali-status-locked]');
         const note = waliBlok.querySelector('[data-wali-wajib-note]');
+        const optionNote = waliBlok.querySelector('[data-wali-option-note]');
         const detail = waliBlok.querySelector('[data-ortu-detail]');
         const ayahStatus = ayahBlok?.querySelector('[data-status-hidup]');
         const ibuStatus = ibuBlok?.querySelector('[data-status-hidup]');
+        const opsiAyah = 'Sama dengan ayah kandung';
+        const opsiIbu = 'Sama dengan ibu kandung';
+
+        const setOptionDisabled = (value, disabled) => {
+            const option = [...(status?.options || [])].find((item) => item.value === value);
+
+            if (option) {
+                option.disabled = disabled;
+            }
+        };
 
         const syncWali = () => {
-            const keduaMeninggal = ayahStatus?.value === 'meninggal' && ibuStatus?.value === 'meninggal';
+            const ayahMeninggal = ayahStatus?.value === 'meninggal';
+            const ibuMeninggal = ibuStatus?.value === 'meninggal';
+            const keduaMeninggal = ayahMeninggal && ibuMeninggal;
 
-            if (keduaMeninggal && status) {
-                status.value = 'Lainnya';
-            }
+            setOptionDisabled(opsiAyah, ayahMeninggal);
+            setOptionDisabled(opsiIbu, ibuMeninggal);
 
             if (status) {
+                if (keduaMeninggal) {
+                    status.value = 'Lainnya';
+                } else if (ayahMeninggal && status.value === opsiAyah) {
+                    status.value = '';
+                } else if (ibuMeninggal && status.value === opsiIbu) {
+                    status.value = '';
+                }
+
                 status.disabled = keduaMeninggal;
                 status.classList.toggle('bg-light', keduaMeninggal);
             }
@@ -314,6 +334,19 @@ function bindOrtuForm() {
 
             if (note) {
                 note.hidden = ! keduaMeninggal;
+            }
+
+            if (optionNote) {
+                if (keduaMeninggal || (! ayahMeninggal && ! ibuMeninggal)) {
+                    optionNote.hidden = true;
+                    optionNote.textContent = '';
+                } else if (ayahMeninggal) {
+                    optionNote.hidden = false;
+                    optionNote.textContent = 'Pilihan sama dengan ayah kandung tidak tersedia karena ayah sudah meninggal dunia.';
+                } else {
+                    optionNote.hidden = false;
+                    optionNote.textContent = 'Pilihan sama dengan ibu kandung tidak tersedia karena ibu sudah meninggal dunia.';
+                }
             }
 
             const lainnya = keduaMeninggal || status?.value === 'Lainnya' || status?.value === 'Isi sendiri';
@@ -436,17 +469,16 @@ function bindAlamatOrtu() {
 
     if (waliBlok) {
         const status = waliBlok.getAttribute('data-wali-status');
+        const ayahMeninggal = form.querySelector('[data-alamat-ortu="ayah"]')?.getAttribute('data-status-hidup') === 'meninggal';
+        const ibuMeninggal = form.querySelector('[data-alamat-ortu="ibu"]')?.getAttribute('data-status-hidup') === 'meninggal';
         const alamat = waliBlok.querySelector('[data-ortu-alamat]');
-        const note = waliBlok.querySelector('[data-wali-alamat-note]');
-
-        const isiSendiri = status === 'Lainnya' || status === 'Isi sendiri';
+        const isiSendiri = status === 'Lainnya'
+            || status === 'Isi sendiri'
+            || (status === 'Sama dengan ayah kandung' && ayahMeninggal)
+            || (status === 'Sama dengan ibu kandung' && ibuMeninggal);
 
         if (alamat) {
             alamat.hidden = ! isiSendiri;
-        }
-
-        if (note) {
-            note.hidden = isiSendiri;
         }
     }
 }
@@ -678,6 +710,10 @@ function bindAlamatSiswa() {
             const blok = document.querySelector(`[data-alamat-ortu="${peran}"]`);
 
             if (blok?.getAttribute('data-status-hidup') === 'meninggal') {
+                continue;
+            }
+
+            if (blok?.querySelector('[data-ortu-alamat]')?.hidden) {
                 continue;
             }
 

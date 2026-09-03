@@ -5,19 +5,32 @@
     $judul = ['ayah' => 'Ayah Kandung', 'ibu' => 'Ibu Kandung', 'wali' => 'Wali'][$peran];
     $statusHidup = (string) ($ortu?->status_hidup);
     $ayahHidup = (string) ($siswa->orangTuas->firstWhere('peran', 'ayah')?->status_hidup);
+    $ibuHidup = (string) ($siswa->orangTuas->firstWhere('peran', 'ibu')?->status_hidup);
     $meninggal = $statusHidup === 'meninggal';
     $ayahMeninggal = $ayahHidup === 'meninggal';
+    $ibuMeninggal = $ibuHidup === 'meninggal';
     $kkSamaAyah = ! $ayahMeninggal && (bool) old($old.'.sama_dengan_ayah', $ortu?->sama_dengan_ayah);
     $statusWali = (string) old('ortu.wali.status', $siswa->orangTuas->firstWhere('peran', 'wali')?->status);
     if ($statusWali === 'Isi sendiri') {
         $statusWali = 'Lainnya';
     }
-    $waliIsiSendiri = $peran === 'wali' && $statusWali === 'Lainnya';
-    $waliMengikuti = $peran === 'wali' && in_array($statusWali, ['Sama dengan ayah kandung', 'Sama dengan ibu kandung'], true);
+    $waliMengikutiAyah = $statusWali === 'Sama dengan ayah kandung' && ! $ayahMeninggal;
+    $waliMengikutiIbu = $statusWali === 'Sama dengan ibu kandung' && ! $ibuMeninggal;
+    $waliIsiSendiri = $peran === 'wali' && (
+        $statusWali === 'Lainnya'
+        || ($statusWali === 'Sama dengan ayah kandung' && $ayahMeninggal)
+        || ($statusWali === 'Sama dengan ibu kandung' && $ibuMeninggal)
+    );
+    $waliMengikuti = $peran === 'wali' && ($waliMengikutiAyah || $waliMengikutiIbu);
     $sembunyikanForm = $meninggal || ($peran === 'ibu' && $kkSamaAyah) || ($peran === 'wali' && ! $waliIsiSendiri);
-    $catatanWali = $statusWali === 'Sama dengan ibu kandung'
+    $catatanWali = $waliMengikutiIbu
         ? 'Alamat wali mengikuti ibu kandung.'
         : 'Alamat wali mengikuti ayah kandung.';
+    if ($peran === 'wali' && $statusWali === 'Sama dengan ayah kandung' && $ayahMeninggal) {
+        $catatanWali = 'Ayah kandung sudah meninggal dunia. Lengkapi alamat wali, atau ubah status wali di tab Orang tua.';
+    } elseif ($peran === 'wali' && $statusWali === 'Sama dengan ibu kandung' && $ibuMeninggal) {
+        $catatanWali = 'Ibu kandung sudah meninggal dunia. Lengkapi alamat wali, atau ubah status wali di tab Orang tua.';
+    }
 @endphp
 <div
     class="madani-card p-4"
@@ -43,10 +56,14 @@
                 <label class="form-check-label" for="alamat_sama_ayah">Alamat sama dengan ayah kandung</label>
             </div>
         @endif
-        @if ($peran === 'wali' && ! $waliIsiSendiri)
-            <p class="form-text mb-0" data-wali-alamat-note>
-                {{ $waliMengikuti ? $catatanWali : 'Status wali dipilih di tab Orang tua. Alamat mengikuti pilihan tersebut.' }}
-            </p>
+        @if ($peran === 'wali' && $waliMengikuti)
+            <p class="form-text mb-0" data-wali-alamat-note>{{ $catatanWali }}</p>
+        @elseif ($peran === 'wali' && $statusWali === 'Sama dengan ayah kandung' && $ayahMeninggal)
+            <p class="form-text mb-3" data-wali-alamat-note>{{ $catatanWali }}</p>
+        @elseif ($peran === 'wali' && $statusWali === 'Sama dengan ibu kandung' && $ibuMeninggal)
+            <p class="form-text mb-3" data-wali-alamat-note>{{ $catatanWali }}</p>
+        @elseif ($peran === 'wali' && ! $waliIsiSendiri)
+            <p class="form-text mb-0" data-wali-alamat-note>Status wali dipilih di tab Orang tua. Alamat mengikuti pilihan tersebut.</p>
         @endif
         <div data-ortu-alamat @if ($sembunyikanForm) hidden @endif>
             <div class="mb-3">

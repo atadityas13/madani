@@ -9,9 +9,24 @@
     }
     $ayahHidupNow = (string) old('ortu.ayah.status_hidup', $siswa->orangTuas->firstWhere('peran', 'ayah')?->status_hidup);
     $ibuHidupNow = (string) old('ortu.ibu.status_hidup', $siswa->orangTuas->firstWhere('peran', 'ibu')?->status_hidup);
-    $keduaMeninggal = $ayahHidupNow === 'meninggal' && $ibuHidupNow === 'meninggal';
-    if ($peran === 'wali' && $keduaMeninggal) {
-        $statusWali = 'Lainnya';
+    $ayahMeninggal = $ayahHidupNow === 'meninggal';
+    $ibuMeninggal = $ibuHidupNow === 'meninggal';
+    $keduaMeninggal = $ayahMeninggal && $ibuMeninggal;
+    $waliDisabled = [];
+    if ($ayahMeninggal) {
+        $waliDisabled[] = 'Sama dengan ayah kandung';
+    }
+    if ($ibuMeninggal) {
+        $waliDisabled[] = 'Sama dengan ibu kandung';
+    }
+    if ($peran === 'wali') {
+        if ($keduaMeninggal) {
+            $statusWali = 'Lainnya';
+        } elseif ($ayahMeninggal && $statusWali === 'Sama dengan ayah kandung') {
+            $statusWali = '';
+        } elseif ($ibuMeninggal && $statusWali === 'Sama dengan ibu kandung') {
+            $statusWali = '';
+        }
     }
     $statusHidup = old($old.'.status_hidup', $ortu?->status_hidup);
     $waliLainnya = $statusWali === 'Lainnya';
@@ -22,8 +37,19 @@
     @if ($peran === 'wali')
         <div class="mb-3" data-wali-status-wrap>
             <label class="form-label">Status wali <span class="text-danger">*</span></label>
-            <x-emis-select :name="$input.'[status]'" :options="$emis['status_wali']" :value="$statusWali" :required="! $keduaMeninggal" :disabled="$keduaMeninggal" class="{{ $keduaMeninggal ? 'bg-light' : '' }}" data-wali-status />
+            <x-emis-select :name="$input.'[status]'" :options="$emis['status_wali']" :value="$statusWali" :required="! $keduaMeninggal" :disabled="$keduaMeninggal" :disabled-values="$waliDisabled" class="{{ $keduaMeninggal ? 'bg-light' : '' }}" data-wali-status />
             <div class="form-text">Isian wali hanya muncul jika statusnya selain ayah atau ibu kandung.</div>
+            @php
+                $waliOptionNote = '';
+                if (! $keduaMeninggal) {
+                    if ($ayahMeninggal) {
+                        $waliOptionNote = 'Pilihan sama dengan ayah kandung tidak tersedia karena ayah sudah meninggal dunia.';
+                    } elseif ($ibuMeninggal) {
+                        $waliOptionNote = 'Pilihan sama dengan ibu kandung tidak tersedia karena ibu sudah meninggal dunia.';
+                    }
+                }
+            @endphp
+            <p class="form-text mb-0" data-wali-option-note @if ($waliOptionNote === '') hidden @endif>{{ $waliOptionNote }}</p>
         </div>
         <input type="hidden" name="{{ $input }}[status]" value="Lainnya" data-wali-status-locked @disabled(! $keduaMeninggal)>
         <p class="form-text mb-3" data-wali-wajib-note @if (! $keduaMeninggal) hidden @endif>Ayah dan ibu kandung sudah meninggal dunia. Status wali otomatis Lainnya dan tidak dapat diubah.</p>

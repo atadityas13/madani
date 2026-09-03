@@ -259,6 +259,44 @@ class SiswaPortalTest extends TestCase
         $this->assertSame('Lainnya', $siswa->fresh()->orangTuas->firstWhere('peran', 'wali')?->status);
     }
 
+    public function test_api_orang_tua_rejects_wali_matching_deceased_parent(): void
+    {
+        $this->seed();
+        $siswa = $this->buatSiswa();
+        $token = $this->tokenSiswa($siswa);
+        $payload = $this->payloadOrangTua();
+        $payload['tidak_punya_kks'] = true;
+        $payload['tidak_punya_pkh'] = true;
+
+        $payload['ortu']['ayah']['status_hidup'] = 'meninggal';
+        $payload['ortu']['wali']['status'] = 'Sama dengan ayah kandung';
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/orang-tua', $payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('ortu.wali.status');
+
+        $payload['ortu']['ayah']['status_hidup'] = 'hidup';
+        $payload['ortu']['ibu']['status_hidup'] = 'meninggal';
+        $payload['ortu']['wali']['status'] = 'Sama dengan ibu kandung';
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/orang-tua', $payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('ortu.wali.status');
+
+        $payload['ortu']['ayah']['status_hidup'] = 'meninggal';
+        $payload['ortu']['ibu']['status_hidup'] = 'hidup';
+        $payload['ortu']['wali']['status'] = 'Sama dengan ibu kandung';
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/orang-tua', $payload)
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertSame('Sama dengan ibu kandung', $siswa->fresh()->orangTuas->firstWhere('peran', 'wali')?->status);
+    }
+
     public function test_api_data_siswa_requires_kk_and_gates_pengajuan(): void
     {
         Storage::fake('public');

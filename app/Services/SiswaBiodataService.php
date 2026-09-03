@@ -172,11 +172,14 @@ class SiswaBiodataService
             $waliStatus = 'Lainnya';
         }
 
-        if ($waliStatus === 'Sama dengan ayah kandung') {
+        $ayahMeninggal = ($ayah['status_hidup'] ?? null) === 'meninggal';
+        $ibuMeninggal = ($ibu['status_hidup'] ?? null) === 'meninggal';
+
+        if ($waliStatus === 'Sama dengan ayah kandung' && ! $ayahMeninggal) {
             $wali = array_merge($wali, Arr::except($ayah, ['status', 'hubungan']));
             $wali['status'] = $waliStatus;
             $wali['hubungan'] = 'Ayah kandung';
-        } elseif ($waliStatus === 'Sama dengan ibu kandung') {
+        } elseif ($waliStatus === 'Sama dengan ibu kandung' && ! $ibuMeninggal) {
             $wali = array_merge($wali, Arr::except($ibu, ['status', 'hubungan']));
             $wali['status'] = $waliStatus;
             $wali['hubungan'] = 'Ibu kandung';
@@ -703,7 +706,20 @@ class SiswaBiodataService
         $request->validate(array_merge(
             [
                 'ortu' => ['required', 'array'],
-                'ortu.wali.status' => ['required', 'string', Rule::in(array_keys(config('emis.status_wali')))],
+                'ortu.wali.status' => [
+                    'required',
+                    'string',
+                    Rule::in(array_keys(config('emis.status_wali'))),
+                    function (string $attribute, mixed $value, \Closure $fail) use ($ayahMeninggal, $ibuMeninggal): void {
+                        if ($ayahMeninggal && $value === 'Sama dengan ayah kandung') {
+                            $fail('Status wali tidak dapat sama dengan ayah kandung karena ayah sudah meninggal dunia.');
+                        }
+
+                        if ($ibuMeninggal && $value === 'Sama dengan ibu kandung') {
+                            $fail('Status wali tidak dapat sama dengan ibu kandung karena ibu sudah meninggal dunia.');
+                        }
+                    },
+                ],
                 'ortu.wali.hubungan' => [Rule::requiredIf($waliLainnya), 'nullable', 'string', Rule::in(array_keys(config('emis.hubungan_wali')))],
                 'penghasilan_gabungan' => ['required', 'string', Rule::in(array_keys(config('emis.penghasilan_gabungan')))],
                 'tidak_punya_kks' => ['sometimes', 'boolean'],

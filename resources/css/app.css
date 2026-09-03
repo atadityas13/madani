@@ -639,7 +639,8 @@ a:hover {
 [data-alamat-ortu-kosong][hidden],
 [data-siswa-alamat-isi][hidden],
 [data-wali-status-wrap][hidden],
-[data-wali-wajib-note][hidden] {
+[data-wali-wajib-note][hidden],
+[data-wali-option-note][hidden] {
     display: none !important;
 }
 
