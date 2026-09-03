@@ -104,8 +104,6 @@ a:hover {
     max-height: 64px;
     object-fit: contain;
     object-position: left center;
-    background: #000;
-    border-radius: 8px;
 }
 
 .emis-sidebar-collapse {
@@ -677,13 +675,6 @@ a:hover {
     background: #fff;
     border-radius: 16px;
     padding: 2rem;
-}
-
-.login-brand {
-    background: #000;
-    border-radius: 12px;
-    overflow: hidden;
-    padding: 0.9rem 1rem 0.75rem;
 }
 
 .login-brand img {

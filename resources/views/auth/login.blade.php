@@ -6,7 +6,7 @@
 <div class="login-shell d-flex align-items-center justify-content-center p-3">
     <div class="login-card">
         <div class="login-brand mb-4">
-            <img src="{{ asset('images/logo-madani.png') }}" alt="MADANI — Management Academic Data Native Integration">
+            <img src="{{ asset('images/logo-madani.png') }}?v={{ filemtime(public_path('images/logo-madani.png')) }}" alt="MADANI — Management Academic Data Native Integration">
         </div>
         <div class="emis-topbar-sub mb-3">MTsN 11 Majalengka</div>
         <h1 class="h5 fw-bold mb-1">Masuk operator</h1>
