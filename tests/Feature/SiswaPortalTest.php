@@ -85,7 +85,7 @@ class SiswaPortalTest extends TestCase
 
     public function test_portal_requires_tabs_in_order_until_required_ones_are_complete(): void
     {
-        Storage::fake('public');
+        Storage::fake('r2');
         $this->seed();
         $siswa = $this->buatSiswa();
         $siswa->gantiPassword('sandibaru1');
@@ -176,7 +176,7 @@ class SiswaPortalTest extends TestCase
 
     public function test_api_login_me_and_password_change(): void
     {
-        Storage::fake('public');
+        Storage::fake('r2');
         $this->seed();
         $siswa = $this->buatSiswa();
 
@@ -374,7 +374,7 @@ class SiswaPortalTest extends TestCase
 
     public function test_api_data_siswa_requires_kk_and_gates_pengajuan(): void
     {
-        Storage::fake('public');
+        Storage::fake('r2');
         $this->seed();
         $siswa = $this->buatSiswa();
         $token = $this->tokenSiswa($siswa);
@@ -470,7 +470,7 @@ class SiswaPortalTest extends TestCase
 
     public function test_api_rekam_didik_and_prestasi(): void
     {
-        Storage::fake('public');
+        Storage::fake('r2');
         $this->seed();
         $siswa = $this->buatSiswa();
         $token = $this->tokenSiswa($siswa);
@@ -520,7 +520,7 @@ class SiswaPortalTest extends TestCase
 
     public function test_hp_leading_zero_becomes_country_code_and_formats_are_enforced(): void
     {
-        Storage::fake('public');
+        Storage::fake('r2');
         $this->seed();
         $siswa = $this->buatSiswa();
         $token = $this->tokenSiswa($siswa);
@@ -650,6 +650,12 @@ class SiswaPortalTest extends TestCase
         $this->withToken($token)
             ->post('/api/v1/siswa/dokumen/kk', [
                 'file_kk' => UploadedFile::fake()->image('kk.jpg'),
+            ], ['Accept' => 'application/json'])
+            ->assertOk();
+
+        $this->withToken($token)
+            ->post('/api/v1/siswa/dokumen/akta_lahir', [
+                'file_akta' => UploadedFile::fake()->image('akta.jpg'),
             ], ['Accept' => 'application/json'])
             ->assertOk();
     }

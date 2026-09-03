@@ -71,7 +71,7 @@
         <div class="col-md-4">
             <label class="form-label">Unggah ijazah <span class="text-danger">*</span></label>
             <input class="form-control @error('file_ijazah') is-invalid @enderror" type="file" name="file_ijazah" accept=".pdf,.jpg,.jpeg,.png" @required(! $ijazahSd)>
-            <div class="form-text">Maks. 2MB, pdf / jpg / png. Wajib diunggah.</div>
+            <div class="form-text">Maks. 1MB, pdf / jpg / png. Wajib diunggah.</div>
             @error('file_ijazah') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
             @if ($ijazahSd)
                 <div class="form-text">Berkas saat ini: {{ $ijazahSd->nama_asli }}</div>

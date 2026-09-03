@@ -140,7 +140,7 @@
                         <label class="form-check-label small" for="tidak_punya_kks">Tidak memiliki KKS</label>
                     </div>
                     <div data-bantuan-upload @if (blank(old('no_kks', $periodik?->no_kks)) || old('tidak_punya_kks', $periodik?->tidak_punya_kks)) hidden @endif>
-                        <div class="form-text mt-2">Unggah kartu KKS (wajib jika nomor diisi), maks. 2MB pdf/jpg/png</div>
+                        <div class="form-text mt-2">Unggah kartu KKS (wajib jika nomor diisi), Maks. 1MB pdf/jpg/png</div>
                         @if ($kks = $siswa->dokumenJenis('kks'))
                             <div class="form-text" data-berkas-tersimpan>Berkas tersimpan: {{ $kks->nama_asli }}</div>
                         @endif
@@ -156,7 +156,7 @@
                         <label class="form-check-label small" for="tidak_punya_pkh">Tidak memiliki PKH</label>
                     </div>
                     <div data-bantuan-upload @if (blank(old('no_pkh', $periodik?->no_pkh)) || old('tidak_punya_pkh', $periodik?->tidak_punya_pkh)) hidden @endif>
-                        <div class="form-text mt-2">Unggah kartu PKH (wajib jika nomor diisi), maks. 2MB pdf/jpg/png</div>
+                        <div class="form-text mt-2">Unggah kartu PKH (wajib jika nomor diisi), Maks. 1MB pdf/jpg/png</div>
                         @if ($pkh = $siswa->dokumenJenis('pkh'))
                             <div class="form-text" data-berkas-tersimpan>Berkas tersimpan: {{ $pkh->nama_asli }}</div>
                         @endif

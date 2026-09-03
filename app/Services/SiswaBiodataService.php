@@ -34,6 +34,7 @@ class SiswaBiodataService
             }
 
             $this->simpanDokumen($request, $siswa, 'file_kk', 'kk');
+            $this->simpanDokumen($request, $siswa, 'file_akta', 'akta_lahir');
             $this->simpanDokumen($request, $siswa, 'file_kip', 'kip');
 
             return $siswa;
@@ -91,6 +92,7 @@ class SiswaBiodataService
         }
 
         $this->simpanDokumen($request, $siswa, 'file_kk', 'kk');
+        $this->simpanDokumen($request, $siswa, 'file_akta', 'akta_lahir');
         $this->simpanDokumen($request, $siswa, 'file_kip', 'kip');
         $this->simpanFoto($request, $siswa);
 
@@ -351,7 +353,7 @@ class SiswaBiodataService
             'kategori' => ['required', 'string', Rule::in(array_keys(config('emis.jenis_beasiswa')))],
             'nomor_rekening' => ['nullable', 'regex:/^[0-9]+$/', 'max:50'],
             'nominal' => ['nullable', 'integer', 'min:0'],
-            'bukti' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+            'bukti' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
         ], [
             'nomor_rekening.regex' => 'Nomor rekening hanya boleh angka',
         ]);
@@ -379,7 +381,7 @@ class SiswaBiodataService
             'tingkat' => ['nullable', 'string', Rule::in(array_keys(config('emis.tingkat_prestasi')))],
             'tahun' => ['nullable', 'integer', 'min:2000', 'max:2100'],
             'penyelenggara' => ['nullable', 'string', 'max:255'],
-            'sertifikat' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+            'sertifikat' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
         ]);
 
         unset($data['sertifikat']);
@@ -418,7 +420,7 @@ class SiswaBiodataService
                 'nullable',
                 'file',
                 'mimes:pdf,jpg,jpeg,png',
-                'max:2048',
+                'max:1024',
             ],
         ], [
             'nama_sd.required' => 'Nama sekolah wajib diisi',
@@ -557,16 +559,23 @@ class SiswaBiodataService
                 'nullable',
                 'file',
                 'mimes:pdf,jpg,jpeg,png',
-                'max:2048',
+                'max:1024',
+            ],
+            'file_akta' => [
+                Rule::requiredIf($siswa === null || $siswa->dokumenJenis('akta_lahir') === null),
+                'nullable',
+                'file',
+                'mimes:pdf,jpg,jpeg,png',
+                'max:1024',
             ],
             'file_kip' => [
                 Rule::requiredIf(filled($noKip) && ($siswa === null || $siswa->dokumenJenis('kip') === null)),
                 'nullable',
                 'file',
                 'mimes:pdf,jpg,jpeg,png',
-                'max:2048',
+                'max:1024',
             ],
-            'foto' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'foto' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:1024'],
         ], [
             'nama.regex' => 'Nama lengkap hanya dapat diisi huruf dan simbol -\'.,',
             'kepala_keluarga.regex' => 'Nama kepala keluarga hanya dapat diisi huruf dan simbol -\'.,',
@@ -592,6 +601,7 @@ class SiswaBiodataService
             'kebutuhan_khusus_lainnya.required' => 'Sebutkan kebutuhan khusus lainnya',
             'disabilitas_lainnya.required' => 'Sebutkan disabilitas lainnya',
             'file_kk.required' => 'Unggah Kartu Keluarga',
+            'file_akta.required' => 'Unggah Akta Kelahiran',
             'file_kip.required' => 'Unggah kartu KIP karena nomor KIP diisi',
         ]);
     }
@@ -780,14 +790,14 @@ class SiswaBiodataService
                     'nullable',
                     'file',
                     'mimes:pdf,jpg,jpeg,png',
-                    'max:2048',
+                    'max:1024',
                 ],
                 'file_pkh' => [
                     Rule::requiredIf(filled($noPkh) && $siswa->dokumenJenis('pkh') === null),
                     'nullable',
                     'file',
                     'mimes:pdf,jpg,jpeg,png',
-                    'max:2048',
+                    'max:1024',
                 ],
             ],
             $this->aturanDataOrtu($request, 'ortu.ayah', true),

@@ -95,7 +95,7 @@
                     <div class="mb-0">
                         <label class="form-label">Sertifikat/Piagam</label>
                         <input class="form-control @error('sertifikat') is-invalid @enderror" type="file" name="sertifikat" accept=".pdf,.jpg,.jpeg,.png">
-                        <div class="form-text">Maks. 2MB, pdf / jpg / png</div>
+                        <div class="form-text">Maks. 1MB, pdf / jpg / png</div>
                         @error('sertifikat') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                     </div>
                 </div>

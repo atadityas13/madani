@@ -18,7 +18,7 @@ class KelembagaanTest extends TestCase
 
     public function test_superadmin_can_update_identitas_and_logo_but_admin_cannot(): void
     {
-        Storage::fake('public');
+        Storage::fake('r2');
         $this->seed();
         $superadmin = User::query()->where('username', 'admin')->first();
 
@@ -39,7 +39,7 @@ class KelembagaanTest extends TestCase
         $madrasah = Madrasah::saatIni();
         $this->assertSame('12345678', $madrasah->npsn);
         $this->assertNotNull($madrasah->logo_path);
-        Storage::disk('public')->assertExists($madrasah->logo_path);
+        Storage::disk('r2')->assertExists($madrasah->logo_path);
 
         $this->actingAs($superadmin)
             ->post('/pengguna', [

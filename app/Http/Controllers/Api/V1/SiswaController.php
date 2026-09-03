@@ -81,6 +81,7 @@ class SiswaController extends Controller
         $siswa = $request->user();
         $map = [
             'kk' => 'file_kk',
+            'akta_lahir' => 'file_akta',
             'kip' => 'file_kip',
             'kks' => 'file_kks',
             'pkh' => 'file_pkh',
@@ -98,8 +99,8 @@ class SiswaController extends Controller
         $field = $map[$jenis];
         $request->validate([
             $field => $jenis === 'foto'
-                ? ['required', 'image', 'mimes:jpg,jpeg,png', 'max:2048']
-                : ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+                ? ['required', 'image', 'mimes:jpg,jpeg,png', 'max:1024']
+                : ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
         ]);
 
         if ($jenis === 'foto') {
@@ -118,7 +119,7 @@ class SiswaController extends Controller
     public function requestUploadUrl(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'jenis' => ['required', 'string', 'in:kk,kip,kks,pkh,ijazah_sd,foto'],
+            'jenis' => ['required', 'string', 'in:kk,akta_lahir,kip,kks,pkh,ijazah_sd,foto'],
             'filename' => ['required', 'string', 'max:255'],
         ]);
 
@@ -147,7 +148,7 @@ class SiswaController extends Controller
     {
         $validated = $request->validate([
             'object_key' => ['required', 'string', 'max:500'],
-            'jenis' => ['required', 'string', 'in:kk,kip,kks,pkh,ijazah_sd,foto'],
+            'jenis' => ['required', 'string', 'in:kk,akta_lahir,kip,kks,pkh,ijazah_sd,foto'],
         ]);
 
         /** @var Siswa $siswa */

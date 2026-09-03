@@ -136,6 +136,7 @@ class KelengkapanSiswa
         $emailOk = $siswa->tidak_punya_email || filled($siswa->email);
         $kipOk = $periodik?->tidak_punya_kip || filled($periodik?->no_kip);
         $kkDokumen = $siswa->dokumenJenis('kk') !== null;
+        $aktaDokumen = $siswa->dokumenJenis('akta_lahir') !== null;
         $kipDokumen = $periodik?->tidak_punya_kip
             || blank($periodik?->no_kip)
             || $siswa->dokumenJenis('kip') !== null;
@@ -159,6 +160,7 @@ class KelengkapanSiswa
             && $kipOk
             && filled($periodik?->kebutuhanKhususLabel())
             && $kkDokumen
+            && $aktaDokumen
             && $kipDokumen;
     }
 

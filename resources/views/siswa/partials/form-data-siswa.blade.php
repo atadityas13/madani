@@ -14,6 +14,7 @@
     $valAgama = old('agama', $s?->agama);
     $kebutuhanKhusus = old('kebutuhan_khusus', $p?->kebutuhanKhususLabel());
     $dokumenKk = $s?->dokumenJenis('kk');
+    $dokumenAkta = $s?->dokumenJenis('akta_lahir');
     $dokumenKip = $s?->dokumenJenis('kip');
     $jenisKelaminLabel = old('jenis_kelamin', $s?->jenis_kelamin) === 'P' ? 'Perempuan' : (old('jenis_kelamin', $s?->jenis_kelamin) === 'L' ? 'Laki-laki' : '');
 @endphp
@@ -266,16 +267,25 @@
     </div>
     <div class="col-md-6">
         <label class="form-label">Unggah Kartu Keluarga <span class="text-danger">*</span></label>
-        <div class="form-text">Wajib. Maks. 2MB bertipe pdf jpg png</div>
+        <div class="form-text">Wajib. Maks. 1MB bertipe pdf jpg png</div>
         @if ($dokumenKk)
             <div class="form-text">Berkas tersimpan: {{ $dokumenKk->nama_asli }}</div>
         @endif
         <input class="form-control mt-1 @error('file_kk') is-invalid @enderror" type="file" name="file_kk" accept=".pdf,.jpg,.jpeg,.png">
         @error('file_kk') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
     </div>
+    <div class="col-md-6">
+        <label class="form-label">Unggah Akta Kelahiran <span class="text-danger">*</span></label>
+        <div class="form-text">Wajib. Maks. 1MB bertipe pdf jpg png</div>
+        @if ($dokumenAkta)
+            <div class="form-text">Berkas tersimpan: {{ $dokumenAkta->nama_asli }}</div>
+        @endif
+        <input class="form-control mt-1 @error('file_akta') is-invalid @enderror" type="file" name="file_akta" accept=".pdf,.jpg,.jpeg,.png">
+        @error('file_akta') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+    </div>
     <div class="col-md-6" data-kip-upload @if (blank(old('no_kip', $p?->no_kip)) || old('tidak_punya_kip', $p?->tidak_punya_kip)) hidden @endif>
         <label class="form-label">Unggah kartu KIP <span class="text-danger">*</span></label>
-        <div class="form-text">Wajib jika nomor KIP diisi. Maks. 2MB bertipe pdf jpg png</div>
+        <div class="form-text">Wajib jika nomor KIP diisi. Maks. 1MB bertipe pdf jpg png</div>
         @if ($dokumenKip)
             <div class="form-text">Berkas tersimpan: {{ $dokumenKip->nama_asli }}</div>
         @endif
