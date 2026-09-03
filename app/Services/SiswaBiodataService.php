@@ -14,6 +14,8 @@ use Illuminate\Validation\ValidationException;
 
 class SiswaBiodataService
 {
+    private const NAMA_ORANG = '/^[A-Za-zÀ-ÿ\-\'’`., ]+$/u';
+
     public function create(Request $request): Siswa
     {
         $data = $this->validateDataSiswa($request);
@@ -218,6 +220,8 @@ class SiswaBiodataService
 
     public function updateAlamat(Request $request, Siswa $siswa): string
     {
+        $this->siapkanNomorAlamat($request);
+
         $request->validate([
             'tempat_tinggal' => ['nullable', 'string', 'max:80'],
             'provinsi' => ['nullable', 'string', 'max:80'],
@@ -225,14 +229,36 @@ class SiswaBiodataService
             'kecamatan' => ['nullable', 'string', 'max:80'],
             'desa' => ['nullable', 'string', 'max:80'],
             'blok' => ['nullable', 'string', 'max:80'],
-            'rt' => ['nullable', 'string', 'max:5'],
-            'rw' => ['nullable', 'string', 'max:5'],
+            'rt' => ['nullable', 'digits:3'],
+            'rw' => ['nullable', 'digits:3'],
             'alamat' => ['nullable', 'string', 'max:255'],
-            'kode_pos' => ['nullable', 'string', 'max:10'],
+            'kode_pos' => ['nullable', 'digits:5'],
             'koordinat' => ['nullable', 'string', 'max:80'],
             'jarak' => ['nullable', 'string', 'max:40'],
             'waktu_tempuh' => ['nullable', 'string', 'max:40'],
             'transportasi' => ['nullable', 'string', 'max:80'],
+            'ortu.ayah.rt' => ['nullable', 'digits:3'],
+            'ortu.ayah.rw' => ['nullable', 'digits:3'],
+            'ortu.ayah.kode_pos' => ['nullable', 'digits:5'],
+            'ortu.ibu.rt' => ['nullable', 'digits:3'],
+            'ortu.ibu.rw' => ['nullable', 'digits:3'],
+            'ortu.ibu.kode_pos' => ['nullable', 'digits:5'],
+            'ortu.wali.rt' => ['nullable', 'digits:3'],
+            'ortu.wali.rw' => ['nullable', 'digits:3'],
+            'ortu.wali.kode_pos' => ['nullable', 'digits:5'],
+        ], [
+            'rt.digits' => 'RT harus 3 digit',
+            'rw.digits' => 'RW harus 3 digit',
+            'kode_pos.digits' => 'Kode pos harus 5 digit',
+            'ortu.ayah.rt.digits' => 'RT ayah harus 3 digit',
+            'ortu.ayah.rw.digits' => 'RW ayah harus 3 digit',
+            'ortu.ayah.kode_pos.digits' => 'Kode pos ayah harus 5 digit',
+            'ortu.ibu.rt.digits' => 'RT ibu harus 3 digit',
+            'ortu.ibu.rw.digits' => 'RW ibu harus 3 digit',
+            'ortu.ibu.kode_pos.digits' => 'Kode pos ibu harus 5 digit',
+            'ortu.wali.rt.digits' => 'RT wali harus 3 digit',
+            'ortu.wali.rw.digits' => 'RW wali harus 3 digit',
+            'ortu.wali.kode_pos.digits' => 'Kode pos wali harus 5 digit',
         ]);
 
         $siswa->loadMissing('orangTuas');
@@ -323,9 +349,11 @@ class SiswaBiodataService
         $data = $request->validate([
             'tahun' => ['required', 'integer', 'min:2000', 'max:2100'],
             'kategori' => ['required', 'string', Rule::in(array_keys(config('emis.jenis_beasiswa')))],
-            'nomor_rekening' => ['nullable', 'string', 'max:50'],
+            'nomor_rekening' => ['nullable', 'regex:/^[0-9]+$/', 'max:50'],
             'nominal' => ['nullable', 'integer', 'min:0'],
             'bukti' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+        ], [
+            'nomor_rekening.regex' => 'Nomor rekening hanya boleh angka',
         ]);
 
         unset($data['bukti']);
@@ -370,12 +398,17 @@ class SiswaBiodataService
     {
         $siswa->loadMissing('dokumens');
 
+        $request->merge([
+            'npsn' => $this->hanyaDigit($request->input('npsn')),
+            'nip_kepala_sekolah' => $this->hanyaDigit($request->input('nip_kepala_sekolah')),
+        ]);
+
         $data = $request->validate([
             'nama_sd' => ['required', 'string', 'max:255'],
             'npsn' => ['required', 'digits:8'],
             'tahun_ajaran_kelulusan' => ['required', 'string', 'max:20'],
-            'nip_kepala_sekolah' => ['required', 'string', 'max:30'],
-            'nama_kepala_sekolah' => ['required', 'string', 'max:255'],
+            'nip_kepala_sekolah' => ['required', 'digits:18'],
+            'nama_kepala_sekolah' => ['required', 'string', 'max:255', 'regex:'.self::NAMA_ORANG],
             'nomor_seri_ijazah' => ['required', 'string', 'max:50'],
             'tanggal_terbit_ijazah' => ['required', 'date'],
             'ijazah_sesuai' => ['nullable', 'array'],
@@ -393,7 +426,9 @@ class SiswaBiodataService
             'npsn.digits' => 'NPSN harus 8 digit',
             'tahun_ajaran_kelulusan.required' => 'Tahun ajaran lulusan wajib diisi',
             'nip_kepala_sekolah.required' => 'NIP kepala sekolah wajib diisi',
+            'nip_kepala_sekolah.digits' => 'NIP kepala sekolah harus 18 digit',
             'nama_kepala_sekolah.required' => 'Nama kepala sekolah wajib diisi',
+            'nama_kepala_sekolah.regex' => 'Nama kepala sekolah hanya dapat diisi huruf dan simbol -\'.,',
             'nomor_seri_ijazah.required' => 'Nomor seri ijazah wajib diisi',
             'tanggal_terbit_ijazah.required' => 'Tanggal terbit ijazah wajib diisi',
             'file_ijazah.required' => 'Unggah ijazah wajib dilampirkan',
@@ -446,9 +481,17 @@ class SiswaBiodataService
         $tidakPunyaKip = $request->boolean('tidak_punya_kip');
         $noKip = $tidakPunyaKip ? null : $request->input('no_kip');
 
+        $request->merge([
+            'nis' => $this->hanyaDigit($request->input('nis')),
+            'nisn' => $this->hanyaDigit($request->input('nisn')),
+            'nik' => $this->hanyaDigit($request->input('nik')),
+            'no_hp' => $this->normalisasiHp($request->input('no_hp')),
+            'no_kk' => $this->hanyaDigit($request->input('no_kk')),
+        ]);
+
         return $request->validate([
-            'nama' => ['required', 'string', 'max:255', 'regex:/^[A-Za-zÀ-ÿ\-\'’`., ]+$/u'],
-            'nis' => ['nullable', 'string', 'max:20'],
+            'nama' => ['required', 'string', 'max:255', 'regex:'.self::NAMA_ORANG],
+            'nis' => ['nullable', 'digits_between:1,20'],
             'nisn' => [
                 'required',
                 'digits:10',
@@ -483,7 +526,7 @@ class SiswaBiodataService
             ],
             'pembiaya' => ['required', 'string', 'max:80'],
             'no_kk' => ['required', 'digits:16'],
-            'kepala_keluarga' => ['required', 'string', 'max:255'],
+            'kepala_keluarga' => ['required', 'string', 'max:255', 'regex:'.self::NAMA_ORANG],
             'no_kip' => [
                 Rule::requiredIf(! $tidakPunyaKip),
                 'nullable',
@@ -526,9 +569,14 @@ class SiswaBiodataService
             'foto' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
         ], [
             'nama.regex' => 'Nama lengkap hanya dapat diisi huruf dan simbol -\'.,',
-            'no_hp.regex' => 'Nomor HP/Whatsapp tidak bisa diawali 0, harus kode negara, misal: 62',
+            'kepala_keluarga.regex' => 'Nama kepala keluarga hanya dapat diisi huruf dan simbol -\'.,',
+            'no_hp.regex' => 'Nomor HP/Whatsapp harus diawali 62 diikuti 8 sampai 15 digit',
+            'nis.digits_between' => 'NIS lokal hanya boleh angka',
             'nisn.required' => 'NISN tidak boleh kosong',
+            'nisn.digits' => 'NISN harus 10 digit angka',
             'nik.required' => 'NIK tidak boleh kosong',
+            'nik.digits' => 'NIK harus 16 digit angka',
+            'no_kk.digits' => 'Nomor KK harus 16 digit angka',
             'jumlah_saudara.required' => 'Jumlah saudara tidak boleh kosong',
             'anak_ke.required' => 'Anak ke tidak boleh kosong',
             'anak_ke.min' => 'Anak ke tidak boleh NOL',
@@ -700,6 +748,7 @@ class SiswaBiodataService
         }
         $tidakPunyaKks = $request->boolean('tidak_punya_kks');
         $tidakPunyaPkh = $request->boolean('tidak_punya_pkh');
+        $this->siapkanNomorOrtu($request);
         $noKks = $tidakPunyaKks ? null : $request->input('no_kks');
         $noPkh = $tidakPunyaPkh ? null : $request->input('no_pkh');
 
@@ -746,35 +795,42 @@ class SiswaBiodataService
             $this->aturanDataOrtu($request, 'ortu.wali', $waliLainnya),
         ), [
             'ortu.ayah.nama.required' => 'Nama ayah wajib diisi',
+            'ortu.ayah.nama.regex' => 'Nama ayah hanya dapat diisi huruf dan simbol -\'.,',
             'ortu.ayah.status_hidup.required' => 'Status ayah wajib dipilih',
             'ortu.ayah.nik.required' => 'NIK ayah wajib diisi',
+            'ortu.ayah.nik.digits' => 'NIK ayah harus 16 digit angka',
             'ortu.ayah.tempat_lahir.required' => 'Tempat lahir ayah wajib diisi',
             'ortu.ayah.tanggal_lahir.required' => 'Tanggal lahir ayah wajib diisi',
             'ortu.ayah.pendidikan.required' => 'Pendidikan ayah wajib dipilih',
             'ortu.ayah.pekerjaan.required' => 'Pekerjaan ayah wajib dipilih',
             'ortu.ayah.penghasilan.required' => 'Penghasilan ayah wajib dipilih',
             'ortu.ayah.no_hp.required' => 'Nomor HP ayah wajib diisi',
-            'ortu.ayah.no_hp.regex' => 'Nomor HP ayah harus diawali 62, tanpa 0 di depan',
+            'ortu.ayah.no_hp.regex' => 'Nomor HP ayah harus diawali 62 diikuti 8 sampai 15 digit',
             'ortu.ibu.nama.required' => 'Nama ibu wajib diisi',
+            'ortu.ibu.nama.regex' => 'Nama ibu hanya dapat diisi huruf dan simbol -\'.,',
             'ortu.ibu.status_hidup.required' => 'Status ibu wajib dipilih',
             'ortu.ibu.nik.required' => 'NIK ibu wajib diisi',
+            'ortu.ibu.nik.digits' => 'NIK ibu harus 16 digit angka',
             'ortu.ibu.tempat_lahir.required' => 'Tempat lahir ibu wajib diisi',
             'ortu.ibu.tanggal_lahir.required' => 'Tanggal lahir ibu wajib diisi',
             'ortu.ibu.pendidikan.required' => 'Pendidikan ibu wajib dipilih',
             'ortu.ibu.pekerjaan.required' => 'Pekerjaan ibu wajib dipilih',
             'ortu.ibu.penghasilan.required' => 'Penghasilan ibu wajib dipilih',
             'ortu.ibu.no_hp.required' => 'Nomor HP ibu wajib diisi',
-            'ortu.ibu.no_hp.regex' => 'Nomor HP ibu harus diawali 62, tanpa 0 di depan',
+            'ortu.ibu.no_hp.regex' => 'Nomor HP ibu harus diawali 62 diikuti 8 sampai 15 digit',
             'ortu.wali.status.required' => 'Status wali wajib dipilih',
             'ortu.wali.hubungan.required' => 'Hubungan wali wajib dipilih',
             'ortu.wali.nama.required' => 'Nama wali wajib diisi',
+            'ortu.wali.nama.regex' => 'Nama wali hanya dapat diisi huruf dan simbol -\'.,',
             'ortu.wali.nik.required' => 'NIK wali wajib diisi',
+            'ortu.wali.nik.digits' => 'NIK wali harus 16 digit angka',
             'ortu.wali.tempat_lahir.required' => 'Tempat lahir wali wajib diisi',
             'ortu.wali.tanggal_lahir.required' => 'Tanggal lahir wali wajib diisi',
             'ortu.wali.pendidikan.required' => 'Pendidikan wali wajib dipilih',
             'ortu.wali.pekerjaan.required' => 'Pekerjaan wali wajib dipilih',
             'ortu.wali.penghasilan.required' => 'Penghasilan wali wajib dipilih',
             'ortu.wali.no_hp.required' => 'Nomor HP wali wajib diisi',
+            'ortu.wali.no_hp.regex' => 'Nomor HP wali harus diawali 62 diikuti 8 sampai 15 digit',
             'penghasilan_gabungan.required' => 'Penghasilan gabungan wajib dipilih',
             'no_kks.required' => 'Nomor KKS wajib diisi, atau centang tidak memiliki KKS',
             'no_pkh.required' => 'Nomor PKH wajib diisi, atau centang tidak memiliki PKH',
@@ -793,7 +849,7 @@ class SiswaBiodataService
         $tidakPunyaHp = $request->boolean("{$prefix}.tidak_punya_hp");
 
         return [
-            "{$prefix}.nama" => [Rule::requiredIf($wajibIdentitas), 'nullable', 'string', 'max:255'],
+            "{$prefix}.nama" => [Rule::requiredIf($wajibIdentitas), 'nullable', 'string', 'max:255', 'regex:'.self::NAMA_ORANG],
             "{$prefix}.status_hidup" => [
                 Rule::requiredIf($wajibIdentitas),
                 'nullable',
@@ -995,7 +1051,7 @@ class SiswaBiodataService
     private function assertNilaiPerubahan(Siswa $siswa, string $field, string $nilaiBaru): void
     {
         $aturan = match ($field) {
-            'nama' => ['required', 'string', 'max:255', 'regex:/^[A-Za-zÀ-ÿ\-\'’`., ]+$/u'],
+            'nama' => ['required', 'string', 'max:255', 'regex:'.self::NAMA_ORANG],
             'jenis_kelamin' => ['required', 'in:L,P'],
             'nisn' => ['required', 'digits:10', Rule::unique('siswas', 'nisn')->ignore($siswa->id)],
             'nik' => ['required', 'digits:16', Rule::unique('siswas', 'nik')->ignore($siswa->id)],
@@ -1013,5 +1069,102 @@ class SiswaBiodataService
                 'nilai_baru.unique' => 'Nilai ini sudah dipakai siswa lain',
             ],
         )->validate();
+    }
+
+    private function normalisasiHp(mixed $nomor): ?string
+    {
+        $digits = $this->hanyaDigit($nomor);
+
+        if ($digits === null) {
+            return null;
+        }
+
+        if (str_starts_with($digits, '0')) {
+            $digits = '62'.substr($digits, 1);
+        }
+
+        return $digits === '' ? null : $digits;
+    }
+
+    private function hanyaDigit(mixed $nilai): ?string
+    {
+        $digits = preg_replace('/\D+/', '', (string) $nilai) ?? '';
+
+        return $digits === '' ? null : $digits;
+    }
+
+    private function padDigit(mixed $nilai, int $panjang): ?string
+    {
+        $digits = $this->hanyaDigit($nilai);
+
+        if ($digits === null) {
+            return null;
+        }
+
+        return str_pad(substr($digits, 0, $panjang), $panjang, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    private function padAlamatNomor(array $input): array
+    {
+        foreach (['rt', 'rw'] as $field) {
+            if (array_key_exists($field, $input)) {
+                $input[$field] = $this->padDigit($input[$field] ?? null, 3);
+            }
+        }
+
+        if (array_key_exists('kode_pos', $input)) {
+            $input['kode_pos'] = $this->hanyaDigit($input['kode_pos'] ?? null);
+        }
+
+        return $input;
+    }
+
+    private function siapkanNomorOrtu(Request $request): void
+    {
+        $ortu = $request->input('ortu', []);
+
+        if (! is_array($ortu)) {
+            return;
+        }
+
+        foreach (['ayah', 'ibu', 'wali'] as $peran) {
+            if (! isset($ortu[$peran]) || ! is_array($ortu[$peran])) {
+                continue;
+            }
+
+            if (array_key_exists('no_hp', $ortu[$peran])) {
+                $ortu[$peran]['no_hp'] = $this->normalisasiHp($ortu[$peran]['no_hp'] ?? null);
+            }
+
+            if (array_key_exists('nik', $ortu[$peran])) {
+                $ortu[$peran]['nik'] = $this->hanyaDigit($ortu[$peran]['nik'] ?? null);
+            }
+        }
+
+        $request->merge(['ortu' => $ortu]);
+    }
+
+    private function siapkanNomorAlamat(Request $request): void
+    {
+        $merge = $this->padAlamatNomor($request->only(['rt', 'rw', 'kode_pos']));
+        $ortu = $request->input('ortu', []);
+
+        if (is_array($ortu)) {
+            foreach (['ayah', 'ibu', 'wali'] as $peran) {
+                if (! isset($ortu[$peran]) || ! is_array($ortu[$peran])) {
+                    continue;
+                }
+
+                $ortu[$peran] = $this->padAlamatNomor($ortu[$peran]);
+            }
+
+            $merge['ortu'] = $ortu;
+        }
+
+        $request->merge($merge);
     }
 }

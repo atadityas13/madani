@@ -1074,6 +1074,57 @@ function bindPeranUser() {
     });
 }
 
+function bindFormatInputs() {
+    const digitsOnly = (value, max) => {
+        const digits = String(value ?? '').replace(/\D+/g, '');
+
+        return max ? digits.slice(0, max) : digits;
+    };
+
+    const normalisasiHp = (value) => {
+        let digits = digitsOnly(value, 17);
+
+        if (digits.startsWith('0')) {
+            digits = `62${digits.slice(1)}`.slice(0, 17);
+        }
+
+        return digits;
+    };
+
+    document.querySelectorAll('[data-angka]').forEach((el) => {
+        const max = Number(el.getAttribute('maxlength')) || 32;
+        const pad = Number(el.getAttribute('data-pad')) || 0;
+
+        const apply = () => {
+            el.value = digitsOnly(el.value, max);
+        };
+
+        el.addEventListener('input', apply);
+        el.addEventListener('blur', () => {
+            apply();
+
+            if (pad > 0 && el.value !== '') {
+                el.value = el.value.padStart(pad, '0');
+            }
+        });
+    });
+
+    document.querySelectorAll('[data-hp]').forEach((el) => {
+        const apply = () => {
+            el.value = normalisasiHp(el.value);
+        };
+
+        el.addEventListener('input', apply);
+        el.addEventListener('blur', apply);
+    });
+
+    document.querySelectorAll('[data-nama-orang]').forEach((el) => {
+        el.addEventListener('input', () => {
+            el.value = el.value.replace(/[^A-Za-zÀ-ÿ\-'’`., ]+/gu, '');
+        });
+    });
+}
+
 document.querySelectorAll('[data-wilayah-root]').forEach(bindWilayahRoot);
 bindOrtuForm();
 bindAlamatOrtu();
@@ -1083,3 +1134,4 @@ bindIjazahSesuai();
 bindAjukanPerubahan();
 bindOpenModals();
 bindPeranUser();
+bindFormatInputs();

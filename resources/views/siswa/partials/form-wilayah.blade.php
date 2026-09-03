@@ -64,15 +64,15 @@
             </div>
             <div class="col-4">
                 <label class="form-label">RT</label>
-                <input class="form-control" name="{{ $nameRt }}" value="{{ $valRt }}" maxlength="5" data-wilayah-field="rt">
+                <input class="form-control" name="{{ $nameRt }}" value="{{ $valRt }}" maxlength="3" inputmode="numeric" data-angka data-pad="3" data-wilayah-field="rt">
             </div>
             <div class="col-4">
                 <label class="form-label">RW</label>
-                <input class="form-control" name="{{ $nameRw }}" value="{{ $valRw }}" maxlength="5" data-wilayah-field="rw">
+                <input class="form-control" name="{{ $nameRw }}" value="{{ $valRw }}" maxlength="3" inputmode="numeric" data-angka data-pad="3" data-wilayah-field="rw">
             </div>
             <div class="col-4">
                 <label class="form-label">Kode pos</label>
-                <input class="form-control" name="{{ $nameKodePos }}" value="{{ $valKodePos }}" maxlength="10" data-wilayah-field="kode_pos">
+                <input class="form-control" name="{{ $nameKodePos }}" value="{{ $valKodePos }}" maxlength="5" inputmode="numeric" data-angka data-wilayah-field="kode_pos">
             </div>
             <div class="col-12">
                 <label class="form-label">Alamat lengkap</label>

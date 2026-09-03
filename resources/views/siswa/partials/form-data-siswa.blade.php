@@ -41,7 +41,7 @@
     <div class="col-md-8">
         <label class="form-label">Nama lengkap</label>
         <div class="input-group">
-            <input class="form-control @error('nama') is-invalid @enderror" name="nama" value="{{ old('nama', $s?->nama) }}" @if ($kunci) readonly @else required @endif>
+            <input class="form-control @error('nama') is-invalid @enderror" name="nama" value="{{ old('nama', $s?->nama) }}" data-nama-orang @if ($kunci) readonly @else required @endif>
             {!! $tombolAjukan('nama', 'Nama lengkap', $s?->nama) !!}
         </div>
         @error('nama') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
@@ -73,7 +73,7 @@
     <div class="col-md-4">
         <label class="form-label">NISN</label>
         <div class="input-group">
-            <input class="form-control @error('nisn') is-invalid @enderror" name="nisn" value="{{ old('nisn', $s?->nisn) }}" maxlength="10" inputmode="numeric" @if ($kunci) readonly @else required @endif>
+            <input class="form-control @error('nisn') is-invalid @enderror" name="nisn" value="{{ old('nisn', $s?->nisn) }}" maxlength="10" inputmode="numeric" data-angka @if ($kunci) readonly @else required @endif>
             {!! $tombolAjukan('nisn', 'NISN', $s?->nisn) !!}
         </div>
         @error('nisn') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
@@ -83,12 +83,12 @@
     </div>
     <div class="col-md-4">
         <label class="form-label">NIS Lokal</label>
-        <input class="form-control" name="nis" value="{{ old('nis', $s?->nis) }}" maxlength="20" @if ($kunci) readonly @endif>
+        <input class="form-control" name="nis" value="{{ old('nis', $s?->nis) }}" maxlength="20" inputmode="numeric" data-angka @if ($kunci) readonly @endif>
     </div>
     <div class="col-md-4">
         <label class="form-label">NIK</label>
         <div class="input-group">
-            <input class="form-control @error('nik') is-invalid @enderror" name="nik" value="{{ old('nik', $s?->nik) }}" maxlength="16" inputmode="numeric" @if ($kunci) readonly @else required @endif>
+            <input class="form-control @error('nik') is-invalid @enderror" name="nik" value="{{ old('nik', $s?->nik) }}" maxlength="16" inputmode="numeric" data-angka @if ($kunci) readonly @else required @endif>
             {!! $tombolAjukan('nik', 'NIK', $s?->nik) !!}
         </div>
         @error('nik') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
@@ -151,7 +151,7 @@
     </div>
     <div class="col-md-6" data-kontak-bypass>
         <label class="form-label">Nomor HP/Whatsapp <span class="text-danger">*</span></label>
-        <input class="form-control @error('no_hp') is-invalid @enderror" name="no_hp" value="{{ old('no_hp', $s?->no_hp) }}" placeholder="contoh: 6282372377723" data-nomor>
+        <input class="form-control @error('no_hp') is-invalid @enderror" name="no_hp" value="{{ old('no_hp', $s?->no_hp) }}" placeholder="contoh: 6282372377723" maxlength="17" inputmode="numeric" data-nomor data-hp>
         @error('no_hp') <div class="invalid-feedback">{{ $message }}</div> @enderror
         <div class="form-check mt-1">
             <input class="form-check-input" type="checkbox" name="tidak_punya_hp" value="1" id="tidak_punya_hp" @checked(old('tidak_punya_hp', $s?->tidak_punya_hp)) data-tidak-punya>
@@ -238,12 +238,12 @@
     </div>
     <div class="col-md-4">
         <label class="form-label">Nomor KK <span class="text-danger">*</span></label>
-        <input class="form-control @error('no_kk') is-invalid @enderror" name="no_kk" value="{{ old('no_kk', $p?->no_kk) }}" maxlength="16" inputmode="numeric" required>
+        <input class="form-control @error('no_kk') is-invalid @enderror" name="no_kk" value="{{ old('no_kk', $p?->no_kk) }}" maxlength="16" inputmode="numeric" data-angka required>
         @error('no_kk') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
     <div class="col-md-4">
         <label class="form-label">Nama kepala keluarga <span class="text-danger">*</span></label>
-        <input class="form-control @error('kepala_keluarga') is-invalid @enderror" name="kepala_keluarga" value="{{ old('kepala_keluarga', $p?->kepala_keluarga) }}" required>
+        <input class="form-control @error('kepala_keluarga') is-invalid @enderror" name="kepala_keluarga" value="{{ old('kepala_keluarga', $p?->kepala_keluarga) }}" data-nama-orang required>
         @error('kepala_keluarga') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
     <div class="col-md-4">

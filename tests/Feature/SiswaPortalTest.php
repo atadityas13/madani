@@ -518,6 +518,46 @@ class SiswaPortalTest extends TestCase
         $this->assertSame(1, $siswa->fresh()->prestasis()->count());
     }
 
+    public function test_hp_leading_zero_becomes_country_code_and_formats_are_enforced(): void
+    {
+        Storage::fake('public');
+        $this->seed();
+        $siswa = $this->buatSiswa();
+        $token = $this->tokenSiswa($siswa);
+        $this->unggahKk($token);
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/data-siswa', $this->payloadDataSiswa([
+                'tidak_punya_hp' => false,
+                'no_hp' => '081234567890',
+            ]))
+            ->assertOk();
+
+        $this->assertSame('6281234567890', $siswa->fresh()->no_hp);
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/rekam-didik', [
+                'nama_sd' => 'SD Negeri 1 Maniis',
+                'npsn' => '20241234',
+                'tahun_ajaran_kelulusan' => '2023/2024',
+                'nip_kepala_sekolah' => '19700101',
+                'nama_kepala_sekolah' => 'Kepala Sekolah',
+                'nomor_seri_ijazah' => 'DN-123456',
+                'tanggal_terbit_ijazah' => '2024-06-15',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('nip_kepala_sekolah');
+
+        $this->withToken($token)
+            ->postJson('/api/v1/siswa/beasiswa', [
+                'tahun' => 2026,
+                'kategori' => 'PIP',
+                'nomor_rekening' => 'abc',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('nomor_rekening');
+    }
+
     public function test_wilayah_returns_kode_pos(): void
     {
         $this->seed();

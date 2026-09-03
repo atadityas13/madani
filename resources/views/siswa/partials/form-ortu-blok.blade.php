@@ -64,7 +64,7 @@
         @endif
         <div class="mb-3">
             <label class="form-label">Nama lengkap {{ $judul }} <span class="text-danger">*</span></label>
-            <input class="form-control" name="{{ $input }}[nama]" value="{{ old($old.'.nama', $ortu?->nama) }}" @required($peran !== 'wali')>
+            <input class="form-control" name="{{ $input }}[nama]" value="{{ old($old.'.nama', $ortu?->nama) }}" data-nama-orang @required($peran !== 'wali')>
         </div>
         @if ($peran === 'wali')
             <input type="hidden" name="{{ $input }}[status_hidup]" value="hidup">
@@ -78,7 +78,7 @@
         <div class="row g-2" data-ortu-hidup @if ($peran !== 'wali' && ! $tampilHidup) hidden @endif>
             <div class="col-12">
                 <label class="form-label">NIK <span class="text-danger">*</span></label>
-                <input class="form-control" name="{{ $input }}[nik]" value="{{ old($old.'.nik', $ortu?->nik) }}" maxlength="16">
+                <input class="form-control" name="{{ $input }}[nik]" value="{{ old($old.'.nik', $ortu?->nik) }}" maxlength="16" inputmode="numeric" data-angka>
             </div>
             <div class="col-sm-6">
                 <label class="form-label">Tempat lahir <span class="text-danger">*</span></label>
@@ -102,7 +102,7 @@
             </div>
             <div class="col-12">
                 <label class="form-label">Nomor HP/Whatsapp <span class="text-danger">*</span></label>
-                <input class="form-control" name="{{ $input }}[no_hp]" value="{{ old($old.'.no_hp', $ortu?->no_hp) }}" placeholder="628…">
+                <input class="form-control" name="{{ $input }}[no_hp]" value="{{ old($old.'.no_hp', $ortu?->no_hp) }}" placeholder="628…" maxlength="17" inputmode="numeric" data-hp>
                 <div class="form-check mt-1">
                     <input class="form-check-input" type="checkbox" name="{{ $input }}[tidak_punya_hp]" value="1" @checked(old($old.'.tidak_punya_hp', $ortu?->tidak_punya_hp))>
                     <label class="form-check-label small">Tidak memiliki nomor HP/Whatsapp</label>

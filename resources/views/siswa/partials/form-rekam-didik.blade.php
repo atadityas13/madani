@@ -40,7 +40,7 @@
         </div>
         <div class="col-md-3">
             <label class="form-label">NPSN <span class="text-danger">*</span></label>
-            <input class="form-control @error('npsn') is-invalid @enderror" name="npsn" value="{{ $npsn }}" maxlength="8" inputmode="numeric" required>
+            <input class="form-control @error('npsn') is-invalid @enderror" name="npsn" value="{{ $npsn }}" maxlength="8" inputmode="numeric" data-angka required>
             @error('npsn') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
         <div class="col-md-3">
@@ -50,17 +50,17 @@
         </div>
         <div class="col-md-4">
             <label class="form-label">NIP kepala sekolah <span class="text-danger">*</span></label>
-            <input class="form-control @error('nip_kepala_sekolah') is-invalid @enderror" name="nip_kepala_sekolah" value="{{ $nipKepala }}" required>
+            <input class="form-control @error('nip_kepala_sekolah') is-invalid @enderror" name="nip_kepala_sekolah" value="{{ $nipKepala }}" maxlength="18" inputmode="numeric" data-angka required>
             @error('nip_kepala_sekolah') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
         <div class="col-md-8">
             <label class="form-label">Nama kepala sekolah <span class="text-danger">*</span></label>
-            <input class="form-control @error('nama_kepala_sekolah') is-invalid @enderror" name="nama_kepala_sekolah" value="{{ $namaKepala }}" required>
+            <input class="form-control @error('nama_kepala_sekolah') is-invalid @enderror" name="nama_kepala_sekolah" value="{{ $namaKepala }}" data-nama-orang required>
             @error('nama_kepala_sekolah') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
         <div class="col-md-4">
             <label class="form-label">Nomor seri ijazah <span class="text-danger">*</span></label>
-            <input class="form-control @error('nomor_seri_ijazah') is-invalid @enderror" name="nomor_seri_ijazah" value="{{ $nomorSeri }}" required>
+            <input class="form-control @error('nomor_seri_ijazah') is-invalid @enderror" name="nomor_seri_ijazah" value="{{ $nomorSeri }}" maxlength="50" required>
             @error('nomor_seri_ijazah') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
         <div class="col-md-4">

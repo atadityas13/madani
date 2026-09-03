@@ -77,7 +77,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Nomor rekening penerima</label>
-                        <input class="form-control @error('nomor_rekening') is-invalid @enderror" name="nomor_rekening" value="{{ old('nomor_rekening') }}">
+                        <input class="form-control @error('nomor_rekening') is-invalid @enderror" name="nomor_rekening" value="{{ old('nomor_rekening') }}" inputmode="numeric" data-angka maxlength="50">
                         @error('nomor_rekening') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="mb-3">
