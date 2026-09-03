@@ -158,11 +158,14 @@
                         <input class="form-check-input" type="checkbox" name="tidak_punya_kks" value="1" id="tidak_punya_kks" @checked(old('tidak_punya_kks', $periodik?->tidak_punya_kks)) data-tidak-punya>
                         <label class="form-check-label small" for="tidak_punya_kks">Tidak memiliki KKS</label>
                     </div>
-                    <div class="form-text mt-2">Unggah kartu KKS (wajib jika nomor diisi), maks. 2MB pdf/jpg/png</div>
-                    @if ($kks = $siswa->dokumenJenis('kks'))
-                        <div class="form-text">Berkas tersimpan: {{ $kks->nama_asli }}</div>
-                    @endif
-                    <input class="form-control mt-1" type="file" name="file_kks" accept=".pdf,.jpg,.jpeg,.png" data-berkas>
+                    <div data-bantuan-upload @if (blank(old('no_kks', $periodik?->no_kks)) || old('tidak_punya_kks', $periodik?->tidak_punya_kks)) hidden @endif>
+                        <div class="form-text mt-2">Unggah kartu KKS (wajib jika nomor diisi), maks. 2MB pdf/jpg/png</div>
+                        @if ($kks = $siswa->dokumenJenis('kks'))
+                            <div class="form-text" data-berkas-tersimpan>Berkas tersimpan: {{ $kks->nama_asli }}</div>
+                        @endif
+                        <input class="form-control mt-1 @error('file_kks') is-invalid @enderror" type="file" name="file_kks" accept=".pdf,.jpg,.jpeg,.png" data-berkas>
+                        @error('file_kks') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                    </div>
                 </div>
                 <div class="col-md-4" data-bantuan-kartu="pkh">
                     <label class="form-label">Nomor PKH <span class="text-danger">*</span></label>
@@ -171,11 +174,14 @@
                         <input class="form-check-input" type="checkbox" name="tidak_punya_pkh" value="1" id="tidak_punya_pkh" @checked(old('tidak_punya_pkh', $periodik?->tidak_punya_pkh)) data-tidak-punya>
                         <label class="form-check-label small" for="tidak_punya_pkh">Tidak memiliki PKH</label>
                     </div>
-                    <div class="form-text mt-2">Unggah kartu PKH (wajib jika nomor diisi), maks. 2MB pdf/jpg/png</div>
-                    @if ($pkh = $siswa->dokumenJenis('pkh'))
-                        <div class="form-text">Berkas tersimpan: {{ $pkh->nama_asli }}</div>
-                    @endif
-                    <input class="form-control mt-1" type="file" name="file_pkh" accept=".pdf,.jpg,.jpeg,.png" data-berkas>
+                    <div data-bantuan-upload @if (blank(old('no_pkh', $periodik?->no_pkh)) || old('tidak_punya_pkh', $periodik?->tidak_punya_pkh)) hidden @endif>
+                        <div class="form-text mt-2">Unggah kartu PKH (wajib jika nomor diisi), maks. 2MB pdf/jpg/png</div>
+                        @if ($pkh = $siswa->dokumenJenis('pkh'))
+                            <div class="form-text" data-berkas-tersimpan>Berkas tersimpan: {{ $pkh->nama_asli }}</div>
+                        @endif
+                        <input class="form-control mt-1 @error('file_pkh') is-invalid @enderror" type="file" name="file_pkh" accept=".pdf,.jpg,.jpeg,.png" data-berkas>
+                        @error('file_pkh') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                    </div>
                 </div>
             </div>
         </div>
@@ -207,7 +213,7 @@
                     <label class="form-label">Status tempat tinggal</label>
                     <x-emis-select name="tempat_tinggal" :options="$emis['status_tempat_tinggal_siswa']" :value="old('tempat_tinggal', $periodik?->tempat_tinggal)" data-tempat-tinggal />
                     <div class="form-text" data-alamat-ortu-kosong hidden>Lengkapi alamat orang tua terlebih dahulu.</div>
-                    <div class="mt-3">
+                    <div class="mt-3" data-siswa-alamat-isi @if (blank(old('tempat_tinggal', $periodik?->tempat_tinggal))) hidden @endif>
                         @include('siswa.partials.form-wilayah', [
                             'namePrefix' => '',
                             'oldPrefix' => '',
@@ -217,7 +223,7 @@
                         ])
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6" data-siswa-alamat-isi @if (blank(old('tempat_tinggal', $periodik?->tempat_tinggal))) hidden @endif>
                     <label class="form-label">Titik koordinat</label>
                     <input class="form-control bg-light" name="koordinat" value="{{ old('koordinat', $periodik?->koordinat) }}" placeholder="-7.043314, 108.353711" data-koordinat readonly>
                     <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
@@ -228,15 +234,15 @@
                     </div>
                     <div class="madani-map mt-2" data-siswa-map></div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4" data-siswa-alamat-isi @if (blank(old('tempat_tinggal', $periodik?->tempat_tinggal))) hidden @endif>
                     <label class="form-label">Jarak tempat tinggal – madrasah</label>
                     <x-emis-select name="jarak" :options="$emis['jarak']" :value="old('jarak', $periodik?->jarak)" />
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4" data-siswa-alamat-isi @if (blank(old('tempat_tinggal', $periodik?->tempat_tinggal))) hidden @endif>
                     <label class="form-label">Waktu tempuh</label>
                     <x-emis-select name="waktu_tempuh" :options="$emis['waktu_tempuh']" :value="old('waktu_tempuh', $periodik?->waktu_tempuh)" />
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4" data-siswa-alamat-isi @if (blank(old('tempat_tinggal', $periodik?->tempat_tinggal))) hidden @endif>
                     <label class="form-label">Transportasi ke sekolah</label>
                     <x-emis-select name="transportasi" :options="$emis['transportasi']" :value="old('transportasi', $periodik?->transportasi)" />
                 </div>

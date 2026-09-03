@@ -51,7 +51,6 @@ return [
     'status_hidup' => [
         'hidup' => 'Masih hidup',
         'meninggal' => 'Meninggal dunia',
-        'tidak_diketahui' => 'Tidak diketahui',
     ],
 
     'status_tempat_tinggal_siswa' => [

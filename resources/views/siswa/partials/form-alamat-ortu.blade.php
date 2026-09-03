@@ -12,8 +12,9 @@
     if ($statusWali === 'Isi sendiri') {
         $statusWali = 'Lainnya';
     }
+    $waliIsiSendiri = $peran === 'wali' && $statusWali === 'Lainnya';
     $waliMengikuti = $peran === 'wali' && in_array($statusWali, ['Sama dengan ayah kandung', 'Sama dengan ibu kandung'], true);
-    $sembunyikanForm = $meninggal || ($peran === 'ibu' && $kkSamaAyah) || $waliMengikuti;
+    $sembunyikanForm = $meninggal || ($peran === 'ibu' && $kkSamaAyah) || ($peran === 'wali' && ! $waliIsiSendiri);
     $catatanWali = $statusWali === 'Sama dengan ibu kandung'
         ? 'Alamat wali mengikuti ibu kandung.'
         : 'Alamat wali mengikuti ayah kandung.';
@@ -28,7 +29,7 @@
     @if ($meninggal)
         <p class="form-text mb-0">Alamat tidak diisi karena sudah meninggal dunia.</p>
     @else
-        @if ($peran === 'ibu')
+        @if ($peran === 'ibu' && ! $ayahMeninggal)
             <div class="form-check mb-3">
                 <input
                     class="form-check-input"
@@ -38,16 +39,14 @@
                     id="alamat_sama_ayah"
                     data-ibu-kk-ayah
                     @checked($kkSamaAyah)
-                    @disabled($ayahMeninggal)
                 >
                 <label class="form-check-label" for="alamat_sama_ayah">Alamat sama dengan ayah kandung</label>
             </div>
-            <p class="form-text mb-3" data-ayah-meninggal-note @if (! $ayahMeninggal) hidden @endif>
-                Tidak dapat disamakan karena ayah kandung sudah meninggal dunia.
-            </p>
         @endif
-        @if ($waliMengikuti)
-            <p class="form-text mb-0" data-wali-alamat-note>{{ $catatanWali }}</p>
+        @if ($peran === 'wali' && ! $waliIsiSendiri)
+            <p class="form-text mb-0" data-wali-alamat-note>
+                {{ $waliMengikuti ? $catatanWali : 'Status wali dipilih di tab Orang tua. Alamat mengikuti pilihan tersebut.' }}
+            </p>
         @endif
         <div data-ortu-alamat @if ($sembunyikanForm) hidden @endif>
             <div class="mb-3">

@@ -83,13 +83,7 @@
     </div>
     <div class="col-md-4">
         <label class="form-label">NIS Lokal</label>
-        <div class="input-group">
-            <input class="form-control" name="nis" value="{{ old('nis', $s?->nis) }}" maxlength="20" @if ($kunci) readonly @endif>
-            {!! $tombolAjukan('nis', 'NIS lokal', $s?->nis) !!}
-        </div>
-        @if ($pengajuanPending->has('nis'))
-            <div class="form-text text-warning">Menunggu konfirmasi madrasah</div>
-        @endif
+        <input class="form-control" name="nis" value="{{ old('nis', $s?->nis) }}" maxlength="20" @if ($kunci) readonly @endif>
     </div>
     <div class="col-md-4">
         <label class="form-label">NIK</label>
@@ -170,7 +164,7 @@
         @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
         <div class="form-check mt-1">
             <input class="form-check-input" type="checkbox" name="tidak_punya_email" value="1" id="tidak_punya_email" @checked(old('tidak_punya_email', $s?->tidak_punya_email)) data-tidak-punya>
-            <label class="form-check-label small" for="tidak_punya_email"><i class="bi bi-envelope-x me-1"></i>Tidak memiliki email</label>
+            <label class="form-check-label small" for="tidak_punya_email">Tidak memiliki email</label>
         </div>
     </div>
 

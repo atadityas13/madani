@@ -355,9 +355,29 @@ class SiswaPortalTest extends TestCase
         $token = $this->tokenSiswa($siswa);
 
         $this->withToken($token)
+            ->getJson('/api/v1/wilayah?provinsi=Jawa Barat')
+            ->assertOk()
+            ->assertJsonFragment(['Majalengka']);
+
+        $this->withToken($token)
             ->getJson('/api/v1/wilayah?provinsi=Jawa Barat&kota=Majalengka&kecamatan=Cingambul&desa=Maniis')
             ->assertOk()
             ->assertJsonPath('kode_pos', '45467');
+    }
+
+    public function test_referensi_includes_wilayah_tree(): void
+    {
+        $this->seed();
+        $siswa = $this->buatSiswa();
+        $token = $this->tokenSiswa($siswa);
+
+        $data = $this->withToken($token)
+            ->getJson('/api/v1/referensi')
+            ->assertOk()
+            ->json('data');
+
+        $this->assertSame('45467', data_get($data, 'wilayah.Jawa Barat.Majalengka.Cingambul.Maniis'));
+        $this->assertArrayNotHasKey('tidak_diketahui', $data['emis']['status_hidup'] ?? []);
     }
 
     /**

@@ -326,11 +326,24 @@ function bindOrtuForm() {
                 }
             }
 
-            if (root.getAttribute('data-bantuan-kartu') === 'kip') {
+            const jenis = root.getAttribute('data-bantuan-kartu');
+            const hasNomor = ! skip && String(nomor?.value || '').trim() !== '';
+
+            if (jenis === 'kip') {
                 const kipUpload = document.querySelector('[data-kip-upload]');
                 if (kipUpload) {
-                    kipUpload.hidden = skip || ! String(nomor?.value || '').trim();
+                    kipUpload.hidden = ! hasNomor;
                 }
+            }
+
+            const upload = root.querySelector('[data-bantuan-upload]');
+            if (upload) {
+                upload.hidden = ! hasNomor;
+            }
+
+            if (berkas && jenis && jenis !== 'kip') {
+                const tersimpan = Boolean(root.querySelector('[data-berkas-tersimpan]'));
+                berkas.required = hasNomor && ! tersimpan;
             }
         };
 
@@ -361,20 +374,8 @@ function bindAlamatOrtu() {
         const ibuWilayah = ibuBlok.querySelector('[data-wilayah-root]');
 
         const ayahMeninggal = ayahBlok.getAttribute('data-status-hidup') === 'meninggal';
-        const ayahMeninggalNote = ibuBlok.querySelector('[data-ayah-meninggal-note]');
 
         const syncIbuAlamat = () => {
-            if (checkbox) {
-                checkbox.disabled = ayahMeninggal;
-                if (ayahMeninggal) {
-                    checkbox.checked = false;
-                }
-            }
-
-            if (ayahMeninggalNote) {
-                ayahMeninggalNote.hidden = !ayahMeninggal;
-            }
-
             const same = Boolean(checkbox?.checked) && !ayahMeninggal;
 
             if (alamat) {
@@ -413,14 +414,14 @@ function bindAlamatOrtu() {
         const alamat = waliBlok.querySelector('[data-ortu-alamat]');
         const note = waliBlok.querySelector('[data-wali-alamat-note]');
 
-        const mengikuti = status === 'Sama dengan ayah kandung' || status === 'Sama dengan ibu kandung';
+        const isiSendiri = status === 'Lainnya' || status === 'Isi sendiri';
 
         if (alamat) {
-            alamat.hidden = mengikuti;
+            alamat.hidden = ! isiSendiri;
         }
 
         if (note) {
-            note.hidden = !mengikuti;
+            note.hidden = isiSendiri;
         }
     }
 }
@@ -654,6 +655,38 @@ function bindAlamatSiswa() {
 
     const applyStatus = () => {
         const status = tempat?.value || '';
+        const isiBlocks = form.querySelectorAll('[data-siswa-alamat-isi]');
+        const autoCopy = status === 'Asrama Madrasah' || status === 'Tinggal dengan Orang Tua/Wali';
+
+        isiBlocks.forEach((block) => {
+            block.hidden = status === '';
+        });
+
+        form.querySelectorAll('[data-wilayah-root="siswa"] select, [data-wilayah-root="siswa"] input').forEach((el) => {
+            el.classList.toggle('bg-light', autoCopy);
+            el.style.pointerEvents = autoCopy ? 'none' : '';
+            el.tabIndex = autoCopy ? -1 : 0;
+        });
+
+        if (koordinat) {
+            koordinat.readOnly = autoCopy;
+        }
+
+        if (lokasiBtn) {
+            lokasiBtn.disabled = autoCopy;
+        }
+
+        if (marker?.dragging) {
+            if (autoCopy) {
+                marker.dragging.disable();
+            } else {
+                marker.dragging.enable();
+            }
+        }
+
+        if (map && status !== '') {
+            setTimeout(() => map.invalidateSize(), 150);
+        }
 
         if (status === 'Asrama Madrasah' && root?._wilayah) {
             root._wilayah.apply(alamatAsrama);
@@ -745,7 +778,7 @@ function bindAlamatSiswa() {
                 }
                 pinSource = 'gps';
                 setStatus();
-                lokasiBtn.disabled = false;
+                lokasiBtn.disabled = tempat?.value === 'Asrama Madrasah' || tempat?.value === 'Tinggal dengan Orang Tua/Wali';
             },
             (error) => {
                 const messages = {
@@ -755,7 +788,7 @@ function bindAlamatSiswa() {
                 };
 
                 setStatus(messages[error?.code] || 'Gagal mengambil lokasi perangkat.');
-                lokasiBtn.disabled = false;
+                lokasiBtn.disabled = tempat?.value === 'Asrama Madrasah' || tempat?.value === 'Tinggal dengan Orang Tua/Wali';
             },
             { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
         );

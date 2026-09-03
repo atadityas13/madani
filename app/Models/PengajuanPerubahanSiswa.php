@@ -15,7 +15,6 @@ class PengajuanPerubahanSiswa extends Model
         'nama' => 'Nama lengkap',
         'jenis_kelamin' => 'Jenis kelamin',
         'nisn' => 'NISN',
-        'nis' => 'NIS lokal',
         'nik' => 'NIK',
         'tempat_lahir' => 'Tempat lahir',
         'tanggal_lahir' => 'Tanggal lahir',

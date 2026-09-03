@@ -19,6 +19,7 @@ class ReferensiController extends Controller
             'data' => [
                 'emis' => $emis,
                 'asrama_madrasah' => config('emis.asrama_madrasah'),
+                'wilayah' => Wilayah::tree(),
             ],
         ]);
     }

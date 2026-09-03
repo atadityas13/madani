@@ -951,7 +951,6 @@ class SiswaBiodataService
             'nama' => ['required', 'string', 'max:255', 'regex:/^[A-Za-zÀ-ÿ\-\'’`., ]+$/u'],
             'jenis_kelamin' => ['required', 'in:L,P'],
             'nisn' => ['required', 'digits:10', Rule::unique('siswas', 'nisn')->ignore($siswa->id)],
-            'nis' => ['required', 'string', 'max:20'],
             'nik' => ['required', 'digits:16', Rule::unique('siswas', 'nik')->ignore($siswa->id)],
             'tempat_lahir' => ['required', 'string', 'max:100'],
             'tanggal_lahir' => ['required', 'date'],
