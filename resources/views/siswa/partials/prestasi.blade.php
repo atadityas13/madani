@@ -33,7 +33,7 @@
                         <td>{{ $item->penyelenggara ?: '—' }}</td>
                         <td>
                             @if ($item->sertifikat_path)
-                                <a href="{{ asset('storage/'.$item->sertifikat_path) }}" target="_blank" rel="noopener">Lihat</a>
+                                <a href="{{ Storage::disk('r2')->url($item->sertifikat_path) }}" target="_blank" rel="noopener">Lihat</a>
                             @else
                                 —
                             @endif

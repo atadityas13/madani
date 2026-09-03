@@ -30,7 +30,7 @@
                         <td>{{ $item->nominal !== null ? 'Rp '.number_format($item->nominal, 0, ',', '.') : '—' }}</td>
                         <td>
                             @if ($item->bukti_path)
-                                <a href="{{ asset('storage/'.$item->bukti_path) }}" target="_blank" rel="noopener">Lihat</a>
+                                <a href="{{ Storage::disk('r2')->url($item->bukti_path) }}" target="_blank" rel="noopener">Lihat</a>
                             @else
                                 —
                             @endif

@@ -364,7 +364,7 @@ class SiswaBiodataService
 
         if ($request->hasFile('bukti')) {
             $beasiswa->update([
-                'bukti_path' => $request->file('bukti')->store("dokumen/{$siswa->id}/bantuan", 'public'),
+                'bukti_path' => $request->file('bukti')->store("dokumen/{$siswa->id}/bantuan", 'r2'),
             ]);
         }
 
@@ -387,7 +387,7 @@ class SiswaBiodataService
 
         if ($request->hasFile('sertifikat')) {
             $prestasi->update([
-                'sertifikat_path' => $request->file('sertifikat')->store("dokumen/{$siswa->id}/prestasi", 'public'),
+                'sertifikat_path' => $request->file('sertifikat')->store("dokumen/{$siswa->id}/prestasi", 'r2'),
             ]);
         }
 
@@ -690,7 +690,7 @@ class SiswaBiodataService
         }
 
         $file = $request->file($field);
-        $path = $file->store("dokumen/{$siswa->id}", 'public');
+        $path = $file->store("dokumen/{$siswa->id}", 'r2');
 
         $siswa->dokumens()->updateOrCreate(
             ['jenis' => $jenis],
@@ -704,7 +704,7 @@ class SiswaBiodataService
             return;
         }
 
-        $path = $request->file('foto')->store("foto/{$siswa->id}", 'public');
+        $path = $request->file('foto')->store("foto/{$siswa->id}", 'r2');
         $siswa->update(['foto' => $path]);
     }
 

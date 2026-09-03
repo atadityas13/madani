@@ -46,10 +46,10 @@ class KelembagaanController extends Controller
 
         if ($request->hasFile('logo')) {
             if ($madrasah->logo_path) {
-                Storage::disk('public')->delete($madrasah->logo_path);
+                Storage::disk('r2')->delete($madrasah->logo_path);
             }
 
-            $data['logo_path'] = $request->file('logo')->store('madrasah', 'public');
+            $data['logo_path'] = $request->file('logo')->store('madrasah', 'r2');
         }
 
         $madrasah->update($data);

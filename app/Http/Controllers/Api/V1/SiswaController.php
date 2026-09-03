@@ -8,6 +8,8 @@ use App\Services\SiswaBiodataService;
 use App\Support\SiswaPortalPayload;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class SiswaController extends Controller
 {
@@ -109,6 +111,68 @@ class SiswaController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Berkas diunggah.',
+            'data' => SiswaPortalPayload::make($siswa->fresh()),
+        ]);
+    }
+
+    public function requestUploadUrl(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'jenis' => ['required', 'string', 'in:kk,kip,kks,pkh,ijazah_sd,foto'],
+            'filename' => ['required', 'string', 'max:255'],
+        ]);
+
+        /** @var Siswa $siswa */
+        $siswa = $request->user();
+        $ext = pathinfo($validated['filename'], PATHINFO_EXTENSION) ?: 'jpg';
+        $folder = $validated['jenis'] === 'foto' ? 'foto' : 'dokumen';
+        $key = "{$folder}/{$siswa->id}/".Str::uuid().".{$ext}";
+
+        /** @var \Aws\S3\S3Client $client */
+        $client = Storage::disk('r2')->getClient();
+        $cmd = $client->getCommand('PutObject', [
+            'Bucket' => config('filesystems.disks.r2.bucket'),
+            'Key' => $key,
+        ]);
+        $url = (string) $client->createPresignedRequest($cmd, '+15 minutes')->getUri();
+
+        return response()->json([
+            'success' => true,
+            'upload_url' => $url,
+            'object_key' => $key,
+        ]);
+    }
+
+    public function confirmUpload(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'object_key' => ['required', 'string', 'max:500'],
+            'jenis' => ['required', 'string', 'in:kk,kip,kks,pkh,ijazah_sd,foto'],
+        ]);
+
+        /** @var Siswa $siswa */
+        $siswa = $request->user();
+
+        if (! Storage::disk('r2')->exists($validated['object_key'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File belum ditemukan di storage.',
+            ], 422);
+        }
+
+        if ($validated['jenis'] === 'foto') {
+            $siswa->update(['foto' => $validated['object_key']]);
+        } else {
+            $siswa->dokumens()->updateOrCreate(
+                ['jenis' => $validated['jenis']],
+                ['path' => $validated['object_key']],
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berkas dikonfirmasi.',
+            'url' => Storage::disk('r2')->url($validated['object_key']),
             'data' => SiswaPortalPayload::make($siswa->fresh()),
         ]);
     }
