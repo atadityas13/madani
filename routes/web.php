@@ -4,6 +4,8 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GtkController;
 use App\Http\Controllers\KelembagaanController;
+use App\Http\Controllers\Portal\SiswaAuthController;
+use App\Http\Controllers\Portal\SiswaPortalController;
 use App\Http\Controllers\RombelController;
 use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\TahunAjaranController;
@@ -15,9 +17,26 @@ Route::middleware('guest')->group(function () {
     Route::post('/', [LoginController::class, 'store']);
 });
 
+Route::middleware('guest:siswa')->group(function () {
+    Route::get('/siswa/masuk', [SiswaAuthController::class, 'create'])->name('siswa.masuk');
+    Route::post('/siswa/masuk', [SiswaAuthController::class, 'store']);
+});
+
 Route::redirect('/login', '/');
 
 Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')->name('logout');
+Route::post('/siswa/keluar', [SiswaAuthController::class, 'destroy'])->middleware('auth:siswa')->name('siswa.keluar');
+
+Route::middleware('auth:siswa')->group(function () {
+    Route::get('/siswa/password', [SiswaAuthController::class, 'editPassword'])->name('siswa.password.edit');
+    Route::put('/siswa/password', [SiswaAuthController::class, 'updatePassword'])->name('siswa.password.update');
+
+    Route::middleware('siswa.password')->group(function () {
+        Route::get('/siswa/portal', [SiswaPortalController::class, 'show'])->name('siswa.portal');
+        Route::put('/siswa/portal', [SiswaPortalController::class, 'update'])->name('siswa.portal.update');
+        Route::delete('/siswa/portal/relasi', [SiswaPortalController::class, 'destroyRelasi'])->name('siswa.portal.relasi.destroy');
+    });
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
@@ -59,10 +78,11 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('siswa', [SiswaController::class, 'index'])->name('siswa.index');
-    Route::get('siswa/{siswa}', [SiswaController::class, 'show'])->name('siswa.show');
-    Route::get('siswa/{siswa}/edit', [SiswaController::class, 'edit'])->name('siswa.edit');
-    Route::put('siswa/{siswa}', [SiswaController::class, 'update'])->name('siswa.update');
-    Route::delete('siswa/{siswa}/relasi', [SiswaController::class, 'destroyRelasi'])->name('siswa.relasi.destroy');
+    Route::get('siswa/{siswa}', [SiswaController::class, 'show'])->name('siswa.show')->whereUuid('siswa');
+    Route::get('siswa/{siswa}/edit', [SiswaController::class, 'edit'])->name('siswa.edit')->whereUuid('siswa');
+    Route::put('siswa/{siswa}', [SiswaController::class, 'update'])->name('siswa.update')->whereUuid('siswa');
+    Route::post('siswa/{siswa}/reset-password', [SiswaController::class, 'resetPassword'])->name('siswa.reset-password')->whereUuid('siswa');
+    Route::delete('siswa/{siswa}/relasi', [SiswaController::class, 'destroyRelasi'])->name('siswa.relasi.destroy')->whereUuid('siswa');
     Route::get('rombel', [RombelController::class, 'index'])->name('rombel.index');
     Route::get('rombel/{rombel}', [RombelController::class, 'show'])->name('rombel.show');
 });

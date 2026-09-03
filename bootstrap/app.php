@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\EnsureSiswaApi;
+use App\Http\Middleware\EnsureSiswaPasswordChanged;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -16,12 +18,26 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->redirectGuestsTo(fn () => route('login'));
-        $middleware->redirectUsersTo(fn () => route('dashboard'));
+        $middleware->redirectGuestsTo(function (Request $request) {
+            if ($request->is('siswa/portal*') || $request->is('siswa/keluar') || $request->is('siswa/password*')) {
+                return route('siswa.masuk');
+            }
+
+            return route('login');
+        });
+        $middleware->redirectUsersTo(function (Request $request) {
+            if ($request->is('siswa/masuk')) {
+                return route('siswa.portal');
+            }
+
+            return route('dashboard');
+        });
         $middleware->alias([
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,
+            'siswa.password' => EnsureSiswaPasswordChanged::class,
+            'siswa.api' => EnsureSiswaApi::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

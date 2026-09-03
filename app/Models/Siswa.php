@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use App\Support\KelengkapanSiswa;
+use App\Support\SiswaPassword;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable([
     'nisn', 'punya_nisn', 'nik', 'punya_nik', 'nism', 'nis', 'nama',
@@ -16,11 +20,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'kewarganegaraan', 'anak_ke', 'jumlah_saudara',
     'cita_cita', 'hobi', 'email', 'no_hp',
     'tidak_punya_hp', 'foto', 'status_keaktifan', 'tanggal_nonaktif',
-    'alasan_nonaktif',
+    'alasan_nonaktif', 'must_change_password',
 ])]
-class Siswa extends Model
+#[Hidden(['password', 'remember_token'])]
+class Siswa extends Authenticatable
 {
-    use HasUuids, SoftDeletes;
+    use HasApiTokens, HasUuids, SoftDeletes;
 
     protected function casts(): array
     {
@@ -30,7 +35,64 @@ class Siswa extends Model
             'punya_nisn' => 'boolean',
             'punya_nik' => 'boolean',
             'tidak_punya_hp' => 'boolean',
+            'must_change_password' => 'boolean',
+            'password' => 'hashed',
         ];
+    }
+
+    public function bisaMasuk(): bool
+    {
+        return $this->status_keaktifan !== 'nonaktif' && filled($this->nisn);
+    }
+
+    public function ensurePasswordAwal(): void
+    {
+        if (filled($this->password)) {
+            return;
+        }
+
+        $plain = SiswaPassword::dariTanggalLahir($this->tanggal_lahir);
+
+        if ($plain === null) {
+            return;
+        }
+
+        $this->password = $plain;
+        $this->must_change_password = true;
+    }
+
+    public function resetPasswordAwal(): bool
+    {
+        $plain = SiswaPassword::dariTanggalLahir($this->tanggal_lahir);
+
+        if ($plain === null) {
+            return false;
+        }
+
+        $this->forceFill([
+            'password' => $plain,
+            'must_change_password' => true,
+        ])->save();
+
+        $this->tokens()->delete();
+
+        return true;
+    }
+
+    public function gantiPassword(string $baru): void
+    {
+        $this->forceFill([
+            'password' => $baru,
+            'must_change_password' => false,
+        ])->save();
+    }
+
+    /**
+     * @return array{persen: int, wajib_selesai: int, wajib_total: int, tab: list<array{id: string, label: string, selesai: bool, wajib: bool}>}
+     */
+    public function kelengkapan(): array
+    {
+        return KelengkapanSiswa::ringkasan($this);
     }
 
     public function orangTuas(): HasMany
@@ -108,6 +170,8 @@ class Siswa extends Model
 
     public function dokumenJenis(string $jenis): ?Dokumen
     {
+        $this->loadMissing('dokumens');
+
         return $this->dokumens->firstWhere('jenis', $jenis);
     }
 

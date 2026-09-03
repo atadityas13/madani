@@ -39,7 +39,7 @@
                             @endif
                         </td>
                         <td class="text-end">
-                            <form method="POST" action="{{ route('siswa.relasi.destroy', $siswa) }}" onsubmit="return confirm('Hapus data ini?')">
+                            <form method="POST" action="{{ $relasiAction }}" onsubmit="return confirm('Hapus data ini?')">
                                 @csrf
                                 @method('DELETE')
                                 <input type="hidden" name="jenis" value="prestasi">
@@ -59,7 +59,7 @@
 <div class="modal fade" id="prestasiModal" tabindex="-1" aria-labelledby="prestasiModalLabel" aria-hidden="true" @if ($bukaModalPrestasi) data-modal-open @endif>
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form method="POST" action="{{ route('siswa.update', $siswa) }}" enctype="multipart/form-data">
+            <form method="POST" action="{{ $updateAction }}" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 <input type="hidden" name="bagian" value="prestasi">

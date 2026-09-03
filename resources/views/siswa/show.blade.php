@@ -1,10 +1,5 @@
-@extends('layouts.app')
-
-@section('title', $siswa->nama)
-@section('heading', 'Data siswa')
-@section('subheading', 'MTsN 11 Majalengka')
-
 @php
+    $portal = $portal ?? false;
     $tabs = [
         'data-siswa' => 'Data siswa',
         'orang-tua' => 'Data orang tua',
@@ -19,7 +14,18 @@
         ->take(2)
         ->map(fn ($p) => strtoupper(substr($p, 0, 1)))
         ->implode('');
+    $updateAction = $portal ? route('siswa.portal.update') : route('siswa.update', $siswa);
+    $relasiAction = $portal ? route('siswa.portal.relasi.destroy') : route('siswa.relasi.destroy', $siswa);
+    $tabUrl = fn (string $id) => $portal
+        ? route('siswa.portal', ['tab' => $id])
+        : route('siswa.show', ['siswa' => $siswa, 'tab' => $id]);
 @endphp
+
+@extends($portal ? 'layouts.siswa' : 'layouts.app')
+
+@section('title', $portal ? 'Data saya' : $siswa->nama)
+@section('heading', $portal ? 'Data saya' : 'Data siswa')
+@section('subheading', 'MTsN 11 Majalengka')
 
 @section('content')
 <div class="emis-student-head mb-3">
@@ -31,13 +37,19 @@
             · {{ str_replace('_', ' ', $siswa->status_keaktifan) }}
         </div>
     </div>
+    @if (! $portal && auth()->user()?->mengampu($siswa) && $siswa->tanggal_lahir)
+        <form method="POST" action="{{ route('siswa.reset-password', $siswa) }}" class="ms-auto" onsubmit="return confirm('Reset password ke tanggal lahir (ddmmyyyy)? Siswa wajib mengubahnya saat masuk.')">
+            @csrf
+            <button class="btn btn-outline-secondary btn-sm" type="submit">Reset password</button>
+        </form>
+    @endif
 </div>
 
 <div class="madani-card px-2 mb-3">
     <ul class="nav nav-pills flex-nowrap overflow-auto mb-0">
         @foreach ($tabs as $id => $label)
             <li class="nav-item">
-                <a class="nav-link {{ $tab === $id ? 'active' : '' }}" href="{{ route('siswa.show', ['siswa' => $siswa, 'tab' => $id]) }}">{{ $label }}</a>
+                <a class="nav-link {{ $tab === $id ? 'active' : '' }}" href="{{ $tabUrl($id) }}">{{ $label }}</a>
             </li>
         @endforeach
     </ul>
@@ -45,13 +57,17 @@
 
 @if ($tab === 'data-siswa')
     <div class="madani-card p-4">
-        <form method="POST" action="{{ route('siswa.update', $siswa) }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ $updateAction }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             <input type="hidden" name="bagian" value="data-siswa">
             @include('siswa.partials.form-data-siswa', ['siswa' => $siswa, 'periodik' => $periodik, 'emis' => $emis])
             <div class="emis-actions">
+                @unless ($portal)
+                    @unless ($portal)
                 <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
+            @endunless
+                @endunless
                 <button class="btn btn-madani" type="submit">Simpan</button>
             </div>
         </form>
@@ -59,7 +75,7 @@
 @endif
 
 @if ($tab === 'orang-tua')
-    <form method="POST" action="{{ route('siswa.update', $siswa) }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ $updateAction }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
         <input type="hidden" name="bagian" value="orang-tua">
@@ -92,14 +108,16 @@
             </div>
         </div>
         <div class="emis-actions">
-            <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
+            @unless ($portal)
+                <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
+            @endunless
             <button class="btn btn-madani" type="submit">Simpan</button>
         </div>
     </form>
 @endif
 
 @if ($tab === 'alamat')
-    <form method="POST" action="{{ route('siswa.update', $siswa) }}" data-alamat-form>
+    <form method="POST" action="{{ $updateAction }}" data-alamat-form>
         @csrf
         @method('PUT')
         <input type="hidden" name="bagian" value="alamat">
@@ -155,7 +173,9 @@
         <script type="application/json" id="madani-alamat-ortu">@json($alamatOrtu ?? [])</script>
         <script type="application/json" id="madani-alamat-asrama">@json($alamatAsrama ?? [])</script>
         <div class="emis-actions">
-            <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
+            @unless ($portal)
+                <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
+            @endunless
             <button class="btn btn-madani" type="submit">Simpan</button>
         </div>
     </form>
@@ -174,13 +194,15 @@
 @endif
 
 @if ($tab === 'rekam-didik')
-    <form method="POST" action="{{ route('siswa.update', $siswa) }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ $updateAction }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
         <input type="hidden" name="bagian" value="rekam-didik">
         @include('siswa.partials.form-rekam-didik')
         <div class="emis-actions">
-            <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
+            @unless ($portal)
+                <a class="btn btn-outline-secondary" href="{{ route('siswa.index') }}">Kembali</a>
+            @endunless
             <button class="btn btn-madani" type="submit">Simpan</button>
         </div>
     </form>

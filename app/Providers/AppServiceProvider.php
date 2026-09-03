@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Support\Navigasi;
 use Illuminate\Support\Facades\View;
@@ -24,10 +25,20 @@ class AppServiceProvider extends ServiceProvider
     {
         date_default_timezone_set(config('app.timezone'));
 
+        Siswa::creating(function (Siswa $siswa): void {
+            $siswa->ensurePasswordAwal();
+        });
+
         View::composer('layouts.app', function ($view) {
             $view->with([
                 'tahunAktif' => TahunAjaran::aktif(),
                 'menuEmis' => Navigasi::untuk(auth()->user()),
+            ]);
+        });
+
+        View::composer('layouts.siswa', function ($view) {
+            $view->with([
+                'tahunAktif' => TahunAjaran::aktif(),
             ]);
         });
     }

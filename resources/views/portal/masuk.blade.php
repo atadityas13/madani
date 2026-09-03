@@ -1,6 +1,6 @@
 @extends('layouts.base')
 
-@section('title', 'Masuk')
+@section('title', 'Masuk siswa')
 
 @section('body')
 <div class="login-shell d-flex align-items-center justify-content-center p-3">
@@ -9,14 +9,14 @@
             <img src="{{ asset('images/logo-madani.png') }}?v={{ filemtime(public_path('images/logo-madani.png')) }}" alt="MADANI — Management Academic Data Native Integration">
         </div>
         <div class="emis-topbar-sub mb-3">MTsN 11 Majalengka</div>
-        <h1 class="h5 fw-bold mb-1">Masuk operator</h1>
-        <p class="text-secondary small mb-4">Gunakan username atau email yang terdaftar.</p>
-        <form method="POST" action="{{ route('login') }}">
+        <h1 class="h5 fw-bold mb-1">Masuk siswa</h1>
+        <p class="text-secondary small mb-4">Gunakan NISN dan kata sandi. Password awal adalah tanggal lahir dengan format ddmmyyyy.</p>
+        <form method="POST" action="{{ route('siswa.masuk') }}">
             @csrf
             <div class="mb-3">
-                <label class="form-label">Username / email</label>
-                <input class="form-control @error('login') is-invalid @enderror" type="text" name="login" value="{{ old('login') }}" required autofocus>
-                @error('login') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <label class="form-label">NISN</label>
+                <input class="form-control @error('nisn') is-invalid @enderror" type="text" name="nisn" value="{{ old('nisn') }}" inputmode="numeric" maxlength="10" required autofocus>
+                @error('nisn') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="mb-3">
                 <label class="form-label">Kata sandi</label>
@@ -29,7 +29,7 @@
             <button class="btn btn-madani w-100" type="submit">Masuk</button>
         </form>
         <p class="text-center small mt-3 mb-0">
-            <a href="{{ route('siswa.masuk') }}">Saya siswa</a>
+            <a href="{{ route('login') }}">Saya operator / guru</a>
         </p>
     </div>
 </div>
