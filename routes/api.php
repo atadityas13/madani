@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\V1\AppUpdateController;
 use App\Http\Controllers\Api\V1\GuruAuthController;
+use App\Http\Controllers\Api\V1\GuruCalendarEventController;
+use App\Http\Controllers\Api\V1\GuruElapkinController;
 use App\Http\Controllers\Api\V1\GuruProfileController;
 use App\Http\Controllers\Api\V1\PengumumanController;
 use App\Http\Controllers\Api\V1\ReferensiController;
@@ -24,6 +26,10 @@ Route::prefix('v1')->group(function () {
         Route::put('profile/biodata', [GuruProfileController::class, 'updateBiodata']);
         Route::put('profile/kontak', [GuruProfileController::class, 'updateKontak']);
         Route::post('profile/foto', [GuruProfileController::class, 'updatePhoto']);
+        Route::get('calendar-events', [GuruCalendarEventController::class, 'index']);
+        Route::get('elapkin-sso', [GuruElapkinController::class, 'ssoToken']);
+        Route::post('elapkin-bridge', [GuruElapkinController::class, 'bridgeSession']);
+        Route::get('hari-libur', [GuruElapkinController::class, 'hariLibur']);
     });
 
     Route::middleware(['auth:sanctum', 'siswa.api'])->group(function () {

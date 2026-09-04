@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AppUpdateController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\CalendarEventController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GtkController;
 use App\Http\Controllers\KelembagaanController;
@@ -62,6 +63,10 @@ Route::middleware('auth')->group(function () {
         Route::post('pengaturan/pengumuman', [PengumumanController::class, 'store'])->name('pengumuman.store');
         Route::put('pengaturan/pengumuman/{pengumuman}', [PengumumanController::class, 'update'])->name('pengumuman.update');
         Route::delete('pengaturan/pengumuman/{pengumuman}', [PengumumanController::class, 'destroy'])->name('pengumuman.destroy');
+        Route::get('pengaturan/kalender', [CalendarEventController::class, 'index'])->name('calendar-events.index');
+        Route::post('pengaturan/kalender', [CalendarEventController::class, 'store'])->name('calendar-events.store');
+        Route::put('pengaturan/kalender/{calendarEvent}', [CalendarEventController::class, 'update'])->name('calendar-events.update');
+        Route::delete('pengaturan/kalender/{calendarEvent}', [CalendarEventController::class, 'destroy'])->name('calendar-events.destroy');
         Route::get('siswa/create', [SiswaController::class, 'create'])->name('siswa.create');
         Route::post('siswa', [SiswaController::class, 'store'])->name('siswa.store');
         Route::post('rombel/{rombel}/anggota', [RombelController::class, 'storeAnggota'])->name('rombel.anggota.store');

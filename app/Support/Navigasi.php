@@ -68,7 +68,7 @@ class Navigasi
             [
                 'label' => 'Aplikasi',
                 'icon' => 'bi-phone',
-                'match' => ['app-updates.*', 'pengumuman.*'],
+                'match' => ['app-updates.*', 'pengumuman.*', 'calendar-events.*'],
                 'roles' => [Peran::SUPERADMIN, Peran::ADMIN],
                 'children' => [
                     [
@@ -81,6 +81,12 @@ class Navigasi
                         'label' => 'Pengumuman',
                         'route' => 'pengumuman.index',
                         'match' => 'pengumuman.*',
+                        'roles' => [Peran::SUPERADMIN, Peran::ADMIN],
+                    ],
+                    [
+                        'label' => 'Kalender',
+                        'route' => 'calendar-events.index',
+                        'match' => 'calendar-events.*',
                         'roles' => [Peran::SUPERADMIN, Peran::ADMIN],
                     ],
                 ],
