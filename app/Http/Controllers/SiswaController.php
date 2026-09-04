@@ -155,6 +155,27 @@ class SiswaController extends Controller
             ->with('status', 'Data dihapus.');
     }
 
+    public function destroyDokumen(Siswa $siswa, string $jenis): RedirectResponse
+    {
+        $this->authorize('update', $siswa);
+
+        if (! in_array($jenis, ['kk', 'akta_lahir', 'kip', 'kks', 'pkh', 'ijazah_sd'], true)) {
+            abort(404);
+        }
+
+        $this->biodata->hapusDokumen($siswa, $jenis);
+
+        $tab = match ($jenis) {
+            'kks', 'pkh' => 'orang-tua',
+            'ijazah_sd' => 'rekam-didik',
+            default => 'data-siswa',
+        };
+
+        return redirect()
+            ->route('siswa.show', ['siswa' => $siswa, 'tab' => $tab])
+            ->with('status', 'Dokumen dihapus dari database dan storage.');
+    }
+
     public function resetPassword(Siswa $siswa): RedirectResponse
     {
         $this->authorize('update', $siswa);

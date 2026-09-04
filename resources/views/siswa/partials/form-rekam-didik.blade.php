@@ -69,13 +69,15 @@
             @error('tanggal_terbit_ijazah') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
         <div class="col-md-4">
-            <label class="form-label">Unggah ijazah <span class="text-danger">*</span></label>
-            <input class="form-control @error('file_ijazah') is-invalid @enderror" type="file" name="file_ijazah" accept=".pdf,.jpg,.jpeg,.png" @required(! $ijazahSd)>
-            <div class="form-text">Maks. 1MB, pdf / jpg / png. Wajib diunggah.</div>
-            @error('file_ijazah') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-            @if ($ijazahSd)
-                <div class="form-text">Berkas saat ini: {{ $ijazahSd->nama_asli }}</div>
-            @endif
+            <x-dokumen-box
+                judul="Ijazah"
+                name="file_ijazah"
+                jenis="ijazah_sd"
+                :dokumen="$ijazahSd"
+                :siswa="($portal ?? false) ? null : $siswa"
+                :required="! $ijazahSd"
+                hint="Maks. 1MB · pdf / jpg / png. Wajib diunggah."
+            />
         </div>
     </div>
 </div>

@@ -724,6 +724,21 @@ class SiswaBiodataService
         }
     }
 
+    public function hapusDokumen(Siswa $siswa, string $jenis): void
+    {
+        $dokumen = $siswa->dokumens()->where('jenis', $jenis)->first();
+
+        if (! $dokumen) {
+            return;
+        }
+
+        if ($dokumen->path) {
+            Storage::disk('r2')->delete($dokumen->path);
+        }
+
+        $dokumen->delete();
+    }
+
     public function simpanFoto(Request $request, Siswa $siswa): void
     {
         if (! $request->hasFile('foto')) {

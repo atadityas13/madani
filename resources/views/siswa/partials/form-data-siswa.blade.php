@@ -266,30 +266,35 @@
         <div class="stat-label">Dokumen</div>
     </div>
     <div class="col-md-6">
-        <label class="form-label">Unggah Kartu Keluarga <span class="text-danger">*</span></label>
-        <div class="form-text">Wajib. Maks. 1MB bertipe pdf jpg png</div>
-        @if ($dokumenKk)
-            <div class="form-text">Berkas tersimpan: {{ $dokumenKk->nama_asli }}</div>
-        @endif
-        <input class="form-control mt-1 @error('file_kk') is-invalid @enderror" type="file" name="file_kk" accept=".pdf,.jpg,.jpeg,.png">
-        @error('file_kk') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+        <x-dokumen-box
+            judul="Kartu Keluarga"
+            name="file_kk"
+            jenis="kk"
+            :dokumen="$dokumenKk"
+            :siswa="($portal ?? false) ? null : $s"
+            :required="true"
+            hint="Wajib. Maks. 1MB · pdf / jpg / png"
+        />
     </div>
     <div class="col-md-6">
-        <label class="form-label">Unggah Akta Kelahiran <span class="text-danger">*</span></label>
-        <div class="form-text">Wajib. Maks. 1MB bertipe pdf jpg png</div>
-        @if ($dokumenAkta)
-            <div class="form-text">Berkas tersimpan: {{ $dokumenAkta->nama_asli }}</div>
-        @endif
-        <input class="form-control mt-1 @error('file_akta') is-invalid @enderror" type="file" name="file_akta" accept=".pdf,.jpg,.jpeg,.png">
-        @error('file_akta') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+        <x-dokumen-box
+            judul="Akta Kelahiran"
+            name="file_akta"
+            jenis="akta_lahir"
+            :dokumen="$dokumenAkta"
+            :siswa="($portal ?? false) ? null : $s"
+            :required="true"
+            hint="Wajib. Maks. 1MB · pdf / jpg / png"
+        />
     </div>
     <div class="col-md-6" data-kip-upload @if (blank(old('no_kip', $p?->no_kip)) || old('tidak_punya_kip', $p?->tidak_punya_kip)) hidden @endif>
-        <label class="form-label">Unggah kartu KIP <span class="text-danger">*</span></label>
-        <div class="form-text">Wajib jika nomor KIP diisi. Maks. 1MB bertipe pdf jpg png</div>
-        @if ($dokumenKip)
-            <div class="form-text">Berkas tersimpan: {{ $dokumenKip->nama_asli }}</div>
-        @endif
-        <input class="form-control mt-1 @error('file_kip') is-invalid @enderror" type="file" name="file_kip" accept=".pdf,.jpg,.jpeg,.png" data-berkas>
-        @error('file_kip') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+        <x-dokumen-box
+            judul="Kartu Indonesia Pintar"
+            name="file_kip"
+            jenis="kip"
+            :dokumen="$dokumenKip"
+            :siswa="($portal ?? false) ? null : $s"
+            hint="Wajib jika nomor KIP diisi. Maks. 1MB · pdf / jpg / png"
+        />
     </div>
 </div>

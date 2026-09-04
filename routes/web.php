@@ -85,6 +85,10 @@ Route::middleware('auth')->group(function () {
     Route::post('siswa/{siswa}/pengajuan/{pengajuan}', [SiswaController::class, 'prosesPengajuan'])->name('siswa.pengajuan.proses')->whereUuid('siswa');
     Route::post('siswa/{siswa}/reset-password', [SiswaController::class, 'resetPassword'])->name('siswa.reset-password')->whereUuid('siswa');
     Route::delete('siswa/{siswa}/relasi', [SiswaController::class, 'destroyRelasi'])->name('siswa.relasi.destroy')->whereUuid('siswa');
+    Route::delete('siswa/{siswa}/dokumen/{jenis}', [SiswaController::class, 'destroyDokumen'])
+        ->name('siswa.dokumen.destroy')
+        ->whereUuid('siswa')
+        ->where('jenis', 'kk|akta_lahir|kip|kks|pkh|ijazah_sd');
     Route::get('rombel', [RombelController::class, 'index'])->name('rombel.index');
     Route::get('rombel/{rombel}', [RombelController::class, 'show'])->name('rombel.show');
 });

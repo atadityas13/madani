@@ -1125,6 +1125,78 @@ function bindFormatInputs() {
     });
 }
 
+function bindDokumenBoxes() {
+    const csrfToken = () => document.querySelector('input[name="_token"]')?.value
+        || document.querySelector('meta[name="csrf-token"]')?.content
+        || '';
+
+    document.querySelectorAll('[data-dokumen-box]').forEach((box) => {
+        const input = box.querySelector('[data-dokumen-input]');
+        const pick = box.querySelector('[data-dokumen-pick]');
+        const preview = box.querySelector('[data-dokumen-preview]');
+        const hapus = box.querySelector('[data-dokumen-hapus]');
+
+        if (input && pick && preview) {
+            pick.addEventListener('click', () => input.click());
+
+            input.addEventListener('change', () => {
+                const file = input.files?.[0];
+
+                if (!file) {
+                    return;
+                }
+
+                pick.textContent = 'Unggah ulang';
+
+                const isImage = /^image\//.test(file.type) || /\.(jpe?g|png)$/i.test(file.name);
+                preview.innerHTML = '';
+
+                if (isImage) {
+                    const img = document.createElement('img');
+                    img.alt = file.name;
+                    img.dataset.dokumenImg = '';
+                    img.src = URL.createObjectURL(file);
+                    preview.appendChild(img);
+                } else {
+                    const pdf = document.createElement('div');
+                    pdf.className = 'dokumen-box__pdf';
+                    pdf.innerHTML = `<i class="bi bi-file-earmark-pdf"></i><span>${file.name}</span>`;
+                    preview.appendChild(pdf);
+                }
+            });
+        }
+
+        hapus?.addEventListener('click', () => {
+            const judul = hapus.getAttribute('data-judul') || 'berkas';
+            const url = hapus.getAttribute('data-url');
+
+            if (!url || !window.confirm(`Hapus ${judul} dari database dan storage?`)) {
+                return;
+            }
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = url;
+            form.style.display = 'none';
+
+            const token = document.createElement('input');
+            token.type = 'hidden';
+            token.name = '_token';
+            token.value = csrfToken();
+            form.appendChild(token);
+
+            const method = document.createElement('input');
+            method.type = 'hidden';
+            method.name = '_method';
+            method.value = 'DELETE';
+            form.appendChild(method);
+
+            document.body.appendChild(form);
+            form.submit();
+        });
+    });
+}
+
 document.querySelectorAll('[data-wilayah-root]').forEach(bindWilayahRoot);
 bindOrtuForm();
 bindAlamatOrtu();
@@ -1135,3 +1207,4 @@ bindAjukanPerubahan();
 bindOpenModals();
 bindPeranUser();
 bindFormatInputs();
+bindDokumenBoxes();

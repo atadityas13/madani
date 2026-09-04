@@ -140,12 +140,16 @@
                         <label class="form-check-label small" for="tidak_punya_kks">Tidak memiliki KKS</label>
                     </div>
                     <div data-bantuan-upload @if (blank(old('no_kks', $periodik?->no_kks)) || old('tidak_punya_kks', $periodik?->tidak_punya_kks)) hidden @endif>
-                        <div class="form-text mt-2">Unggah kartu KKS (wajib jika nomor diisi), Maks. 1MB pdf/jpg/png</div>
-                        @if ($kks = $siswa->dokumenJenis('kks'))
-                            <div class="form-text" data-berkas-tersimpan>Berkas tersimpan: {{ $kks->nama_asli }}</div>
-                        @endif
-                        <input class="form-control mt-1 @error('file_kks') is-invalid @enderror" type="file" name="file_kks" accept=".pdf,.jpg,.jpeg,.png" data-berkas>
-                        @error('file_kks') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        <div class="mt-2">
+                            <x-dokumen-box
+                                judul="Kartu Keluarga Sejahtera"
+                                name="file_kks"
+                                jenis="kks"
+                                :dokumen="$siswa->dokumenJenis('kks')"
+                                :siswa="$portal ? null : $siswa"
+                                hint="Wajib jika nomor KKS diisi. Maks. 1MB · pdf / jpg / png"
+                            />
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-4" data-bantuan-kartu="pkh">
@@ -156,12 +160,16 @@
                         <label class="form-check-label small" for="tidak_punya_pkh">Tidak memiliki PKH</label>
                     </div>
                     <div data-bantuan-upload @if (blank(old('no_pkh', $periodik?->no_pkh)) || old('tidak_punya_pkh', $periodik?->tidak_punya_pkh)) hidden @endif>
-                        <div class="form-text mt-2">Unggah kartu PKH (wajib jika nomor diisi), Maks. 1MB pdf/jpg/png</div>
-                        @if ($pkh = $siswa->dokumenJenis('pkh'))
-                            <div class="form-text" data-berkas-tersimpan>Berkas tersimpan: {{ $pkh->nama_asli }}</div>
-                        @endif
-                        <input class="form-control mt-1 @error('file_pkh') is-invalid @enderror" type="file" name="file_pkh" accept=".pdf,.jpg,.jpeg,.png" data-berkas>
-                        @error('file_pkh') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        <div class="mt-2">
+                            <x-dokumen-box
+                                judul="Kartu Program Keluarga Harapan"
+                                name="file_pkh"
+                                jenis="pkh"
+                                :dokumen="$siswa->dokumenJenis('pkh')"
+                                :siswa="$portal ? null : $siswa"
+                                hint="Wajib jika nomor PKH diisi. Maks. 1MB · pdf / jpg / png"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>

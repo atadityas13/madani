@@ -174,6 +174,32 @@ class SiswaPortalTest extends TestCase
         $this->assertTrue(Hash::check('02092012', $siswa->getAuthPassword()));
     }
 
+    public function test_gtk_can_delete_siswa_dokumen_from_database_and_r2(): void
+    {
+        Storage::fake('r2');
+        $this->seed();
+        $siswa = $this->buatSiswa();
+        $admin = User::query()->where('username', 'admin')->first();
+
+        $path = "dokumen/{$siswa->id}/kk.jpg";
+        Storage::disk('r2')->put($path, 'fake-kk');
+        $siswa->dokumens()->create([
+            'jenis' => 'kk',
+            'path' => $path,
+            'nama_asli' => 'kk.jpg',
+        ]);
+
+        $this->actingAs($admin)
+            ->delete(route('siswa.dokumen.destroy', [$siswa, 'kk']))
+            ->assertRedirect(route('siswa.show', ['siswa' => $siswa, 'tab' => 'data-siswa']));
+
+        $this->assertDatabaseMissing('dokumens', [
+            'siswa_id' => $siswa->id,
+            'jenis' => 'kk',
+        ]);
+        Storage::disk('r2')->assertMissing($path);
+    }
+
     public function test_api_login_me_and_password_change(): void
     {
         Storage::fake('r2');

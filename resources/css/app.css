@@ -959,3 +959,95 @@ a.biodata-path-item:hover {
     bottom: -1px;
     font-size: 0.55rem;
 }
+
+.dokumen-box {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 188px;
+    border: 2px dashed #1b7a5a;
+    border-radius: 14px;
+    background: #f3faf6;
+    overflow: hidden;
+    padding-bottom: 0.65rem;
+}
+
+.dokumen-box.is-invalid {
+    border-color: var(--emis-red);
+}
+
+.dokumen-box__label {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 2;
+    max-width: calc(100% - 20px);
+    padding: 0.2rem 0.55rem;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dokumen-box__preview {
+    flex: 1;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e8f3ee;
+}
+
+.dokumen-box__preview img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    display: block;
+}
+
+.dokumen-box__empty,
+.dokumen-box__pdf {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    color: #1b7a5a;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 1.5rem 1rem 1rem;
+    text-align: center;
+}
+
+.dokumen-box__empty i,
+.dokumen-box__pdf i {
+    font-size: 1.75rem;
+}
+
+.dokumen-box__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    justify-content: center;
+    padding: 0.55rem 0.65rem 0;
+}
+
+.dokumen-box__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.dokumen-box__hint {
+    text-align: center;
+    color: var(--emis-muted);
+    font-size: 11px;
+    padding: 0.25rem 0.65rem 0;
+}
