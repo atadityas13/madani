@@ -40,6 +40,12 @@ return [
         'secret' => env('MADANI_INTROSPECT_SECRET'),
     ],
 
+    'firebase' => [
+        'project_id' => env('FIREBASE_PROJECT_ID'),
+        'credentials' => env('FIREBASE_CREDENTIALS'),
+        'credentials_json' => env('FIREBASE_CREDENTIALS_JSON'),
+    ],
+
     'elapkin' => [
         'sso_secret' => env('ELAPKIN_SSO_SECRET', 'MTSN11-TALIM-SSO-2026'),
         'mobile_url' => env('ELAPKIN_MOBILE_URL', 'https://e-lapkin.mtsn11majalengka.sch.id/mobile-app/'),

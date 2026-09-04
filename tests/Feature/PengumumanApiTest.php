@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\Pengumuman;
+use App\Models\Notifikasi;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -12,21 +12,27 @@ class PengumumanApiTest extends TestCase
 
     public function test_pengumuman_api_returns_published_items(): void
     {
-        Pengumuman::create([
+        Notifikasi::query()->create([
             'judul' => 'Aktif',
             'isi' => 'Isi aktif',
+            'jenis' => Notifikasi::JENIS_PENGUMUMAN,
+            'audience' => Notifikasi::AUDIENCE_SEMUA_GURU,
             'is_active' => true,
             'published_at' => now()->subHour(),
         ]);
-        Pengumuman::create([
+        Notifikasi::query()->create([
             'judul' => 'Nonaktif',
             'isi' => 'Sembunyi',
+            'jenis' => Notifikasi::JENIS_PENGUMUMAN,
+            'audience' => Notifikasi::AUDIENCE_SEMUA_GURU,
             'is_active' => false,
             'published_at' => now()->subHour(),
         ]);
-        Pengumuman::create([
+        Notifikasi::query()->create([
             'judul' => 'Jadwal depan',
             'isi' => 'Belum tayang',
+            'jenis' => Notifikasi::JENIS_PENGUMUMAN,
+            'audience' => Notifikasi::AUDIENCE_SEMUA_GURU,
             'is_active' => true,
             'published_at' => now()->addDay(),
         ]);

@@ -68,7 +68,7 @@ class Navigasi
             [
                 'label' => 'Aplikasi',
                 'icon' => 'bi-phone',
-                'match' => ['app-updates.*', 'pengumuman.*', 'calendar-events.*'],
+                'match' => ['app-updates.*', 'notifikasi.*', 'pengumuman.*', 'calendar-events.*'],
                 'roles' => [Peran::SUPERADMIN, Peran::ADMIN],
                 'children' => [
                     [
@@ -78,9 +78,9 @@ class Navigasi
                         'roles' => [Peran::SUPERADMIN, Peran::ADMIN],
                     ],
                     [
-                        'label' => 'Pengumuman',
-                        'route' => 'pengumuman.index',
-                        'match' => 'pengumuman.*',
+                        'label' => 'Notifikasi',
+                        'route' => 'notifikasi.index',
+                        'match' => 'notifikasi.*',
                         'roles' => [Peran::SUPERADMIN, Peran::ADMIN],
                     ],
                     [
