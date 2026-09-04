@@ -709,8 +709,10 @@ class SiswaBiodataService
         }
 
         $file = $request->file($field);
-        $lama = $siswa->dokumenJenis($jenis)?->path;
-        $path = $file->store("dokumen/{$siswa->id}", 'r2');
+        $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+        $ext = preg_replace('/[^a-z0-9]/', '', $ext) ?: 'jpg';
+        $lama = $siswa->dokumens()->where('jenis', $jenis)->value('path');
+        $path = $file->storeAs("dokumen/{$siswa->id}", "{$jenis}.{$ext}", 'r2');
 
         $siswa->dokumens()->updateOrCreate(
             ['jenis' => $jenis],
@@ -728,8 +730,11 @@ class SiswaBiodataService
             return;
         }
 
+        $file = $request->file('foto');
+        $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+        $ext = preg_replace('/[^a-z0-9]/', '', $ext) ?: 'jpg';
         $lama = $siswa->foto;
-        $path = $request->file('foto')->store("foto/{$siswa->id}", 'r2');
+        $path = $file->storeAs("foto/{$siswa->id}", "profil.{$ext}", 'r2');
         $siswa->update(['foto' => $path]);
 
         if ($lama && $lama !== $path) {

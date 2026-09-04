@@ -9,7 +9,6 @@ use App\Support\SiswaPortalPayload;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class SiswaController extends Controller
 {
@@ -125,9 +124,8 @@ class SiswaController extends Controller
 
         /** @var Siswa $siswa */
         $siswa = $request->user();
-        $ext = pathinfo($validated['filename'], PATHINFO_EXTENSION) ?: 'jpg';
-        $folder = $validated['jenis'] === 'foto' ? 'foto' : 'dokumen';
-        $key = "{$folder}/{$siswa->id}/".Str::uuid().".{$ext}";
+        $ext = strtolower(pathinfo($validated['filename'], PATHINFO_EXTENSION) ?: 'jpg');
+        $key = $this->objectKeyUntuk($siswa->id, $validated['jenis'], $ext);
 
         /** @var \Aws\S3\S3Client $client */
         $client = Storage::disk('r2')->getClient();
@@ -149,6 +147,7 @@ class SiswaController extends Controller
         $validated = $request->validate([
             'object_key' => ['required', 'string', 'max:500'],
             'jenis' => ['required', 'string', 'in:kk,akta_lahir,kip,kks,pkh,ijazah_sd,foto'],
+            'nama_asli' => ['nullable', 'string', 'max:255'],
         ]);
 
         /** @var Siswa $siswa */
@@ -164,18 +163,17 @@ class SiswaController extends Controller
         if ($validated['jenis'] === 'foto') {
             $lama = $siswa->foto;
             $siswa->update(['foto' => $validated['object_key']]);
-            if ($lama && $lama !== $validated['object_key']) {
-                Storage::disk('r2')->delete($lama);
-            }
+            $this->hapusObjectLama($lama, $validated['object_key']);
         } else {
-            $lama = $siswa->dokumenJenis($validated['jenis'])?->path;
+            $lama = $siswa->dokumens()->where('jenis', $validated['jenis'])->value('path');
             $siswa->dokumens()->updateOrCreate(
                 ['jenis' => $validated['jenis']],
-                ['path' => $validated['object_key']],
+                [
+                    'path' => $validated['object_key'],
+                    'nama_asli' => $validated['nama_asli'] ?? basename($validated['object_key']),
+                ],
             );
-            if ($lama && $lama !== $validated['object_key']) {
-                Storage::disk('r2')->delete($lama);
-            }
+            $this->hapusObjectLama($lama, $validated['object_key']);
         }
 
         return response()->json([
@@ -184,6 +182,26 @@ class SiswaController extends Controller
             'url' => Storage::disk('r2')->url($validated['object_key']),
             'data' => SiswaPortalPayload::make($siswa->fresh()),
         ]);
+    }
+
+    private function objectKeyUntuk(string $siswaId, string $jenis, string $ext): string
+    {
+        $ext = preg_replace('/[^a-z0-9]/', '', strtolower($ext)) ?: 'jpg';
+
+        if ($jenis === 'foto') {
+            return "foto/{$siswaId}/profil.{$ext}";
+        }
+
+        return "dokumen/{$siswaId}/{$jenis}.{$ext}";
+    }
+
+    private function hapusObjectLama(?string $lama, string $baru): void
+    {
+        if (! $lama || $lama === $baru) {
+            return;
+        }
+
+        Storage::disk('r2')->delete($lama);
     }
 
     public function storePengajuan(Request $request): JsonResponse

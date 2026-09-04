@@ -107,7 +107,9 @@ class SiswaPortalPayload
             'dokumen' => $siswa->dokumens->mapWithKeys(fn ($item) => [
                 $item->jenis => [
                     'nama_asli' => $item->nama_asli,
-                    'url' => Storage::disk('r2')->url($item->path),
+                    'url' => $item->path
+                        ? Storage::disk('r2')->url($item->path).'?v='.($item->updated_at?->timestamp ?? time())
+                        : null,
                 ],
             ]),
             'data_masuk' => $siswa->dataMasukAkademik(),
