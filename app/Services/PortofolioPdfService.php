@@ -182,11 +182,11 @@ class PortofolioPdfService
     private function aktivitasRows(Siswa $siswa): array
     {
         $masuk = $siswa->dataMasukAkademik();
-        $masukKeterangan = $masuk['status'] ?? 'Baru';
+        $masukKeterangan = ($masuk['status'] ?? null) === 'Pindahan' ? 'Siswa Pindahan' : 'Siswa Baru';
         if (($masuk['status'] ?? null) === 'Pindahan' && filled($masuk['nama_sekolah_asal'] ?? null)) {
-            $masukKeterangan = 'Pindahan — '.$masuk['nama_sekolah_asal'];
-        } elseif (($masuk['status'] ?? null) === 'Baru' && filled($masuk['nama_sekolah_asal'] ?? null)) {
-            $masukKeterangan = 'Baru — '.$masuk['nama_sekolah_asal'];
+            $masukKeterangan = 'Siswa Pindahan — '.$masuk['nama_sekolah_asal'];
+        } elseif (($masuk['status'] ?? null) !== 'Pindahan' && filled($masuk['nama_sekolah_asal'] ?? null)) {
+            $masukKeterangan = 'Siswa Baru — '.$masuk['nama_sekolah_asal'];
         }
 
         // Chronological (oldest first) to derive naik kelas from the previous record.

@@ -762,7 +762,7 @@ class SiswaPortalTest extends TestCase
         $this->assertCount(2, $aktivitas);
         $this->assertSame('Naik kelas — kelas 7', $aktivitas[0]['keterangan']);
         $this->assertSame('Kelas 8', $aktivitas[0]['tingkat']);
-        $this->assertSame('Baru', $aktivitas[1]['keterangan']);
+        $this->assertSame('Siswa Baru', $aktivitas[1]['keterangan']);
         $this->assertSame('Kelas 7', $aktivitas[1]['tingkat']);
     }
 

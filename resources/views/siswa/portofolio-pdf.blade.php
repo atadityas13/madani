@@ -222,7 +222,7 @@
     <thead>
         <tr>
             <th>Tahun</th>
-            <th>Kategori</th>
+            <th>Jenis bantuan</th>
             <th>Nama</th>
             <th>Nominal</th>
             <th>No rekening</th>
