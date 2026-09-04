@@ -8,8 +8,6 @@ use App\Models\RekamDidik;
 use App\Models\Siswa;
 use App\Models\SiswaPeriodik;
 use App\Models\TahunAjaran;
-use Illuminate\Support\Facades\Storage;
-
 class SiswaPortalPayload
 {
     /**
@@ -48,7 +46,7 @@ class SiswaPortalPayload
             'tidak_punya_email' => (bool) $siswa->tidak_punya_email,
             'status_keaktifan' => $siswa->status_keaktifan,
             'must_change_password' => (bool) $siswa->must_change_password,
-            'foto_url' => $siswa->foto ? Storage::disk('r2')->url($siswa->foto) : null,
+            'foto_url' => R2Url::temporary($siswa->foto),
             'tahun_ajaran' => $tahun?->label(),
             'rombel' => $rombel ? [
                 'id' => $rombel->id,
@@ -93,7 +91,7 @@ class SiswaPortalPayload
                 'tingkat' => $item->tingkat,
                 'tahun' => $item->tahun,
                 'penyelenggara' => $item->penyelenggara,
-                'sertifikat_url' => $item->sertifikat_path ? Storage::disk('r2')->url($item->sertifikat_path) : null,
+                'sertifikat_url' => R2Url::temporary($item->sertifikat_path),
             ])->values(),
             'beasiswas' => $siswa->beasiswas->map(fn ($item) => [
                 'id' => $item->id,
@@ -102,14 +100,12 @@ class SiswaPortalPayload
                 'nama' => $item->nama,
                 'nominal' => $item->nominal,
                 'nomor_rekening' => $item->nomor_rekening,
-                'bukti_url' => $item->bukti_path ? Storage::disk('r2')->url($item->bukti_path) : null,
+                'bukti_url' => R2Url::temporary($item->bukti_path),
             ])->values(),
             'dokumen' => $siswa->dokumens->mapWithKeys(fn ($item) => [
                 $item->jenis => [
                     'nama_asli' => $item->nama_asli,
-                    'url' => $item->path
-                        ? Storage::disk('r2')->url($item->path).'?v='.($item->updated_at?->timestamp ?? time())
-                        : null,
+                    'url' => R2Url::temporary($item->path),
                 ],
             ]),
             'data_masuk' => $siswa->dataMasukAkademik(),

@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
+use App\Support\R2Url;
 
 #[Fillable([
     'nama', 'npsn', 'nsm', 'jenjang', 'status', 'akreditasi', 'alamat', 'desa',
@@ -47,6 +47,6 @@ class Madrasah extends Model
             return null;
         }
 
-        return Storage::disk('r2')->url($this->logo_path);
+        return R2Url::temporary($this->logo_path);
     }
 }

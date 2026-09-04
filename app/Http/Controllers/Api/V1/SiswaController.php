@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Siswa;
 use App\Services\SiswaBiodataService;
+use App\Support\R2Url;
 use App\Support\SiswaPortalPayload;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -179,7 +180,7 @@ class SiswaController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Berkas dikonfirmasi.',
-            'url' => Storage::disk('r2')->url($validated['object_key']),
+            'url' => R2Url::temporary($validated['object_key']),
             'data' => SiswaPortalPayload::make($siswa->fresh()),
         ]);
     }
