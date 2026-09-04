@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\PengumumanController;
 use App\Http\Controllers\Api\V1\ReferensiController;
 use App\Http\Controllers\Api\V1\SiswaAuthController;
 use App\Http\Controllers\Api\V1\SiswaController;
+use App\Http\Controllers\Api\V1\TokenIntrospectController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -14,6 +15,7 @@ Route::prefix('v1')->group(function () {
     Route::get('pengumuman', [PengumumanController::class, 'index']);
     Route::post('siswa/login', [SiswaAuthController::class, 'login'])->middleware('throttle:5,1');
     Route::post('guru/login', [GuruAuthController::class, 'login'])->middleware('throttle:5,1');
+    Route::post('token/introspect', TokenIntrospectController::class)->middleware('throttle:60,1');
 
     Route::middleware(['auth:sanctum', 'guru.api'])->prefix('guru')->group(function () {
         Route::post('logout', [GuruAuthController::class, 'logout']);

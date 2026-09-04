@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'madani_introspect' => [
+        // Shared secret: Simpatisans mengirim header X-Madani-Introspect-Secret
+        'secret' => env('MADANI_INTROSPECT_SECRET'),
+    ],
+
 ];
