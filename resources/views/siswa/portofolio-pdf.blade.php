@@ -63,6 +63,8 @@
         }
         .section { font-size: 12px; font-weight: bold; margin: 12px 0 4px; text-transform: uppercase; }
         .section-first { margin-top: 0; margin-bottom: 4px; }
+        .page-break { page-break-before: always; }
+        .page-break .section:first-child { margin-top: 0; }
         .rows { width: 100%; border-collapse: collapse; }
         .rows td { padding: 2.5px 0; vertical-align: top; font-size: 11px; }
         .rows .label { width: 38%; }
@@ -173,8 +175,9 @@
     @endforeach
 </table>
 
+<div class="page-break">
 @foreach ([['Ayah kandung', $ayahRows], ['Ibu kandung', $ibuRows], ['Wali', $waliRows]] as [$judulOrtu, $rowsOrtu])
-    <div class="section">{{ $judulOrtu }}</div>
+    <div class="section{{ $loop->first ? ' section-first' : '' }}">{{ $judulOrtu }}</div>
     <table class="rows">
         @foreach ($rowsOrtu as [$label, $value])
             <tr>
@@ -185,8 +188,10 @@
         @endforeach
     </table>
 @endforeach
+</div>
 
-<div class="section">Aktivitas belajar</div>
+<div class="page-break">
+<div class="section section-first">Aktivitas belajar</div>
 <table class="data">
     <thead>
         <tr>
@@ -267,6 +272,7 @@
         @endforelse
     </tbody>
 </table>
+</div>
 
 <div class="footer">
     dokumen digenerate oleh sistem MADANI MTsN 11 Majalengka · {{ $generatedAt->timezone(config('app.timezone'))->format('d/m/Y H:i') }}
