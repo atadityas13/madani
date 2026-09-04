@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\PengajuanPerubahanSiswa;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
+use App\Services\PortofolioPdfService;
 use App\Services\SiswaBiodataService;
 use App\Support\KelengkapanSiswa;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\Response;
 
 class SiswaController extends Controller
 {
@@ -155,7 +157,7 @@ class SiswaController extends Controller
             ->with('status', 'Data dihapus.');
     }
 
-    public function destroyDokumen(Siswa $siswa, string $jenis): RedirectResponse
+        public function destroyDokumen(Siswa $siswa, string $jenis): RedirectResponse
     {
         $this->authorize('update', $siswa);
 
@@ -174,6 +176,20 @@ class SiswaController extends Controller
         return redirect()
             ->route('siswa.show', ['siswa' => $siswa, 'tab' => $tab])
             ->with('status', 'Dokumen dihapus dari database dan storage.');
+    }
+
+    public function portofolio(Siswa $siswa, PortofolioPdfService $portofolio): Response
+    {
+        $this->authorize('view', $siswa);
+
+        return $portofolio->download($siswa);
+    }
+
+    public function cekPortofolio(Siswa $siswa): View
+    {
+        return view('siswa.portofolio-cek', [
+            'siswa' => $siswa,
+        ]);
     }
 
     public function resetPassword(Siswa $siswa): RedirectResponse

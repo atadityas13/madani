@@ -661,6 +661,58 @@ class SiswaPortalTest extends TestCase
         $this->assertTrue(Hash::check(SiswaPassword::dariTanggalLahir('2011-01-15'), $siswa->getAuthPassword()));
     }
 
+    public function test_gtk_can_download_siswa_portofolio_pdf(): void
+    {
+        Storage::fake('r2');
+        $this->seed();
+        $siswa = $this->buatSiswa(['nis' => '2026001']);
+        $admin = User::query()->where('username', 'admin')->first();
+
+        $response = $this->actingAs($admin)
+            ->get(route('siswa.portofolio', $siswa));
+
+        $response->assertOk();
+        $this->assertStringContainsString('application/pdf', (string) $response->headers->get('content-type'));
+        $this->assertGreaterThan(1000, strlen($response->getContent()));
+        $this->assertStringContainsString('Portofolio', (string) $response->headers->get('content-disposition'));
+    }
+
+    public function test_siswa_api_can_download_own_portofolio_pdf(): void
+    {
+        Storage::fake('r2');
+        $this->seed();
+        $siswa = $this->buatSiswa(['nis' => '2026002']);
+        $token = $this->tokenSiswa($siswa);
+
+        $response = $this->withToken($token)
+            ->get('/api/v1/siswa/portofolio.pdf');
+
+        $response->assertOk();
+        $this->assertStringContainsString('application/pdf', (string) $response->headers->get('content-type'));
+        $this->assertGreaterThan(1000, strlen($response->getContent()));
+    }
+
+    public function test_portofolio_signed_verification_page_works(): void
+    {
+        $this->seed();
+        $siswa = $this->buatSiswa(['nis' => '2026003']);
+
+        $url = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+            'portofolio.cek',
+            now()->addDay(),
+            ['siswa' => $siswa->id],
+        );
+
+        $this->get($url)
+            ->assertOk()
+            ->assertSee($siswa->nama)
+            ->assertSee('2026003')
+            ->assertSee('MADANI');
+
+        $this->get(route('portofolio.cek', $siswa))
+            ->assertForbidden();
+    }
+
     private function tokenSiswa(Siswa $siswa): string
     {
         $siswa->gantiPassword('sandibaru1');

@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Siswa;
+use App\Services\PortofolioPdfService;
 use App\Services\SiswaBiodataService;
 use App\Support\R2Url;
 use App\Support\SiswaPortalPayload;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
 
 class SiswaController extends Controller
 {
@@ -216,5 +218,13 @@ class SiswaController extends Controller
             'message' => $pesan,
             'data' => SiswaPortalPayload::make($siswa->fresh()),
         ]);
+    }
+
+    public function portofolio(Request $request, PortofolioPdfService $portofolio): Response
+    {
+        /** @var Siswa $siswa */
+        $siswa = $request->user();
+
+        return $portofolio->download($siswa);
     }
 }

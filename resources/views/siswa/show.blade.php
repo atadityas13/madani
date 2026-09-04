@@ -29,11 +29,16 @@
             · {{ str_replace('_', ' ', $siswa->status_keaktifan) }}
         </div>
     </div>
-    @if (! $portal && auth()->user()?->mengampu($siswa) && $siswa->tanggal_lahir)
-        <form method="POST" action="{{ route('siswa.reset-password', $siswa) }}" class="ms-auto" onsubmit="return confirm('Reset password ke tanggal lahir (ddmmyyyy)? Siswa wajib mengubahnya saat masuk.')">
-            @csrf
-            <button class="btn btn-outline-secondary btn-sm" type="submit">Reset password</button>
-        </form>
+    @if (! $portal)
+        <div class="ms-auto d-flex gap-2 flex-wrap justify-content-end">
+            <a class="btn btn-outline-secondary btn-sm" href="{{ route('siswa.portofolio', $siswa) }}">Portofolio</a>
+            @if (auth()->user()?->mengampu($siswa) && $siswa->tanggal_lahir)
+                <form method="POST" action="{{ route('siswa.reset-password', $siswa) }}" onsubmit="return confirm('Reset password ke tanggal lahir (ddmmyyyy)? Siswa wajib mengubahnya saat masuk.')">
+                    @csrf
+                    <button class="btn btn-outline-secondary btn-sm" type="submit">Reset password</button>
+                </form>
+            @endif
+        </div>
     @endif
 </div>
 

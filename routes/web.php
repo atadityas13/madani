@@ -24,6 +24,11 @@ Route::middleware('guest:siswa')->group(function () {
 
 Route::redirect('/login', '/');
 
+Route::get('/portofolio/cek/{siswa}', [SiswaController::class, 'cekPortofolio'])
+    ->middleware('signed')
+    ->name('portofolio.cek')
+    ->whereUuid('siswa');
+
 Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')->name('logout');
 Route::post('/siswa/keluar', [SiswaAuthController::class, 'destroy'])->middleware('auth:siswa')->name('siswa.keluar');
 
@@ -84,6 +89,7 @@ Route::middleware('auth')->group(function () {
     Route::put('siswa/{siswa}', [SiswaController::class, 'update'])->name('siswa.update')->whereUuid('siswa');
     Route::post('siswa/{siswa}/pengajuan/{pengajuan}', [SiswaController::class, 'prosesPengajuan'])->name('siswa.pengajuan.proses')->whereUuid('siswa');
     Route::post('siswa/{siswa}/reset-password', [SiswaController::class, 'resetPassword'])->name('siswa.reset-password')->whereUuid('siswa');
+    Route::get('siswa/{siswa}/portofolio.pdf', [SiswaController::class, 'portofolio'])->name('siswa.portofolio')->whereUuid('siswa');
     Route::delete('siswa/{siswa}/relasi', [SiswaController::class, 'destroyRelasi'])->name('siswa.relasi.destroy')->whereUuid('siswa');
     Route::delete('siswa/{siswa}/dokumen/{jenis}', [SiswaController::class, 'destroyDokumen'])
         ->name('siswa.dokumen.destroy')
