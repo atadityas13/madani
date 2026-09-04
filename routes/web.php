@@ -89,7 +89,9 @@ Route::middleware('auth')->group(function () {
     Route::put('siswa/{siswa}', [SiswaController::class, 'update'])->name('siswa.update')->whereUuid('siswa');
     Route::post('siswa/{siswa}/pengajuan/{pengajuan}', [SiswaController::class, 'prosesPengajuan'])->name('siswa.pengajuan.proses')->whereUuid('siswa');
     Route::post('siswa/{siswa}/reset-password', [SiswaController::class, 'resetPassword'])->name('siswa.reset-password')->whereUuid('siswa');
-    Route::get('siswa/{siswa}/portofolio.pdf', [SiswaController::class, 'portofolio'])->name('siswa.portofolio')->whereUuid('siswa');
+    Route::get('siswa/{siswa}/portofolio', [SiswaController::class, 'portofolio'])->name('siswa.portofolio')->whereUuid('siswa');
+    Route::get('siswa/{siswa}/portofolio/stream', [SiswaController::class, 'portofolioStream'])->name('siswa.portofolio.stream')->whereUuid('siswa');
+    Route::get('siswa/{siswa}/portofolio.pdf', [SiswaController::class, 'portofolioDownload'])->name('siswa.portofolio.download')->whereUuid('siswa');
     Route::delete('siswa/{siswa}/relasi', [SiswaController::class, 'destroyRelasi'])->name('siswa.relasi.destroy')->whereUuid('siswa');
     Route::delete('siswa/{siswa}/dokumen/{jenis}', [SiswaController::class, 'destroyDokumen'])
         ->name('siswa.dokumen.destroy')

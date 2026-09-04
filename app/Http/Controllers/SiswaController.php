@@ -178,7 +178,23 @@ class SiswaController extends Controller
             ->with('status', 'Dokumen dihapus dari database dan storage.');
     }
 
-    public function portofolio(Siswa $siswa, PortofolioPdfService $portofolio): Response
+    public function portofolio(Siswa $siswa): View
+    {
+        $this->authorize('view', $siswa);
+
+        return view('siswa.portofolio-preview', [
+            'siswa' => $siswa,
+        ]);
+    }
+
+    public function portofolioStream(Siswa $siswa, PortofolioPdfService $portofolio): Response
+    {
+        $this->authorize('view', $siswa);
+
+        return $portofolio->stream($siswa);
+    }
+
+    public function portofolioDownload(Siswa $siswa, PortofolioPdfService $portofolio): Response
     {
         $this->authorize('view', $siswa);
 

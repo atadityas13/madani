@@ -661,20 +661,30 @@ class SiswaPortalTest extends TestCase
         $this->assertTrue(Hash::check(SiswaPassword::dariTanggalLahir('2011-01-15'), $siswa->getAuthPassword()));
     }
 
-    public function test_gtk_can_download_siswa_portofolio_pdf(): void
+    public function test_gtk_can_preview_and_download_siswa_portofolio_pdf(): void
     {
         Storage::fake('r2');
         $this->seed();
         $siswa = $this->buatSiswa(['nis' => '2026001']);
         $admin = User::query()->where('username', 'admin')->first();
 
-        $response = $this->actingAs($admin)
-            ->get(route('siswa.portofolio', $siswa));
+        $this->actingAs($admin)
+            ->get(route('siswa.portofolio', $siswa))
+            ->assertOk()
+            ->assertSee('Preview portofolio')
+            ->assertSee('Unduh');
 
-        $response->assertOk();
-        $this->assertStringContainsString('application/pdf', (string) $response->headers->get('content-type'));
-        $this->assertGreaterThan(1000, strlen($response->getContent()));
-        $this->assertStringContainsString('Portofolio', (string) $response->headers->get('content-disposition'));
+        $stream = $this->actingAs($admin)
+            ->get(route('siswa.portofolio.stream', $siswa));
+        $stream->assertOk();
+        $this->assertStringContainsString('application/pdf', (string) $stream->headers->get('content-type'));
+
+        $download = $this->actingAs($admin)
+            ->get(route('siswa.portofolio.download', $siswa));
+        $download->assertOk();
+        $this->assertStringContainsString('application/pdf', (string) $download->headers->get('content-type'));
+        $this->assertStringContainsString('attachment', (string) $download->headers->get('content-disposition'));
+        $this->assertGreaterThan(1000, strlen($download->getContent()));
     }
 
     public function test_siswa_api_can_download_own_portofolio_pdf(): void

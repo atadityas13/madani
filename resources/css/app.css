@@ -960,6 +960,31 @@ a.biodata-path-item:hover {
     font-size: 0.55rem;
 }
 
+.portofolio-preview-shell {
+    position: relative;
+    height: calc(100vh - 150px);
+    min-height: 520px;
+    background: #e8eaed;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--emis-line);
+}
+
+.portofolio-preview-frame {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: #fff;
+}
+
+.portofolio-preview-download {
+    position: absolute;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 5;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.22);
+}
+
 .dokumen-box {
     position: relative;
     display: flex;
@@ -1050,4 +1075,29 @@ a.biodata-path-item:hover {
     color: var(--emis-muted);
     font-size: 11px;
     padding: 0.25rem 0.65rem 0;
+}
+
+.portofolio-preview-shell {
+    position: relative;
+    height: calc(100vh - 150px);
+    min-height: 520px;
+    background: #e8eaed;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--emis-line);
+}
+
+.portofolio-preview-frame {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: #fff;
+}
+
+.portofolio-preview-download {
+    position: absolute;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 5;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.22);
 }

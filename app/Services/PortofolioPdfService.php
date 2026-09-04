@@ -98,12 +98,12 @@ class PortofolioPdfService
         }
 
         return [
-            ['Jenis kelamin', $jk],
             ['NISN', $siswa->nisn],
             ['NIS', $siswa->nis],
             ['NIK', $siswa->nik],
             ['Tempat lahir', $siswa->tempat_lahir],
             ['Tanggal lahir', $siswa->tanggal_lahir?->locale('id')->translatedFormat('d F Y')],
+            ['Jenis kelamin', $jk],
             ['Jumlah saudara', $siswa->jumlah_saudara !== null ? (string) $siswa->jumlah_saudara : null],
             ['Anak ke', $siswa->anak_ke !== null ? (string) $siswa->anak_ke : null],
             ['Agama', $siswa->agama],

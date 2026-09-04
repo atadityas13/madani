@@ -4,65 +4,74 @@
     <meta charset="utf-8">
     <title>Portofolio {{ $siswa->nama }}</title>
     <style>
-        @page { margin: 28px 32px 40px; }
+        @page { margin: 36px 48px 44px; }
         body {
             font-family: DejaVu Sans, sans-serif;
-            font-size: 10px;
+            font-size: 11px;
             color: #111;
-            line-height: 1.35;
+            line-height: 1.4;
         }
         .kop { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
         .kop td { vertical-align: middle; }
-        .kop-logo { width: 72px; }
-        .kop-logo img { width: 68px; height: auto; }
-        .kop-text { text-align: center; padding: 0 8px; }
-        .kop-text .line1 { font-size: 11px; font-weight: bold; letter-spacing: 0.3px; }
-        .kop-text .line2 { font-size: 11px; font-weight: bold; }
+        .kop-logo { width: 84px; }
+        .kop-logo img { width: 78px; height: auto; }
+        .kop-text { text-align: center; padding: 0 10px; }
+        .kop-text .line1 { font-size: 13px; font-weight: bold; letter-spacing: 0.2px; }
+        .kop-text .line2 { font-size: 12px; font-weight: bold; }
         .kop-text .line3 { font-size: 12px; font-weight: bold; margin-top: 1px; }
-        .kop-text .line4, .kop-text .line5 { font-size: 9px; margin-top: 1px; }
-        .kop-qr { width: 78px; text-align: right; }
-        .kop-qr img { width: 70px; height: 70px; }
+        .kop-text .line4, .kop-text .line5 { font-size: 10px; margin-top: 1px; }
+        .kop-qr { width: 82px; text-align: right; }
+        .kop-qr img { width: 74px; height: 74px; }
         .kop-line {
             border: 0;
             border-top: 3px solid #111;
             border-bottom: 1px solid #111;
-            margin: 4px 0 12px;
+            margin: 6px 0 14px;
         }
-        .title-wrap { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-        .title-wrap td { vertical-align: top; }
-        .title-name { font-size: 16px; font-weight: bold; padding-top: 4px; }
-        .foto-box { width: 90px; text-align: right; }
+        .doc-title {
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: underline;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin: 0 0 14px;
+        }
+        .head-data { width: 100%; border-collapse: collapse; margin-bottom: 2px; }
+        .head-data td { vertical-align: top; }
+        .foto-box { width: 96px; text-align: right; }
         .foto-box img {
-            width: 80px;
-            height: 100px;
+            width: 86px;
+            height: 108px;
             object-fit: cover;
             border: 1px solid #999;
         }
         .foto-placeholder {
             display: inline-block;
-            width: 80px;
-            height: 100px;
+            width: 86px;
+            height: 108px;
             border: 1px solid #999;
             text-align: center;
-            line-height: 100px;
+            line-height: 108px;
             color: #888;
-            font-size: 9px;
+            font-size: 10px;
         }
-        .section { font-size: 11px; font-weight: bold; margin: 12px 0 4px; text-transform: uppercase; }
+        .section { font-size: 12px; font-weight: bold; margin: 12px 0 5px; text-transform: uppercase; }
+        .section-first { margin-top: 0; }
         .rows { width: 100%; border-collapse: collapse; }
-        .rows td { padding: 2px 0; vertical-align: top; }
+        .rows td { padding: 2.5px 0; vertical-align: top; font-size: 11px; }
         .rows .label { width: 38%; }
-        .rows .colon { width: 12px; }
+        .rows .colon { width: 14px; }
         .rows .value { }
         table.data {
             width: 100%;
             border-collapse: collapse;
             margin-top: 4px;
-            font-size: 9px;
+            font-size: 10px;
         }
         table.data th, table.data td {
             border: 1px solid #333;
-            padding: 3px 4px;
+            padding: 4px 5px;
             text-align: left;
             vertical-align: top;
         }
@@ -72,7 +81,7 @@
             left: 0;
             right: 0;
             bottom: -18px;
-            font-size: 8px;
+            font-size: 9px;
             color: #444;
             text-align: center;
             border-top: 1px solid #bbb;
@@ -122,12 +131,14 @@
 </table>
 <hr class="kop-line">
 
-<table class="title-wrap">
+<div class="doc-title">PORTOFOLIO SISWA</div>
+
+<table class="head-data">
     <tr>
         <td>
-            <div class="title-name">{{ strtoupper($siswa->nama) }}</div>
+            <div class="section section-first">Data siswa</div>
         </td>
-        <td class="foto-box">
+        <td class="foto-box" rowspan="2">
             @if ($fotoDataUri)
                 <img src="{{ $fotoDataUri }}" alt="Foto siswa">
             @else
@@ -135,17 +146,24 @@
             @endif
         </td>
     </tr>
-</table>
-
-<div class="section">Data siswa</div>
-<table class="rows">
-    @foreach ($identitasRows as [$label, $value])
-        <tr>
-            <td class="label">{{ strtoupper($label) }}</td>
-            <td class="colon">:</td>
-            <td class="value">{{ $dash($value) }}</td>
-        </tr>
-    @endforeach
+    <tr>
+        <td>
+            <table class="rows">
+                <tr>
+                    <td class="label">NAMA</td>
+                    <td class="colon">:</td>
+                    <td class="value">{{ $dash($siswa->nama) }}</td>
+                </tr>
+                @foreach ($identitasRows as [$label, $value])
+                    <tr>
+                        <td class="label">{{ strtoupper($label) }}</td>
+                        <td class="colon">:</td>
+                        <td class="value">{{ $dash($value) }}</td>
+                    </tr>
+                @endforeach
+            </table>
+        </td>
+    </tr>
 </table>
 
 <div class="section">Alamat siswa</div>
