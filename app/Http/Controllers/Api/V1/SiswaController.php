@@ -162,12 +162,20 @@ class SiswaController extends Controller
         }
 
         if ($validated['jenis'] === 'foto') {
+            $lama = $siswa->foto;
             $siswa->update(['foto' => $validated['object_key']]);
+            if ($lama && $lama !== $validated['object_key']) {
+                Storage::disk('r2')->delete($lama);
+            }
         } else {
+            $lama = $siswa->dokumenJenis($validated['jenis'])?->path;
             $siswa->dokumens()->updateOrCreate(
                 ['jenis' => $validated['jenis']],
                 ['path' => $validated['object_key']],
             );
+            if ($lama && $lama !== $validated['object_key']) {
+                Storage::disk('r2')->delete($lama);
+            }
         }
 
         return response()->json([

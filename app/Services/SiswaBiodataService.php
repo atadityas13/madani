@@ -9,6 +9,7 @@ use App\Support\Wilayah;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -58,11 +59,19 @@ class SiswaBiodataService
 
     public function hapusRelasi(Siswa $siswa, string $jenis, int $id): string
     {
-        match ($jenis) {
-            'beasiswa' => $siswa->beasiswas()->whereKey($id)->delete(),
-            'prestasi' => $siswa->prestasis()->whereKey($id)->delete(),
-            default => null,
-        };
+        if ($jenis === 'beasiswa') {
+            $item = $siswa->beasiswas()->whereKey($id)->first();
+            if ($item?->bukti_path) {
+                Storage::disk('r2')->delete($item->bukti_path);
+            }
+            $item?->delete();
+        } elseif ($jenis === 'prestasi') {
+            $item = $siswa->prestasis()->whereKey($id)->first();
+            if ($item?->sertifikat_path) {
+                Storage::disk('r2')->delete($item->sertifikat_path);
+            }
+            $item?->delete();
+        }
 
         return $jenis === 'prestasi' ? 'prestasi' : 'beasiswa';
     }
@@ -700,12 +709,17 @@ class SiswaBiodataService
         }
 
         $file = $request->file($field);
+        $lama = $siswa->dokumenJenis($jenis)?->path;
         $path = $file->store("dokumen/{$siswa->id}", 'r2');
 
         $siswa->dokumens()->updateOrCreate(
             ['jenis' => $jenis],
             ['path' => $path, 'nama_asli' => $file->getClientOriginalName()],
         );
+
+        if ($lama && $lama !== $path) {
+            Storage::disk('r2')->delete($lama);
+        }
     }
 
     public function simpanFoto(Request $request, Siswa $siswa): void
@@ -714,8 +728,13 @@ class SiswaBiodataService
             return;
         }
 
+        $lama = $siswa->foto;
         $path = $request->file('foto')->store("foto/{$siswa->id}", 'r2');
         $siswa->update(['foto' => $path]);
+
+        if ($lama && $lama !== $path) {
+            Storage::disk('r2')->delete($lama);
+        }
     }
 
     /**
