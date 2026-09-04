@@ -1267,7 +1267,7 @@ function bindPeranUser() {
         }
 
         const sync = () => {
-            field.hidden = select.value !== 'wali_kelas';
+            field.hidden = ! ['wali_kelas', 'guru'].includes(select.value);
         };
 
         select.addEventListener('change', sync);

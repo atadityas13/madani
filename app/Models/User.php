@@ -14,7 +14,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'username', 'email', 'password', 'is_aktif', 'gtk_id'])]
+#[Fillable(['name', 'username', 'email', 'password', 'must_change_password', 'is_aktif', 'gtk_id', 'foto'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -26,6 +26,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'must_change_password' => 'boolean',
             'is_aktif' => 'boolean',
         ];
     }
@@ -52,7 +53,7 @@ class User extends Authenticatable
 
     public function adalahWali(): bool
     {
-        return Peran::cocok($this, [Peran::WALI_KELAS]) && ! $this->bisaKelola();
+        return $this->hasRole(Peran::WALI_KELAS) && ! $this->bisaKelola();
     }
 
     public function peranUtama(): string
@@ -65,8 +66,12 @@ class User extends Authenticatable
             return Peran::ADMIN;
         }
 
-        if ($this->hasAnyRole([Peran::WALI_KELAS, 'guru'])) {
+        if ($this->hasRole(Peran::WALI_KELAS)) {
             return Peran::WALI_KELAS;
+        }
+
+        if ($this->hasRole(Peran::GURU)) {
+            return Peran::GURU;
         }
 
         return Peran::ADMIN;

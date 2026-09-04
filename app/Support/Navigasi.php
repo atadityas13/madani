@@ -65,6 +65,26 @@ class Navigasi
                 'match' => 'pengguna.*',
                 'roles' => [Peran::SUPERADMIN],
             ],
+            [
+                'label' => 'Aplikasi',
+                'icon' => 'bi-phone',
+                'match' => ['app-updates.*', 'pengumuman.*'],
+                'roles' => [Peran::SUPERADMIN, Peran::ADMIN],
+                'children' => [
+                    [
+                        'label' => 'Update Ta\'lim',
+                        'route' => 'app-updates.index',
+                        'match' => 'app-updates.*',
+                        'roles' => [Peran::SUPERADMIN, Peran::ADMIN],
+                    ],
+                    [
+                        'label' => 'Pengumuman',
+                        'route' => 'pengumuman.index',
+                        'match' => 'pengumuman.*',
+                        'roles' => [Peran::SUPERADMIN, Peran::ADMIN],
+                    ],
+                ],
+            ],
         ];
     }
 

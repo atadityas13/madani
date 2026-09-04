@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureGuruApi;
 use App\Http\Middleware\EnsureSiswaApi;
 use App\Http\Middleware\EnsureSiswaPasswordChanged;
 use Illuminate\Foundation\Application;
@@ -38,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => RoleOrPermissionMiddleware::class,
             'siswa.password' => EnsureSiswaPasswordChanged::class,
             'siswa.api' => EnsureSiswaApi::class,
+            'guru.api' => EnsureGuruApi::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

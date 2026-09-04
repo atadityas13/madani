@@ -44,11 +44,11 @@
             <x-emis-select name="role" :options="\App\Support\Peran::labels()" :value="$peranSaatIni" data-peran-user required />
             @error('role') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
         </div>
-        <div class="mb-3" data-gtk-field @hidden($peranSaatIni !== 'wali_kelas')>
-            <label class="form-label">GTK (wali kelas)</label>
+        <div class="mb-3" data-gtk-field @hidden(! in_array($peranSaatIni, \App\Support\Peran::butuhGtk(), true))>
+            <label class="form-label">GTK</label>
             <x-emis-select name="gtk_id" :options="$gtkOptions" :value="old('gtk_id', $user->gtk_id)" />
             @error('gtk_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
-            <div class="form-text">Pilih GTK yang menjadi wali kelas. Satu GTK hanya terhubung ke satu akun.</div>
+            <div class="form-text">Wajib untuk wali kelas / guru Ta'lim. Satu GTK hanya terhubung ke satu akun.</div>
         </div>
         <div class="form-check mb-4">
             <input class="form-check-input" type="checkbox" name="is_aktif" value="1" id="is_aktif" @checked(old('is_aktif', $user->is_aktif ?? true))>

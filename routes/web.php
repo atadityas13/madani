@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\AppUpdateController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GtkController;
 use App\Http\Controllers\KelembagaanController;
+use App\Http\Controllers\PengumumanController;
 use App\Http\Controllers\Portal\SiswaAuthController;
 use App\Http\Controllers\Portal\SiswaPortalController;
 use App\Http\Controllers\RombelController;
@@ -54,6 +56,12 @@ Route::middleware('auth')->group(function () {
             ->parameters(['tahun-ajaran' => 'tahunAjaran'])
             ->except(['show']);
         Route::resource('gtk', GtkController::class)->except(['show']);
+        Route::get('pengaturan/update-app', [AppUpdateController::class, 'index'])->name('app-updates.index');
+        Route::post('pengaturan/update-app', [AppUpdateController::class, 'store'])->name('app-updates.store');
+        Route::get('pengaturan/pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
+        Route::post('pengaturan/pengumuman', [PengumumanController::class, 'store'])->name('pengumuman.store');
+        Route::put('pengaturan/pengumuman/{pengumuman}', [PengumumanController::class, 'update'])->name('pengumuman.update');
+        Route::delete('pengaturan/pengumuman/{pengumuman}', [PengumumanController::class, 'destroy'])->name('pengumuman.destroy');
         Route::get('siswa/create', [SiswaController::class, 'create'])->name('siswa.create');
         Route::post('siswa', [SiswaController::class, 'store'])->name('siswa.store');
         Route::post('rombel/{rombel}/anggota', [RombelController::class, 'storeAnggota'])->name('rombel.anggota.store');
@@ -81,6 +89,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('pengguna', UserController::class)
             ->parameters(['pengguna' => 'user'])
             ->except(['show']);
+        Route::post('gtk/{gtk}/akun', [GtkController::class, 'buatAkun'])->name('gtk.akun.store');
+        Route::post('gtk/{gtk}/akun/reset-password', [GtkController::class, 'resetPassword'])->name('gtk.akun.reset');
     });
 
     Route::get('siswa', [SiswaController::class, 'index'])->name('siswa.index');

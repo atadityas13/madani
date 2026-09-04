@@ -128,11 +128,11 @@ class UserController extends Controller
 
         $data['is_aktif'] = $request->boolean('is_aktif');
 
-        if ($data['role'] === Peran::WALI_KELAS) {
+        if (in_array($data['role'], Peran::butuhGtk(), true)) {
             $request->validate([
                 'gtk_id' => ['required', 'exists:gtks,id'],
             ], [
-                'gtk_id.required' => 'Wali kelas harus terhubung ke data GTK.',
+                'gtk_id.required' => 'Peran ini harus terhubung ke data GTK.',
             ]);
         } else {
             $data['gtk_id'] = null;

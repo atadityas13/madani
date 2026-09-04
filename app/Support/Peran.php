@@ -12,6 +12,8 @@ class Peran
 
     public const WALI_KELAS = 'wali_kelas';
 
+    public const GURU = 'guru';
+
     /**
      * @return array<string, string>
      */
@@ -21,6 +23,7 @@ class Peran
             self::SUPERADMIN => 'Super admin',
             self::ADMIN => 'Admin',
             self::WALI_KELAS => 'Wali kelas',
+            self::GURU => 'Guru (Ta\'lim)',
         ];
     }
 
@@ -37,7 +40,17 @@ class Peran
      */
     public static function wali(): array
     {
-        return [self::WALI_KELAS, 'guru'];
+        return [self::WALI_KELAS, self::GURU];
+    }
+
+    /**
+     * Peran yang wajib terhubung ke GTK (akun Ta'lim / wali).
+     *
+     * @return list<string>
+     */
+    public static function butuhGtk(): array
+    {
+        return [self::WALI_KELAS, self::GURU];
     }
 
     /**
@@ -56,10 +69,6 @@ class Peran
 
             if ($role === self::ADMIN) {
                 array_push($dibolehkan, 'operator', 'kamad');
-            }
-
-            if ($role === self::WALI_KELAS) {
-                $dibolehkan[] = 'guru';
             }
         }
 
