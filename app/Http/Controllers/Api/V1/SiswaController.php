@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Siswa;
 use App\Services\PortofolioPdfService;
 use App\Services\SiswaBiodataService;
+use App\Support\KelengkapanSiswa;
 use App\Support\R2Url;
 use App\Support\SiswaPortalPayload;
 use Illuminate\Http\JsonResponse;
@@ -220,10 +221,18 @@ class SiswaController extends Controller
         ]);
     }
 
-    public function portofolio(Request $request, PortofolioPdfService $portofolio): Response
+    public function portofolio(Request $request, PortofolioPdfService $portofolio): Response|JsonResponse
     {
         /** @var Siswa $siswa */
         $siswa = $request->user();
+
+        $kelengkapan = KelengkapanSiswa::ringkasan($siswa);
+        if (! ($kelengkapan['wajib_semua_selesai'] ?? false)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lengkapi semua data wajib terlebih dahulu sebelum membuka portofolio.',
+            ], 422);
+        }
 
         return $portofolio->download($siswa);
     }

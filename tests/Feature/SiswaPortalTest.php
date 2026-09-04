@@ -690,19 +690,18 @@ class SiswaPortalTest extends TestCase
         $this->assertGreaterThan(1000, strlen($download->getContent()));
     }
 
-    public function test_siswa_api_can_download_own_portofolio_pdf(): void
+    public function test_siswa_api_cannot_download_portofolio_when_data_incomplete(): void
     {
         Storage::fake('r2');
         $this->seed();
         $siswa = $this->buatSiswa(['nis' => '2026002']);
         $token = $this->tokenSiswa($siswa);
 
-        $response = $this->withToken($token)
-            ->get('/api/v1/siswa/portofolio.pdf');
-
-        $response->assertOk();
-        $this->assertStringContainsString('application/pdf', (string) $response->headers->get('content-type'));
-        $this->assertGreaterThan(1000, strlen($response->getContent()));
+        $this->withToken($token)
+            ->get('/api/v1/siswa/portofolio.pdf')
+            ->assertStatus(422)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('message', 'Lengkapi semua data wajib terlebih dahulu sebelum membuka portofolio.');
     }
 
     public function test_portofolio_signed_verification_page_works(): void
