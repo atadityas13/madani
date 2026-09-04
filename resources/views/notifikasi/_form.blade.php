@@ -35,20 +35,16 @@
                 <input class="form-control js-judul" type="text" name="judul" maxlength="200" required
                     value="{{ old('judul', $item->judul ?? '') }}">
                 <div class="mt-1 d-flex flex-wrap gap-1">
-                    @foreach (['nama', 'nip', 'nisn', 'rombel'] as $key)
-                        <button type="button" class="btn btn-sm btn-outline-secondary js-ph" data-target=".js-judul"
-                            data-ph="{{ '{'.'{'.$key.'}'.'}' }}">{{ '{'.'{'.$key.'}'.'}' }}</button>
-                    @endforeach
+                    <button type="button" class="btn btn-sm btn-outline-secondary js-ph" data-target=".js-judul"
+                        data-ph="{{ '{'.'{'.'nama'.'}'.'}' }}">{{ '{'.'{'.'nama'.'}'.'}' }}</button>
                 </div>
             </div>
             <div class="col-12">
                 <label class="form-label">Isi</label>
                 <textarea class="form-control js-isi" name="isi" rows="5" maxlength="5000" required>{{ old('isi', $item->isi ?? '') }}</textarea>
                 <div class="mt-1 d-flex flex-wrap gap-1">
-                    @foreach (['nama', 'nip', 'nisn', 'rombel'] as $key)
-                        <button type="button" class="btn btn-sm btn-outline-secondary js-ph" data-target=".js-isi"
-                            data-ph="{{ '{'.'{'.$key.'}'.'}' }}">{{ '{'.'{'.$key.'}'.'}' }}</button>
-                    @endforeach
+                    <button type="button" class="btn btn-sm btn-outline-secondary js-ph" data-target=".js-isi"
+                        data-ph="{{ '{'.'{'.'nama'.'}'.'}' }}">{{ '{'.'{'.'nama'.'}'.'}' }}</button>
                 </div>
             </div>
             <div class="col-md-6">
@@ -214,11 +210,7 @@
     const renderPreview = (tpl) => {
         const o = '{' + '{';
         const c = '}' + '}';
-        return tpl
-            .replaceAll(o + 'nama' + c, 'Budi Santoso')
-            .replaceAll(o + 'nip' + c, '198001012005011001')
-            .replaceAll(o + 'nisn' + c, '0123456789')
-            .replaceAll(o + 'rombel' + c, 'VII A');
+        return tpl.replaceAll(o + 'nama' + c, 'Budi Santoso');
     };
     const syncPreview = () => {
         form.querySelector('.js-preview-title').textContent = renderPreview(form.querySelector('.js-judul')?.value || 'Judul');

@@ -15,7 +15,7 @@
 <div class="d-flex justify-content-between align-items-center gap-3 mb-3 flex-wrap">
     <p class="text-secondary mb-0">
         Notifikasi → lonceng. Pengumuman → lonceng + section. Pengingat → section.
-        Placeholder: <code>@{{nama}}</code>, <code>@{{nip}}</code>, <code>@{{nisn}}</code>, <code>@{{rombel}}</code>.
+        Placeholder: <code>@{{nama}}</code> (diganti nama penerima saat dikirim).
     </p>
     <div class="d-flex gap-2">
         <a href="{{ route('notifikasi.media.index') }}" class="btn btn-outline-secondary">Pustaka media</a>
