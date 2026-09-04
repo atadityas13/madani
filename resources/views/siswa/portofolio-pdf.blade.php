@@ -200,8 +200,6 @@
             <th>Rombel</th>
             <th>Status</th>
             <th>Keterangan</th>
-            <th>NSM</th>
-            <th>NPSN</th>
         </tr>
     </thead>
     <tbody>
@@ -212,11 +210,9 @@
                 <td>{{ $dash($row['rombel'] ?? null) }}</td>
                 <td>{{ $dash($row['status'] ?? null) }}</td>
                 <td>{{ $dash($row['keterangan'] ?? null) }}</td>
-                <td>{{ $dash($row['nsm'] ?? null) }}</td>
-                <td>{{ $dash($row['npsn'] ?? null) }}</td>
             </tr>
         @empty
-            <tr><td colspan="7">-</td></tr>
+            <tr><td colspan="5">-</td></tr>
         @endforelse
     </tbody>
 </table>

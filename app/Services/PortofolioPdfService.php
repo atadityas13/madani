@@ -73,7 +73,7 @@ class PortofolioPdfService
             'ayahRows' => $this->ortuRows($siswa->ayah, 'ayah'),
             'ibuRows' => $this->ortuRows($siswa->ibu, 'ibu'),
             'waliRows' => $this->ortuRows($siswa->wali, 'wali'),
-            'aktivitas' => $this->aktivitasRows($siswa, $madrasah),
+            'aktivitas' => $this->aktivitasRows($siswa),
             'beasiswas' => $siswa->beasiswas,
             'prestasis' => $siswa->prestasis,
         ];
@@ -179,27 +179,57 @@ class PortofolioPdfService
     /**
      * @return list<array<string, string|null>>
      */
-    private function aktivitasRows(Siswa $siswa, Madrasah $madrasah): array
+    private function aktivitasRows(Siswa $siswa): array
     {
         $masuk = $siswa->dataMasukAkademik();
-        $keterangan = $masuk['status'] ?? null;
+        $masukKeterangan = $masuk['status'] ?? 'Baru';
         if (($masuk['status'] ?? null) === 'Pindahan' && filled($masuk['nama_sekolah_asal'] ?? null)) {
-            $keterangan = 'Pindahan — '.$masuk['nama_sekolah_asal'];
+            $masukKeterangan = 'Pindahan — '.$masuk['nama_sekolah_asal'];
+        } elseif (($masuk['status'] ?? null) === 'Baru' && filled($masuk['nama_sekolah_asal'] ?? null)) {
+            $masukKeterangan = 'Baru — '.$masuk['nama_sekolah_asal'];
         }
 
-        return $siswa->rombels
-            ->sortByDesc(fn ($rombel) => $rombel->tahunAjaran?->tanggal_mulai?->format('Ymd') ?? '0')
-            ->values()
-            ->map(fn ($rombel) => [
+        // Chronological (oldest first) to derive naik kelas from the previous record.
+        $chronological = $siswa->rombels
+            ->sortBy(fn ($rombel) => sprintf(
+                '%s-%02d-%010d',
+                $rombel->tahunAjaran?->tanggal_mulai?->format('Ymd') ?? '00000000',
+                (int) ($rombel->tingkat ?? 0),
+                (int) $rombel->id,
+            ))
+            ->values();
+
+        $rows = $chronological->map(function ($rombel, int $index) use ($chronological, $masukKeterangan) {
+            if ($index === 0) {
+                $keterangan = $masukKeterangan;
+            } else {
+                $prev = $chronological[$index - 1];
+                $prevTingkat = $prev->tingkat;
+                $currTingkat = $rombel->tingkat;
+                $prevLabel = $prevTingkat !== null && $prevTingkat !== ''
+                    ? (string) $prevTingkat
+                    : ($prev->nama ?: '-');
+
+                if ($prevTingkat !== null && $currTingkat !== null && (int) $currTingkat === (int) $prevTingkat) {
+                    $keterangan = 'Mengulang — kelas '.$prevLabel;
+                } elseif ($prevTingkat !== null && $currTingkat !== null && (int) $currTingkat < (int) $prevTingkat) {
+                    $keterangan = 'Pindah rombel — dari kelas '.$prevLabel;
+                } else {
+                    $keterangan = 'Naik kelas — kelas '.$prevLabel;
+                }
+            }
+
+            return [
                 'tahun_ajaran' => $rombel->tahunAjaran?->label(),
                 'tingkat' => $rombel->tingkat !== null ? 'Kelas '.$rombel->tingkat : null,
                 'rombel' => $rombel->nama,
-                'status' => $rombel->pivot->status,
+                'status' => $rombel->pivot->status === 'aktif' ? 'Aktif' : 'Nonaktif',
                 'keterangan' => $keterangan,
-                'nsm' => $madrasah->nsm,
-                'npsn' => $madrasah->npsn,
-            ])
-            ->all();
+            ];
+        });
+
+        // Newest first for display (matches riwayat akademik UI).
+        return $rows->reverse()->values()->all();
     }
 
     private function formatAlamat(OrangTua|SiswaPeriodik|null $record): ?string

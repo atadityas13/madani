@@ -2,8 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Rombel;
 use App\Models\Siswa;
+use App\Models\TahunAjaran;
 use App\Models\User;
+use App\Services\PortofolioPdfService;
 use App\Support\SiswaPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -721,6 +724,46 @@ class SiswaPortalTest extends TestCase
 
         $this->get(route('portofolio.cek', $siswa))
             ->assertForbidden();
+    }
+
+    public function test_portofolio_aktivitas_keterangan_follows_rombel_progression(): void
+    {
+        $this->seed();
+        $siswa = $this->buatSiswa(['nis' => '2026004']);
+
+        $tahunLama = TahunAjaran::query()->create([
+            'nama' => '2024/2025',
+            'tanggal_mulai' => '2024-07-01',
+            'tanggal_selesai' => '2025-06-30',
+            'is_aktif' => false,
+            'status' => TahunAjaran::STATUS_ARSIP,
+        ]);
+        $tahunBaru = TahunAjaran::aktif();
+        $this->assertNotNull($tahunBaru);
+
+        $rombel7 = Rombel::query()->create([
+            'tahun_ajaran_id' => $tahunLama->id,
+            'tingkat' => 7,
+            'nama' => 'A',
+        ]);
+        $rombel8 = Rombel::query()->create([
+            'tahun_ajaran_id' => $tahunBaru->id,
+            'tingkat' => 8,
+            'nama' => 'B',
+        ]);
+
+        $siswa->rombels()->attach([
+            $rombel7->id => ['status' => 'nonaktif'],
+            $rombel8->id => ['status' => 'aktif'],
+        ]);
+
+        $aktivitas = app(PortofolioPdfService::class)->viewData($siswa->fresh())['aktivitas'];
+
+        $this->assertCount(2, $aktivitas);
+        $this->assertSame('Naik kelas — kelas 7', $aktivitas[0]['keterangan']);
+        $this->assertSame('Kelas 8', $aktivitas[0]['tingkat']);
+        $this->assertSame('Baru', $aktivitas[1]['keterangan']);
+        $this->assertSame('Kelas 7', $aktivitas[1]['tingkat']);
     }
 
     private function tokenSiswa(Siswa $siswa): string
