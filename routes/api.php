@@ -16,18 +16,19 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::get('app-update/{platform}', [AppUpdateController::class, 'show']);
-    Route::get('pengumuman', [PengumumanController::class, 'index']);
     Route::post('siswa/login', [SiswaAuthController::class, 'login'])->middleware('throttle:5,1');
     Route::post('guru/login', [GuruAuthController::class, 'login'])->middleware('throttle:5,1');
     Route::post('token/introspect', TokenIntrospectController::class)->middleware('throttle:60,1');
 
     Route::middleware(['auth:sanctum'])->group(function () {
+        Route::get('pengumuman', [PengumumanController::class, 'index']);
         Route::post('device-token', [DeviceTokenController::class, 'store']);
         Route::delete('device-token', [DeviceTokenController::class, 'destroy']);
         Route::get('notifikasi', [NotifikasiController::class, 'index']);
         Route::post('notifikasi/read-all', [NotifikasiController::class, 'markAllRead']);
         Route::post('notifikasi/clear', [NotifikasiController::class, 'clear']);
         Route::post('notifikasi/{notifikasi}/read', [NotifikasiController::class, 'markRead']);
+        Route::post('notifikasi/{notifikasi}/dismiss', [NotifikasiController::class, 'dismiss']);
     });
 
     Route::middleware(['auth:sanctum', 'guru.api'])->prefix('guru')->group(function () {

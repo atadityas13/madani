@@ -181,8 +181,86 @@ class NotifikasiApiTest extends TestCase
 
         $this->getJson('/api/v1/notifikasi?jenis=pengumuman')
             ->assertOk()
-            ->assertJsonCount(1, 'data')
-            ->assertJsonPath('data.0.is_read', true);
+            ->assertJsonCount(0, 'data');
+    }
+
+    public function test_expired_periode_pengingat_is_hidden(): void
+    {
+        $guru = $this->guruUser();
+        Notifikasi::query()->create([
+            'judul' => 'Sudah lewat',
+            'isi' => 'A',
+            'jenis' => Notifikasi::JENIS_PENGINGAT,
+            'audience' => Notifikasi::AUDIENCE_SEMUA_GURU,
+            'use_periode' => true,
+            'starts_at' => now()->subDays(5),
+            'ends_at' => now()->subDay(),
+            'is_active' => true,
+            'published_at' => now()->subDays(5),
+        ]);
+
+        Sanctum::actingAs($guru);
+
+        $this->getJson('/api/v1/notifikasi?jenis=pengingat')
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+    }
+
+    public function test_dismiss_pengingat_hides_item(): void
+    {
+        $guru = $this->guruUser();
+        $item = Notifikasi::query()->create([
+            'judul' => 'Tutup saya',
+            'isi' => 'A',
+            'jenis' => Notifikasi::JENIS_PENGINGAT,
+            'audience' => Notifikasi::AUDIENCE_SEMUA_GURU,
+            'use_periode' => false,
+            'is_active' => true,
+            'published_at' => now(),
+        ]);
+
+        Sanctum::actingAs($guru);
+
+        $this->postJson("/api/v1/notifikasi/{$item->id}/dismiss")
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->getJson('/api/v1/notifikasi?jenis=pengingat')
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+    }
+
+    public function test_admin_without_guru_role_cannot_see_semua_guru(): void
+    {
+        Role::findOrCreate(Peran::ADMIN);
+        Role::findOrCreate(Peran::GURU);
+        $gtk = Gtk::query()->create([
+            'nama' => 'Admin',
+            'nip' => '199001012000011001',
+            'jenis' => 'guru',
+            'status' => 'aktif',
+        ]);
+        $admin = User::factory()->create([
+            'username' => '199001012000011001',
+            'gtk_id' => $gtk->id,
+            'is_aktif' => true,
+        ]);
+        $admin->syncRoles([Peran::ADMIN]);
+
+        Notifikasi::query()->create([
+            'judul' => 'Hanya guru',
+            'isi' => 'A',
+            'jenis' => Notifikasi::JENIS_NOTIFIKASI,
+            'audience' => Notifikasi::AUDIENCE_SEMUA_GURU,
+            'is_active' => true,
+            'published_at' => now(),
+        ]);
+
+        Sanctum::actingAs($admin);
+
+        $this->getJson('/api/v1/notifikasi')
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
     }
 
     public function test_judul_isi_are_personalized_for_reader(): void

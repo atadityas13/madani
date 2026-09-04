@@ -71,6 +71,7 @@ class GuruAuthController extends Controller
         return response()->json([
             'success' => true,
             'user' => GuruApiPayload::user($user->load('gtk')),
+            'requires_password_change' => (bool) $user->must_change_password,
         ]);
     }
 

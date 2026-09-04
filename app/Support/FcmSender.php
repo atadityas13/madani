@@ -82,22 +82,32 @@ class FcmSender
 
         $androidPriority = ($payload['priority'] ?? 'normal') === 'high' ? 'high' : 'normal';
         $channelId = $payload['android_channel_id'] ?? 'madani_push_default';
+        $isAlarm = str_contains($channelId, 'alarm');
+
+        $data = array_map('strval', $payload['data'] ?? []);
+        $data['title'] = (string) $payload['title'];
+        $data['body'] = (string) $payload['body'];
+        $data['message'] = (string) $payload['body'];
 
         $message = [
             'message' => [
                 'token' => $token,
-                'notification' => $notification,
-                'data' => array_map('strval', $payload['data'] ?? []),
+                'data' => $data,
                 'android' => [
-                    'priority' => $androidPriority,
-                    'notification' => [
-                        'channel_id' => $channelId,
-                        'sound' => 'default',
-                        'default_vibrate_timings' => true,
-                    ],
+                    'priority' => $isAlarm ? 'high' : $androidPriority,
                 ],
             ],
         ];
+
+        // Alarm: data-only agar onMessageReceived + MediaPlayer USAGE_ALARM jalan di background.
+        // Default: sertakan notification tray sistem (tanpa sound agar channel app yang mengatur).
+        if (! $isAlarm) {
+            $message['message']['notification'] = $notification;
+            $message['message']['android']['notification'] = [
+                'channel_id' => $channelId,
+                'default_vibrate_timings' => true,
+            ];
+        }
 
         $response = Http::timeout(20)
             ->withToken($accessToken)

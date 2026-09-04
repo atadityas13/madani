@@ -62,6 +62,15 @@ class SiswaAuthController extends Controller
         /** @var Siswa $siswa */
         $siswa = $request->user();
 
+        if (! $siswa->bisaMasuk()) {
+            $siswa->currentAccessToken()?->delete();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Akun siswa ini tidak aktif. Hubungi madrasah.',
+            ], 403);
+        }
+
         return response()->json([
             'success' => true,
             'must_change_password' => (bool) $siswa->must_change_password,

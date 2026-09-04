@@ -67,16 +67,16 @@ class GuruApiPayload
     private static function fotoUrl(User $user, ?Gtk $gtk): ?string
     {
         if (filled($user->foto)) {
-            $foto = (string) $user->foto;
-            if (str_starts_with($foto, 'http://') || str_starts_with($foto, 'https://')) {
-                return $foto;
-            }
-
-            return R2Url::temporary($foto);
+            return R2Url::public((string) $user->foto);
         }
 
         if (filled($gtk?->foto_url)) {
-            return $gtk->foto_url;
+            $fotoUrl = (string) $gtk->foto_url;
+            if (str_starts_with($fotoUrl, 'http://') || str_starts_with($fotoUrl, 'https://')) {
+                return $fotoUrl;
+            }
+
+            return R2Url::public($fotoUrl);
         }
 
         return null;

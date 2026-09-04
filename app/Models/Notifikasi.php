@@ -97,6 +97,13 @@ class Notifikasi extends Model
                 $q->whereNull('scheduled_at')
                     ->orWhereNotNull('sent_at')
                     ->orWhere('scheduled_at', '<=', now());
+            })
+            ->where(function (Builder $q): void {
+                // Pengingat berperiode yang sudah lewat tidak ditampilkan.
+                $q->where('jenis', '!=', self::JENIS_PENGINGAT)
+                    ->orWhere('use_periode', false)
+                    ->orWhereNull('ends_at')
+                    ->orWhere('ends_at', '>=', now());
             });
     }
 
@@ -189,16 +196,23 @@ class Notifikasi extends Model
 
     public function isVisibleToGuru(User $user): bool
     {
+        if ($user->gtk_id === null || ! $user->is_aktif || ! $user->hasRole(Peran::GURU)) {
+            return false;
+        }
+
         return match ($this->audience) {
             self::AUDIENCE_SEMUA_GURU => true,
-            self::AUDIENCE_GTK => $user->gtk_id !== null
-                && in_array((int) $user->gtk_id, array_map('intval', $this->audience_ids ?? []), true),
+            self::AUDIENCE_GTK => in_array((int) $user->gtk_id, array_map('intval', $this->audience_ids ?? []), true),
             default => false,
         };
     }
 
     public function isVisibleToSiswa(Siswa $siswa): bool
     {
+        if (! $siswa->bisaMasuk()) {
+            return false;
+        }
+
         return match ($this->audience) {
             self::AUDIENCE_SEMUA_SISWA => true,
             self::AUDIENCE_SISWA => in_array((string) $siswa->id, array_map('strval', $this->audience_ids ?? []), true),

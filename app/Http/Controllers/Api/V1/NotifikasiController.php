@@ -46,13 +46,12 @@ class NotifikasiController extends Controller
             ->get()
             ->keyBy('notifikasi_id');
 
-        if ($kanal === 'lonceng') {
-            $items = $items->reject(function (Notifikasi $item) use ($reads) {
-                $read = $reads->get($item->id);
+        // cleared_at menyembunyikan dari semua permukaan app (lonceng + section beranda).
+        $items = $items->reject(function (Notifikasi $item) use ($reads) {
+            $read = $reads->get($item->id);
 
-                return $read !== null && $read->cleared_at !== null;
-            })->values();
-        }
+            return $read !== null && $read->cleared_at !== null;
+        })->values();
 
         $data = $items->map(function (Notifikasi $item) use ($reads, $reader) {
             $at = $item->published_at ?? $item->created_at;
@@ -93,11 +92,12 @@ class NotifikasiController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 401);
         }
 
+        $published = Notifikasi::query()->published()->whereKey($notifikasi->id)->exists();
         $visible = $reader instanceof User
             ? $notifikasi->isVisibleToGuru($reader)
             : $notifikasi->isVisibleToSiswa($reader);
 
-        if (! $notifikasi->is_active || ! $visible) {
+        if (! $published || ! $visible) {
             return response()->json(['success' => false, 'message' => 'Notifikasi tidak ditemukan.'], 404);
         }
 
@@ -108,6 +108,48 @@ class NotifikasiController extends Controller
                 'reader_id' => (string) $reader->getKey(),
             ],
             ['read_at' => now()],
+        );
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Tutup item dari permukaan app (baca + clear). Dipakai dismiss pengingat.
+     */
+    public function dismiss(Request $request, Notifikasi $notifikasi): JsonResponse
+    {
+        $reader = $this->reader($request);
+        if ($reader === null) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 401);
+        }
+
+        $published = Notifikasi::query()->published()->whereKey($notifikasi->id)->exists();
+        $visible = $reader instanceof User
+            ? $notifikasi->isVisibleToGuru($reader)
+            : $notifikasi->isVisibleToSiswa($reader);
+
+        if (! $published || ! $visible) {
+            return response()->json(['success' => false, 'message' => 'Notifikasi tidak ditemukan.'], 404);
+        }
+
+        if (! $notifikasi->isDismissible()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pengingat berperiode tidak dapat ditutup.',
+            ], 422);
+        }
+
+        $now = now();
+        NotifikasiRead::query()->updateOrCreate(
+            [
+                'notifikasi_id' => $notifikasi->id,
+                'reader_type' => $reader::class,
+                'reader_id' => (string) $reader->getKey(),
+            ],
+            [
+                'read_at' => $now,
+                'cleared_at' => $now,
+            ],
         );
 
         return response()->json(['success' => true]);
@@ -174,11 +216,24 @@ class NotifikasiController extends Controller
             $query->whereIn('jenis', [Notifikasi::JENIS_NOTIFIKASI, Notifikasi::JENIS_PENGUMUMAN]);
         }
 
-        return $query->limit(200)->get()->filter(function (Notifikasi $item) use ($reader) {
+        $items = $query->limit(200)->get()->filter(function (Notifikasi $item) use ($reader) {
             return $reader instanceof User
                 ? $item->isVisibleToGuru($reader)
                 : $item->isVisibleToSiswa($reader);
-        })->pluck('id');
+        });
+
+        $reads = NotifikasiRead::query()
+            ->where('reader_type', $reader::class)
+            ->where('reader_id', (string) $reader->getKey())
+            ->whereIn('notifikasi_id', $items->pluck('id'))
+            ->get()
+            ->keyBy('notifikasi_id');
+
+        return $items->reject(function (Notifikasi $item) use ($reads) {
+            $read = $reads->get($item->id);
+
+            return $read !== null && $read->cleared_at !== null;
+        })->pluck('id')->values();
     }
 
     private function reader(Request $request): User|Siswa|null

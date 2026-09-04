@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Gtk;
 use App\Models\User;
 use App\Support\GuruApiPayload;
+use App\Support\R2Url;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -78,7 +79,7 @@ class GuruProfileController extends Controller
         $user->foto = $path;
         $user->save();
 
-        $user->gtk?->update(['foto_url' => Storage::disk('r2')->url($path)]);
+        $user->gtk?->update(['foto_url' => R2Url::public($path)]);
 
         return response()->json([
             'success' => true,
