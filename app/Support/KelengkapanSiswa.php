@@ -16,7 +16,7 @@ class KelengkapanSiswa
 
         $tabs = [
             ['id' => 'data-siswa', 'label' => 'Identitas', 'wajib' => true, 'selesai' => self::dataSiswa($siswa)],
-            ['id' => 'orang-tua', 'label' => 'Data orang tua', 'wajib' => true, 'selesai' => self::orangTua($siswa)],
+            ['id' => 'orang-tua', 'label' => 'Orang tua', 'wajib' => true, 'selesai' => self::orangTua($siswa)],
             ['id' => 'alamat', 'label' => 'Data alamat', 'wajib' => true, 'selesai' => self::alamat($siswa)],
             ['id' => 'rekam-didik', 'label' => 'Rekam didik', 'wajib' => true, 'selesai' => self::rekamDidik($siswa)],
             ['id' => 'aktivitas', 'label' => 'Riwayat', 'wajib' => false, 'selesai' => self::aktivitas($siswa)],
