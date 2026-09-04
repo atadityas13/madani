@@ -63,12 +63,12 @@
     <div class="col-md-6">
         <label class="form-label">Mulai (periode)</label>
         <input class="form-control" type="datetime-local" name="starts_at"
-            value="{{ old('starts_at', optional($item->starts_at ?? null)?->timezone('Asia/Jakarta')->format('Y-m-d\\TH:i')) }}">
+            value="{{ old('starts_at', $item?->starts_at?->timezone('Asia/Jakarta')->format('Y-m-d\\TH:i')) }}">
     </div>
     <div class="col-md-6">
         <label class="form-label">Selesai (periode)</label>
         <input class="form-control" type="datetime-local" name="ends_at"
-            value="{{ old('ends_at', optional($item->ends_at ?? null)?->timezone('Asia/Jakarta')->format('Y-m-d\\TH:i')) }}">
+            value="{{ old('ends_at', $item?->ends_at?->timezone('Asia/Jakarta')->format('Y-m-d\\TH:i')) }}">
     </div>
 </div>
 
