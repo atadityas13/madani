@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Perluas GTK untuk guru + tendik (field bersama + meta khusus).
- * Data Madani yang sudah ada tetap; merge Simpatisans by NIP di command terpisah.
  */
 return new class extends Migration
 {
