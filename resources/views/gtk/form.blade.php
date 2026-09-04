@@ -51,7 +51,7 @@
             <div class="col-md-6">
                 <label class="form-label">NIP / NIK</label>
                 <input class="form-control" name="nip" value="{{ old('nip', $gtk->nip) }}">
-                <div class="form-text">Kunci merge dengan Simpatisans (NIP).</div>
+                <div class="form-text">Dipakai sebagai username akun Ta'lim.</div>
             </div>
             <div class="col-md-6">
                 <label class="form-label">NUPTK</label>

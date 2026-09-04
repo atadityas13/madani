@@ -30,7 +30,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'jenis',
     'status',
     'meta',
-    'simpatisans_guru_id',
 ])]
 class Gtk extends Model
 {

@@ -64,25 +64,6 @@ return [
             ]) : [],
         ],
 
-        /*
-         * Opsional: untuk `php artisan madani:merge-gtk-from-simpatisans`
-         * Isi SIMPATISANS_DB_* di .env production saat merge by NIP.
-         */
-        'simpatisans' => [
-            'driver' => env('SIMPATISANS_DB_CONNECTION', 'mysql'),
-            'host' => env('SIMPATISANS_DB_HOST', env('DB_HOST', '127.0.0.1')),
-            'port' => env('SIMPATISANS_DB_PORT', env('DB_PORT', '3306')),
-            'database' => env('SIMPATISANS_DB_DATABASE', 'simpatisans'),
-            'username' => env('SIMPATISANS_DB_USERNAME', env('DB_USERNAME', 'root')),
-            'password' => env('SIMPATISANS_DB_PASSWORD', ''),
-            'charset' => env('DB_CHARSET', 'utf8mb4'),
-            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
-            'prefix' => '',
-            'prefix_indexes' => true,
-            'strict' => true,
-            'engine' => null,
-        ],
-
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),

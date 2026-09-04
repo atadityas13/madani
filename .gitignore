@@ -21,6 +21,17 @@
 /storage/pail
 /vendor
 _ide_helper.php
+.phpstorm.meta.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Local / test DB artifacts (also covered by database/.gitignore)
+/database/*.sqlite
+/database/*.sqlite-*
+
+# One-off export dumps occasionally left in project root
+/*.json.bak
+/gurus.json
+/users.json
+/export-*.json

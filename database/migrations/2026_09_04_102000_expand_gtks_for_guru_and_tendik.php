@@ -62,9 +62,6 @@ return new class extends Migration
                 // Field khusus per jenis (guru: sertifikasi/mapel; tendik: unit kerja, dll.)
                 $table->json('meta')->nullable()->after('foto_url');
             }
-            if (! Schema::hasColumn('gtks', 'simpatisans_guru_id')) {
-                $table->unsignedBigInteger('simpatisans_guru_id')->nullable()->after('meta')->index();
-            }
         });
     }
 
@@ -88,7 +85,6 @@ return new class extends Migration
                 'duk',
                 'foto_url',
                 'meta',
-                'simpatisans_guru_id',
             ];
 
             foreach ($columns as $column) {
