@@ -36,8 +36,8 @@
                     value="{{ old('judul', $item->judul ?? '') }}">
                 <div class="mt-1 d-flex flex-wrap gap-1">
                     @foreach (['nama', 'nip', 'nisn', 'rombel'] as $key)
-                        @php($ph = '{{'.$key.'}}')
-                        <button type="button" class="btn btn-sm btn-outline-secondary js-ph" data-target=".js-judul" data-ph="{{ $ph }}">{{ $ph }}</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary js-ph" data-target=".js-judul"
+                            data-ph="{{ '{'.'{'.$key.'}'.'}' }}">{{ '{'.'{'.$key.'}'.'}' }}</button>
                     @endforeach
                 </div>
             </div>
@@ -46,8 +46,8 @@
                 <textarea class="form-control js-isi" name="isi" rows="5" maxlength="5000" required>{{ old('isi', $item->isi ?? '') }}</textarea>
                 <div class="mt-1 d-flex flex-wrap gap-1">
                     @foreach (['nama', 'nip', 'nisn', 'rombel'] as $key)
-                        @php($ph = '{{'.$key.'}}')
-                        <button type="button" class="btn btn-sm btn-outline-secondary js-ph" data-target=".js-isi" data-ph="{{ $ph }}">{{ $ph }}</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary js-ph" data-target=".js-isi"
+                            data-ph="{{ '{'.'{'.$key.'}'.'}' }}">{{ '{'.'{'.$key.'}'.'}' }}</button>
                     @endforeach
                 </div>
             </div>
