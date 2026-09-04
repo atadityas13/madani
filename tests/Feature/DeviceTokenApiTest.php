@@ -57,4 +57,36 @@ class DeviceTokenApiTest extends TestCase
             'fcm_token' => 'token-abc-123',
         ]);
     }
+
+    public function test_device_token_rebinds_when_another_account_registers_same_token(): void
+    {
+        $guruA = $this->guruUser();
+        $gtkB = Gtk::query()->create([
+            'nama' => 'Ani',
+            'nip' => '198101012006012002',
+            'jenis' => 'guru',
+            'status' => 'aktif',
+        ]);
+        $guruB = User::factory()->create([
+            'username' => '198101012006012002',
+            'gtk_id' => $gtkB->id,
+            'is_aktif' => true,
+        ]);
+        $guruB->syncRoles([Peran::GURU]);
+
+        Sanctum::actingAs($guruA);
+        $this->postJson('/api/v1/device-token', ['fcm_token' => 'shared-fcm'])->assertOk();
+
+        Sanctum::actingAs($guruB);
+        $this->postJson('/api/v1/device-token', ['fcm_token' => 'shared-fcm'])->assertOk();
+
+        $this->assertDatabaseMissing('device_tokens', [
+            'tokenable_id' => (string) $guruA->id,
+            'fcm_token' => 'shared-fcm',
+        ]);
+        $this->assertDatabaseHas('device_tokens', [
+            'tokenable_id' => (string) $guruB->id,
+            'fcm_token' => 'shared-fcm',
+        ]);
+    }
 }

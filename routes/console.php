@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('r2:cleanup')->monthlyOn(1, '02:00');
+Schedule::command('notifikasi:dispatch-scheduled')->everyMinute()->withoutOverlapping(5);

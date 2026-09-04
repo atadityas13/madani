@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GtkController;
 use App\Http\Controllers\KelembagaanController;
 use App\Http\Controllers\NotifikasiController;
+use App\Http\Controllers\NotifMediaController;
 use App\Http\Controllers\Portal\SiswaAuthController;
 use App\Http\Controllers\Portal\SiswaPortalController;
 use App\Http\Controllers\RombelController;
@@ -60,6 +61,9 @@ Route::middleware('auth')->group(function () {
         Route::get('pengaturan/update-app', [AppUpdateController::class, 'index'])->name('app-updates.index');
         Route::post('pengaturan/update-app', [AppUpdateController::class, 'store'])->name('app-updates.store');
         Route::get('pengaturan/notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi.index');
+        Route::get('pengaturan/notifikasi/media', [NotifMediaController::class, 'index'])->name('notifikasi.media.index');
+        Route::post('pengaturan/notifikasi/media', [NotifMediaController::class, 'store'])->name('notifikasi.media.store');
+        Route::delete('pengaturan/notifikasi/media/{media}', [NotifMediaController::class, 'destroy'])->name('notifikasi.media.destroy');
         Route::post('pengaturan/notifikasi', [NotifikasiController::class, 'store'])->name('notifikasi.store');
         Route::put('pengaturan/notifikasi/{notifikasi}', [NotifikasiController::class, 'update'])->name('notifikasi.update');
         Route::delete('pengaturan/notifikasi/{notifikasi}', [NotifikasiController::class, 'destroy'])->name('notifikasi.destroy');

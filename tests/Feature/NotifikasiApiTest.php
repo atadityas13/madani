@@ -102,4 +102,136 @@ class NotifikasiApiTest extends TestCase
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.judul', 'Pengumuman');
     }
+
+    public function test_lonceng_kanal_excludes_pengingat(): void
+    {
+        $guru = $this->guruUser();
+        Notifikasi::query()->create([
+            'judul' => 'Push lonceng',
+            'isi' => 'A',
+            'jenis' => Notifikasi::JENIS_NOTIFIKASI,
+            'audience' => Notifikasi::AUDIENCE_SEMUA_GURU,
+            'is_active' => true,
+            'published_at' => now(),
+        ]);
+        Notifikasi::query()->create([
+            'judul' => 'Section saja',
+            'isi' => 'B',
+            'jenis' => Notifikasi::JENIS_PENGINGAT,
+            'audience' => Notifikasi::AUDIENCE_SEMUA_GURU,
+            'is_active' => true,
+            'published_at' => now(),
+        ]);
+
+        Sanctum::actingAs($guru);
+
+        $this->getJson('/api/v1/notifikasi?kanal=lonceng')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.judul', 'Push lonceng')
+            ->assertJsonPath('data.0.dismissible', true);
+    }
+
+    public function test_pengingat_periode_is_not_dismissible(): void
+    {
+        $guru = $this->guruUser();
+        Notifikasi::query()->create([
+            'judul' => 'Periode',
+            'isi' => 'Wajib',
+            'jenis' => Notifikasi::JENIS_PENGINGAT,
+            'audience' => Notifikasi::AUDIENCE_SEMUA_GURU,
+            'use_periode' => true,
+            'starts_at' => now()->subDay(),
+            'ends_at' => now()->addDays(3),
+            'is_active' => true,
+            'published_at' => now(),
+        ]);
+
+        Sanctum::actingAs($guru);
+
+        $this->getJson('/api/v1/notifikasi?jenis=pengingat')
+            ->assertOk()
+            ->assertJsonPath('data.0.use_periode', true)
+            ->assertJsonPath('data.0.dismissible', false);
+    }
+
+    public function test_clear_hides_lonceng_items(): void
+    {
+        $guru = $this->guruUser();
+        Notifikasi::query()->create([
+            'judul' => 'Bersihkan saya',
+            'isi' => 'A',
+            'jenis' => Notifikasi::JENIS_PENGUMUMAN,
+            'audience' => Notifikasi::AUDIENCE_SEMUA_GURU,
+            'is_active' => true,
+            'published_at' => now(),
+        ]);
+
+        Sanctum::actingAs($guru);
+
+        $this->postJson('/api/v1/notifikasi/clear?kanal=lonceng')
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('cleared', 1);
+
+        $this->getJson('/api/v1/notifikasi?kanal=lonceng')
+            ->assertOk()
+            ->assertJsonCount(0, 'data')
+            ->assertJsonPath('unread_count', 0);
+
+        $this->getJson('/api/v1/notifikasi?jenis=pengumuman')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.is_read', true);
+    }
+
+    public function test_judul_isi_are_personalized_for_reader(): void
+    {
+        $guru = $this->guruUser();
+        Notifikasi::query()->create([
+            'judul' => 'Halo {{nama}}',
+            'isi' => 'NIP Anda {{nip}}',
+            'jenis' => Notifikasi::JENIS_NOTIFIKASI,
+            'audience' => Notifikasi::AUDIENCE_SEMUA_GURU,
+            'audio_url' => 'https://example.com/a.mp3',
+            'sound_key' => Notifikasi::SOUND_URGENT,
+            'priority' => Notifikasi::PRIORITY_HIGH,
+            'deep_link' => 'calendar',
+            'is_active' => true,
+            'published_at' => now(),
+            'sent_at' => now(),
+        ]);
+
+        Sanctum::actingAs($guru);
+
+        $this->getJson('/api/v1/notifikasi?kanal=lonceng')
+            ->assertOk()
+            ->assertJsonPath('data.0.judul', 'Halo Budi')
+            ->assertJsonPath('data.0.isi', 'NIP Anda 198001012005011001')
+            ->assertJsonPath('data.0.audio_url', 'https://example.com/a.mp3')
+            ->assertJsonPath('data.0.sound_key', 'urgent')
+            ->assertJsonPath('data.0.priority', 'high')
+            ->assertJsonPath('data.0.deep_link', 'calendar');
+    }
+
+    public function test_future_scheduled_notifikasi_hidden_until_due(): void
+    {
+        $guru = $this->guruUser();
+        Notifikasi::query()->create([
+            'judul' => 'Nanti',
+            'isi' => 'A',
+            'jenis' => Notifikasi::JENIS_NOTIFIKASI,
+            'audience' => Notifikasi::AUDIENCE_SEMUA_GURU,
+            'is_active' => true,
+            'published_at' => now(),
+            'scheduled_at' => now()->addHour(),
+            'sent_at' => null,
+        ]);
+
+        Sanctum::actingAs($guru);
+
+        $this->getJson('/api/v1/notifikasi?kanal=lonceng')
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+    }
 }

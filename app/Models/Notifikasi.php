@@ -13,22 +13,31 @@ use Illuminate\Support\Collection;
 #[Fillable([
     'judul',
     'isi',
+    'gambar_url',
+    'link',
+    'audio_url',
+    'sound_key',
+    'priority',
+    'deep_link',
     'jenis',
     'audience',
     'audience_ids',
+    'use_periode',
     'starts_at',
     'ends_at',
     'is_active',
     'published_at',
+    'scheduled_at',
+    'sent_at',
     'created_by',
 ])]
 class Notifikasi extends Model
 {
+    public const JENIS_NOTIFIKASI = 'notifikasi';
+
     public const JENIS_PENGUMUMAN = 'pengumuman';
 
     public const JENIS_PENGINGAT = 'pengingat';
-
-    public const JENIS_PERIODE = 'periode';
 
     public const AUDIENCE_SEMUA_GURU = 'semua_guru';
 
@@ -40,14 +49,27 @@ class Notifikasi extends Model
 
     public const AUDIENCE_ROMBEL = 'rombel';
 
+    public const PRIORITY_NORMAL = 'normal';
+
+    public const PRIORITY_HIGH = 'high';
+
+    public const SOUND_DEFAULT = 'default';
+
+    public const SOUND_SOFT = 'soft';
+
+    public const SOUND_URGENT = 'urgent';
+
     protected function casts(): array
     {
         return [
             'audience_ids' => 'array',
+            'use_periode' => 'boolean',
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'is_active' => 'boolean',
             'published_at' => 'datetime',
+            'scheduled_at' => 'datetime',
+            'sent_at' => 'datetime',
         ];
     }
 
@@ -67,7 +89,47 @@ class Notifikasi extends Model
             ->where('is_active', true)
             ->where(function (Builder $q): void {
                 $q->whereNull('published_at')->orWhere('published_at', '<=', now());
+            })
+            ->where(function (Builder $q): void {
+                $q->whereNull('scheduled_at')
+                    ->orWhereNotNull('sent_at')
+                    ->orWhere('scheduled_at', '<=', now());
             });
+    }
+
+    public function scopeDueForDispatch(Builder $query): Builder
+    {
+        return $query
+            ->where('is_active', true)
+            ->whereNull('sent_at')
+            ->whereNotNull('scheduled_at')
+            ->where('scheduled_at', '<=', now())
+            ->where(function (Builder $q): void {
+                $q->whereNull('published_at')->orWhere('published_at', '<=', now());
+            });
+    }
+
+    public function appearsInLonceng(): bool
+    {
+        return in_array($this->jenis, [self::JENIS_NOTIFIKASI, self::JENIS_PENGUMUMAN], true);
+    }
+
+    public function isDismissible(): bool
+    {
+        if ($this->jenis !== self::JENIS_PENGINGAT) {
+            return true;
+        }
+
+        return ! $this->use_periode;
+    }
+
+    public function androidChannelId(): string
+    {
+        return match ($this->sound_key) {
+            self::SOUND_SOFT => 'madani_push_soft',
+            self::SOUND_URGENT => 'madani_push_urgent',
+            default => 'madani_push_default',
+        };
     }
 
     /**
@@ -76,9 +138,9 @@ class Notifikasi extends Model
     public static function jenisOptions(): array
     {
         return [
+            self::JENIS_NOTIFIKASI => 'Notifikasi',
             self::JENIS_PENGUMUMAN => 'Pengumuman',
             self::JENIS_PENGINGAT => 'Pengingat',
-            self::JENIS_PERIODE => 'Periode pendataan',
         ];
     }
 
@@ -93,6 +155,44 @@ class Notifikasi extends Model
             self::AUDIENCE_GTK => 'Guru tertentu',
             self::AUDIENCE_SISWA => 'Siswa tertentu',
             self::AUDIENCE_ROMBEL => 'Rombel',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function soundOptions(): array
+    {
+        return [
+            self::SOUND_DEFAULT => 'Default',
+            self::SOUND_SOFT => 'Lembut',
+            self::SOUND_URGENT => 'Mendesak',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function priorityOptions(): array
+    {
+        return [
+            self::PRIORITY_NORMAL => 'Normal',
+            self::PRIORITY_HIGH => 'Tinggi',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function deepLinkOptions(): array
+    {
+        return [
+            'notifikasi' => 'Pusat notifikasi',
+            'home' => 'Beranda guru',
+            'calendar' => 'Kalender',
+            'pengumuman' => 'Pengumuman dibaca',
+            'siswa_home' => 'Beranda siswa',
+            'siswa_data' => 'Data siswa',
         ];
     }
 
@@ -130,46 +230,46 @@ class Notifikasi extends Model
     }
 
     /**
+     * @return Collection<int, User|Siswa>
+     */
+    public function resolveRecipients(): Collection
+    {
+        return match ($this->audience) {
+            self::AUDIENCE_SEMUA_GURU => User::role(Peran::GURU)->with('gtk')->get(),
+            self::AUDIENCE_SEMUA_SISWA => Siswa::query()
+                ->where('status_keaktifan', '!=', 'nonaktif')
+                ->get(),
+            self::AUDIENCE_GTK => User::query()
+                ->with('gtk')
+                ->whereIn('gtk_id', array_map('intval', $this->audience_ids ?? []))
+                ->get(),
+            self::AUDIENCE_SISWA => Siswa::query()
+                ->whereIn('id', array_map('strval', $this->audience_ids ?? []))
+                ->get(),
+            self::AUDIENCE_ROMBEL => Siswa::query()
+                ->whereHas('rombels', function (Builder $q): void {
+                    $q->whereIn('rombels.id', array_map('intval', $this->audience_ids ?? []))
+                        ->wherePivot('status', 'aktif');
+                })
+                ->get(),
+            default => collect(),
+        };
+    }
+
+    /**
      * @return Collection<int, string>
      */
     public function resolveFcmTokens(): Collection
     {
-        return match ($this->audience) {
-            self::AUDIENCE_SEMUA_GURU => DeviceToken::query()
-                ->where('tokenable_type', User::class)
-                ->whereIn('tokenable_id', User::role(Peran::GURU)->pluck('id')->map(fn ($id) => (string) $id))
-                ->pluck('fcm_token'),
-            self::AUDIENCE_SEMUA_SISWA => DeviceToken::query()
-                ->where('tokenable_type', Siswa::class)
-                ->pluck('fcm_token'),
-            self::AUDIENCE_GTK => DeviceToken::query()
-                ->where('tokenable_type', User::class)
-                ->whereIn(
-                    'tokenable_id',
-                    User::query()
-                        ->whereIn('gtk_id', array_map('intval', $this->audience_ids ?? []))
-                        ->pluck('id')
-                        ->map(fn ($id) => (string) $id),
-                )
-                ->pluck('fcm_token'),
-            self::AUDIENCE_SISWA => DeviceToken::query()
-                ->where('tokenable_type', Siswa::class)
-                ->whereIn('tokenable_id', array_map('strval', $this->audience_ids ?? []))
-                ->pluck('fcm_token'),
-            self::AUDIENCE_ROMBEL => DeviceToken::query()
-                ->where('tokenable_type', Siswa::class)
-                ->whereIn(
-                    'tokenable_id',
-                    Siswa::query()
-                        ->whereHas('rombels', function (Builder $q): void {
-                            $q->whereIn('rombels.id', array_map('intval', $this->audience_ids ?? []))
-                                ->wherePivot('status', 'aktif');
-                        })
-                        ->pluck('id')
-                        ->map(fn ($id) => (string) $id),
-                )
-                ->pluck('fcm_token'),
-            default => collect(),
-        };
+        return $this->resolveRecipients()
+            ->flatMap(function (User|Siswa $recipient) {
+                return DeviceToken::query()
+                    ->where('tokenable_type', $recipient::class)
+                    ->where('tokenable_id', (string) $recipient->getKey())
+                    ->pluck('fcm_token');
+            })
+            ->filter()
+            ->unique()
+            ->values();
     }
 }

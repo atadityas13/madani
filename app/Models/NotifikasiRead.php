@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
     'reader_type',
     'reader_id',
     'read_at',
+    'cleared_at',
 ])]
 class NotifikasiRead extends Model
 {
@@ -19,6 +20,7 @@ class NotifikasiRead extends Model
     {
         return [
             'read_at' => 'datetime',
+            'cleared_at' => 'datetime',
         ];
     }
 

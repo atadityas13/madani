@@ -12,7 +12,7 @@ class FcmSender
 {
     /**
      * @param  list<string>  $tokens
-     * @param  array{title: string, body: string, data?: array<string, string>}  $payload
+     * @param  array{title: string, body: string, data?: array<string, string>, priority?: string, android_channel_id?: string}  $payload
      * @return array{sent: int, failed: int}
      */
     public function sendToTokens(array $tokens, array $payload): array
@@ -61,7 +61,7 @@ class FcmSender
     }
 
     /**
-     * @param  array{title: string, body: string, data?: array<string, string>}  $payload
+     * @param  array{title: string, body: string, data?: array<string, string>, priority?: string, android_channel_id?: string}  $payload
      */
     private function sendOne(string $token, array $payload): bool
     {
@@ -71,16 +71,30 @@ class FcmSender
             return false;
         }
 
+        $notification = [
+            'title' => $payload['title'],
+            'body' => $payload['body'],
+        ];
+        $image = $payload['data']['image'] ?? null;
+        if (is_string($image) && $image !== '') {
+            $notification['image'] = $image;
+        }
+
+        $androidPriority = ($payload['priority'] ?? 'normal') === 'high' ? 'high' : 'normal';
+        $channelId = $payload['android_channel_id'] ?? 'madani_push_default';
+
         $message = [
             'message' => [
                 'token' => $token,
-                'notification' => [
-                    'title' => $payload['title'],
-                    'body' => $payload['body'],
-                ],
+                'notification' => $notification,
                 'data' => array_map('strval', $payload['data'] ?? []),
                 'android' => [
-                    'priority' => 'high',
+                    'priority' => $androidPriority,
+                    'notification' => [
+                        'channel_id' => $channelId,
+                        'sound' => 'default',
+                        'default_vibrate_timings' => true,
+                    ],
                 ],
             ],
         ];

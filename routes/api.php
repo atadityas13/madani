@@ -25,6 +25,8 @@ Route::prefix('v1')->group(function () {
         Route::post('device-token', [DeviceTokenController::class, 'store']);
         Route::delete('device-token', [DeviceTokenController::class, 'destroy']);
         Route::get('notifikasi', [NotifikasiController::class, 'index']);
+        Route::post('notifikasi/read-all', [NotifikasiController::class, 'markAllRead']);
+        Route::post('notifikasi/clear', [NotifikasiController::class, 'clear']);
         Route::post('notifikasi/{notifikasi}/read', [NotifikasiController::class, 'markRead']);
     });
 
