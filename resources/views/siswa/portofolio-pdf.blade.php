@@ -15,11 +15,12 @@
         .kop td { vertical-align: middle; }
         .kop-logo { width: 84px; }
         .kop-logo img { width: 78px; height: auto; }
-        .kop-text { text-align: center; padding: 0 10px; }
+        .kop-text { text-align: center; padding: 0 8px; }
         .kop-text .line1 { font-size: 13px; font-weight: bold; letter-spacing: 0.2px; }
         .kop-text .line2 { font-size: 12px; font-weight: bold; }
         .kop-text .line3 { font-size: 12px; font-weight: bold; margin-top: 1px; }
-        .kop-text .line4, .kop-text .line5 { font-size: 10px; margin-top: 1px; }
+        .kop-text .line4 { font-size: 9.5px; margin-top: 2px; white-space: nowrap; }
+        .kop-text .line5 { font-size: 9.5px; margin-top: 1px; white-space: nowrap; }
         .kop-qr { width: 82px; text-align: right; }
         .kop-qr img { width: 74px; height: 74px; }
         .kop-line {
@@ -35,7 +36,7 @@
             text-decoration: underline;
             text-transform: uppercase;
             letter-spacing: 0.6px;
-            margin: 0 0 14px;
+            margin: 0 0 12px;
         }
         .head-data { width: 100%; border-collapse: collapse; margin-bottom: 2px; }
         .head-data td { vertical-align: top; }
@@ -47,17 +48,21 @@
             border: 1px solid #999;
         }
         .foto-placeholder {
-            display: inline-block;
             width: 86px;
             height: 108px;
+            border-collapse: collapse;
             border: 1px solid #999;
+        }
+        .foto-placeholder td {
+            width: 86px;
+            height: 108px;
             text-align: center;
-            line-height: 108px;
+            vertical-align: middle;
             color: #888;
             font-size: 10px;
         }
-        .section { font-size: 12px; font-weight: bold; margin: 12px 0 5px; text-transform: uppercase; }
-        .section-first { margin-top: 0; }
+        .section { font-size: 12px; font-weight: bold; margin: 12px 0 4px; text-transform: uppercase; }
+        .section-first { margin-top: 0; margin-bottom: 4px; }
         .rows { width: 100%; border-collapse: collapse; }
         .rows td { padding: 2.5px 0; vertical-align: top; font-size: 11px; }
         .rows .label { width: 38%; }
@@ -93,15 +98,8 @@
 @php
     $dash = fn ($v) => filled($v) ? $v : '-';
     $namaMadrasah = strtoupper($madrasah->nama ?: 'MADRASAH TSANAWIYAH NEGERI 11 MAJALENGKA');
-    $alamatKop = collect([
-        $madrasah->alamat,
-        $madrasah->desa ? 'Desa '.$madrasah->desa : null,
-        $madrasah->kecamatan ? 'Kec. '.$madrasah->kecamatan : null,
-        $madrasah->kota ? 'Kab. '.$madrasah->kota : null,
-        $madrasah->kode_pos,
-    ])->filter()->implode(' ');
     $kontakKop = collect([
-        $madrasah->telepon ? 'Telp / Fax: '.$madrasah->telepon : null,
+        $madrasah->telepon ? 'Telp. '.$madrasah->telepon : null,
         $madrasah->email ? 'E-mail: '.$madrasah->email : null,
     ])->filter()->implode(' ');
 @endphp
@@ -117,15 +115,17 @@
             <div class="line1">KEMENTERIAN AGAMA REPUBLIK INDONESIA</div>
             <div class="line2">KANTOR KEMENTERIAN AGAMA KABUPATEN MAJALENGKA</div>
             <div class="line3">{{ $namaMadrasah }}</div>
-            @if ($alamatKop !== '')
-                <div class="line4">{{ $alamatKop }}</div>
+            @if ($kopAlamat !== '')
+                <div class="line4">{{ $kopAlamat }}</div>
             @endif
             @if ($kontakKop !== '')
                 <div class="line5">{{ $kontakKop }}</div>
             @endif
         </td>
         <td class="kop-qr">
-            <div style="width:70px;height:70px;">{!! $qrSvg !!}</div>
+            @if ($qrDataUri)
+                <img src="{{ $qrDataUri }}" alt="QR verifikasi">
+            @endif
         </td>
     </tr>
 </table>
@@ -137,17 +137,6 @@
     <tr>
         <td>
             <div class="section section-first">Data siswa</div>
-        </td>
-        <td class="foto-box" rowspan="2">
-            @if ($fotoDataUri)
-                <img src="{{ $fotoDataUri }}" alt="Foto siswa">
-            @else
-                <span class="foto-placeholder">Foto</span>
-            @endif
-        </td>
-    </tr>
-    <tr>
-        <td>
             <table class="rows">
                 <tr>
                     <td class="label">NAMA</td>
@@ -162,6 +151,13 @@
                     </tr>
                 @endforeach
             </table>
+        </td>
+        <td class="foto-box">
+            @if ($fotoDataUri)
+                <img src="{{ $fotoDataUri }}" alt="Foto siswa">
+            @else
+                <table class="foto-placeholder"><tr><td>Foto</td></tr></table>
+            @endif
         </td>
     </tr>
 </table>

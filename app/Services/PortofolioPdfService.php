@@ -6,9 +6,7 @@ use App\Models\Madrasah;
 use App\Models\OrangTua;
 use App\Models\Siswa;
 use App\Models\SiswaPeriodik;
-use BaconQrCode\Renderer\Image\SvgImageBackEnd;
-use BaconQrCode\Renderer\ImageRenderer;
-use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Renderer\GDLibRenderer;
 use BaconQrCode\Writer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
@@ -54,9 +52,9 @@ class PortofolioPdfService
         $periodik = $siswa->periodikAktif();
         $generatedAt = now();
 
-        $verifyUrl = URL::temporarySignedRoute(
+        // Permanent signed URL so printed QR keeps verifying authenticity.
+        $verifyUrl = URL::signedRoute(
             'portofolio.cek',
-            $generatedAt->copy()->addDays(90),
             ['siswa' => $siswa->id],
         );
 
@@ -67,7 +65,8 @@ class PortofolioPdfService
             'masuk' => $siswa->dataMasukAkademik(),
             'logoDataUri' => $this->r2DataUri($madrasah->logo_path),
             'fotoDataUri' => $this->r2DataUri($siswa->foto),
-            'qrSvg' => $this->qrSvg($verifyUrl),
+            'qrDataUri' => $this->qrDataUri($verifyUrl),
+            'kopAlamat' => $this->formatKopAlamat($madrasah),
             'generatedAt' => $generatedAt,
             'identitasRows' => $this->identitasRows($siswa, $periodik),
             'alamatRows' => $this->alamatRows($periodik),
@@ -241,13 +240,39 @@ class PortofolioPdfService
         return 'data:'.$mime.';base64,'.base64_encode($bytes);
     }
 
-    private function qrSvg(string $content): string
+    private function formatKopAlamat(Madrasah $madrasah): string
     {
-        $renderer = new ImageRenderer(
-            new RendererStyle(140, 0),
-            new SvgImageBackEnd,
-        );
+        $alamat = trim((string) ($madrasah->alamat ?? ''));
+        $haystack = mb_strtolower($alamat);
 
-        return (new Writer($renderer))->writeString($content);
+        $extras = [];
+        foreach ([
+            filled($madrasah->desa) ? ['Desa '.$madrasah->desa, (string) $madrasah->desa] : null,
+            filled($madrasah->kecamatan) ? ['Kec. '.$madrasah->kecamatan, (string) $madrasah->kecamatan] : null,
+            filled($madrasah->kota) ? ['Kab. '.$madrasah->kota, (string) $madrasah->kota] : null,
+        ] as $pair) {
+            if ($pair === null) {
+                continue;
+            }
+            [$label, $needle] = $pair;
+            if ($needle !== '' && ! str_contains($haystack, mb_strtolower($needle))) {
+                $extras[] = $label;
+            }
+        }
+
+        $line = trim($alamat.' '.implode(' ', $extras));
+        if (filled($madrasah->kode_pos) && ! str_contains($line, (string) $madrasah->kode_pos)) {
+            $line = trim($line.' '.$madrasah->kode_pos);
+        }
+
+        return $line;
+    }
+
+    private function qrDataUri(string $content): string
+    {
+        // PNG via GD — DomPDF does not reliably render inline SVG QR codes.
+        $png = (new Writer(new GDLibRenderer(160)))->writeString($content);
+
+        return 'data:image/png;base64,'.base64_encode($png);
     }
 }

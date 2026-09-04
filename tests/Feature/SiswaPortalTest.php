@@ -707,9 +707,8 @@ class SiswaPortalTest extends TestCase
         $this->seed();
         $siswa = $this->buatSiswa(['nis' => '2026003']);
 
-        $url = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+        $url = \Illuminate\Support\Facades\URL::signedRoute(
             'portofolio.cek',
-            now()->addDay(),
             ['siswa' => $siswa->id],
         );
 
@@ -717,6 +716,7 @@ class SiswaPortalTest extends TestCase
             ->assertOk()
             ->assertSee($siswa->nama)
             ->assertSee('2026003')
+            ->assertSee('Data siswa Terverifikasi')
             ->assertSee('MADANI');
 
         $this->get(route('portofolio.cek', $siswa))
