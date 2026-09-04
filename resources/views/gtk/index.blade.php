@@ -38,7 +38,7 @@
                                 <a class="emis-aksi-btn" href="{{ route('gtk.edit', $gtk) }}" title="Ubah">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <form method="POST" action="{{ route('gtk.destroy', $gtk) }}" onsubmit="return confirm('Hapus GTK ini?')">
+                                <form method="POST" action="{{ route('gtk.destroy', $gtk) }}" data-confirm="Hapus GTK ini?" data-confirm-title="Hapus" data-loading-text="Menghapus…">
                                     @csrf
                                     @method('DELETE')
                                     <button class="emis-aksi-btn" type="submit" title="Hapus">

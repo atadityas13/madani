@@ -8,6 +8,14 @@
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script type="application/json" id="madani-wilayah-data">@json(config('wilayah'))</script>
+    @php
+        $madaniFlash = [
+            'status' => session('status'),
+            'error' => session('error'),
+            'warning' => session('warning'),
+        ];
+    @endphp
+    <script type="application/json" id="madani-flash">@json($madaniFlash)</script>
     @livewireStyles
 </head>
 <body>

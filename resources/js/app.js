@@ -1,11 +1,202 @@
 import * as bootstrap from 'bootstrap';
 import L from 'leaflet';
+import Swal from 'sweetalert2';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import 'leaflet/dist/leaflet.css';
+import 'sweetalert2/dist/sweetalert2.min.css';
 
 window.bootstrap = bootstrap;
+
+const swalBase = {
+    confirmButtonColor: '#1b7a5a',
+    cancelButtonColor: '#6b7280',
+    customClass: {
+        popup: 'madani-swal-popup',
+        confirmButton: 'madani-swal-confirm',
+        cancelButton: 'madani-swal-cancel',
+    },
+};
+
+window.madaniAlert = {
+    success(message, title = 'Berhasil') {
+        return Swal.fire({
+            ...swalBase,
+            icon: 'success',
+            title,
+            text: message || '',
+            confirmButtonText: 'OK',
+        });
+    },
+    error(message, title = 'Gagal') {
+        return Swal.fire({
+            ...swalBase,
+            icon: 'error',
+            title,
+            text: message || '',
+            confirmButtonText: 'OK',
+        });
+    },
+    info(message, title = 'Info') {
+        return Swal.fire({
+            ...swalBase,
+            icon: 'info',
+            title,
+            text: message || '',
+            confirmButtonText: 'OK',
+        });
+    },
+    warning(message, title = 'Peringatan') {
+        return Swal.fire({
+            ...swalBase,
+            icon: 'warning',
+            title,
+            text: message || '',
+            confirmButtonText: 'OK',
+        });
+    },
+    async confirm({
+        title = 'Konfirmasi',
+        text = 'Lanjutkan tindakan ini?',
+        confirmButtonText = 'Ya',
+        cancelButtonText = 'Batal',
+        icon = 'question',
+    } = {}) {
+        const result = await Swal.fire({
+            ...swalBase,
+            icon,
+            title,
+            text,
+            showCancelButton: true,
+            confirmButtonText,
+            cancelButtonText,
+            reverseButtons: true,
+        });
+
+        return result.isConfirmed;
+    },
+    loading(message = 'Memproses…') {
+        Swal.fire({
+            ...swalBase,
+            title: message,
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            },
+        });
+    },
+    closeLoading() {
+        Swal.close();
+    },
+};
+
+function readMadaniFlash() {
+    const node = document.getElementById('madani-flash');
+
+    if (! node) {
+        return;
+    }
+
+    try {
+        const flash = JSON.parse(node.textContent || '{}');
+
+        if (flash.error) {
+            window.madaniAlert.error(flash.error);
+
+            return;
+        }
+
+        if (flash.warning) {
+            window.madaniAlert.warning(flash.warning);
+
+            return;
+        }
+
+        if (flash.status) {
+            window.madaniAlert.success(flash.status);
+        }
+    } catch (_error) {
+        // ignore malformed flash payload
+    }
+}
+
+function bindConfirmForms() {
+    document.addEventListener('submit', async (event) => {
+        const form = event.target;
+
+        if (! (form instanceof HTMLFormElement)) {
+            return;
+        }
+
+        if (form.dataset.confirmHandled === '1') {
+            form.dataset.confirmHandled = '0';
+
+            return;
+        }
+
+        const message = form.getAttribute('data-confirm');
+
+        if (! message) {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const ok = await window.madaniAlert.confirm({
+            title: form.getAttribute('data-confirm-title') || 'Konfirmasi',
+            text: message,
+            confirmButtonText: form.getAttribute('data-confirm-ok') || 'Ya',
+            icon: 'warning',
+        });
+
+        if (! ok) {
+            return;
+        }
+
+        form.dataset.confirmHandled = '1';
+        form.requestSubmit();
+    }, true);
+}
+
+function bindFormLoading() {
+    document.addEventListener('submit', (event) => {
+        const form = event.target;
+
+        if (! (form instanceof HTMLFormElement)) {
+            return;
+        }
+
+        if (form.hasAttribute('data-no-loading')) {
+            return;
+        }
+
+        const method = (form.getAttribute('method') || 'get').toLowerCase();
+
+        if (method !== 'post') {
+            return;
+        }
+
+        if (form.hasAttribute('data-confirm') && form.dataset.confirmHandled !== '1') {
+            return;
+        }
+
+        window.madaniAlert.loading(form.getAttribute('data-loading-text') || 'Menyimpan…');
+    });
+}
+
+function bindStaticWarnings() {
+    document.querySelectorAll('[data-swal-warning]').forEach((node) => {
+        const message = node.getAttribute('data-swal-warning') || node.textContent?.trim();
+
+        if (message) {
+            window.madaniAlert.warning(message);
+        }
+    });
+}
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -985,8 +1176,18 @@ function bindKebutuhanDisabilitas() {
 
 function bindIjazahSesuai() {
     document.querySelectorAll('[data-ijazah-sesuai]').forEach((box) => {
-        box.addEventListener('change', () => {
-            if (box.checked && !window.confirm('Apakah anda yakin data ini sesuai?')) {
+        box.addEventListener('change', async () => {
+            if (! box.checked) {
+                return;
+            }
+
+            const ok = await window.madaniAlert.confirm({
+                title: 'Konfirmasi',
+                text: 'Apakah anda yakin data ini sesuai?',
+                confirmButtonText: 'Ya, sesuai',
+            });
+
+            if (! ok) {
                 box.checked = false;
             }
         });
@@ -1010,7 +1211,7 @@ function bindAjukanPerubahan() {
     document.querySelectorAll('[data-ajukan-field]').forEach((btn) => {
         btn.addEventListener('click', () => {
             if (btn.hasAttribute('data-ajukan-terkunci')) {
-                window.alert('Lengkapi semua data dan dokumen terlebih dahulu.');
+                window.madaniAlert.warning('Lengkapi semua data dan dokumen terlebih dahulu.');
 
                 return;
             }
@@ -1166,18 +1367,32 @@ function bindDokumenBoxes() {
             });
         }
 
-        hapus?.addEventListener('click', () => {
+        hapus?.addEventListener('click', async () => {
             const judul = hapus.getAttribute('data-judul') || 'berkas';
             const url = hapus.getAttribute('data-url');
 
-            if (!url || !window.confirm(`Hapus ${judul} dari database dan storage?`)) {
+            if (!url) {
                 return;
             }
+
+            const ok = await window.madaniAlert.confirm({
+                title: 'Hapus dokumen',
+                text: `Hapus ${judul} dari database dan storage?`,
+                confirmButtonText: 'Hapus',
+                icon: 'warning',
+            });
+
+            if (! ok) {
+                return;
+            }
+
+            window.madaniAlert.loading('Menghapus…');
 
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = url;
             form.style.display = 'none';
+            form.setAttribute('data-no-loading', '1');
 
             const token = document.createElement('input');
             token.type = 'hidden';
@@ -1208,3 +1423,7 @@ bindOpenModals();
 bindPeranUser();
 bindFormatInputs();
 bindDokumenBoxes();
+bindConfirmForms();
+bindFormLoading();
+readMadaniFlash();
+bindStaticWarnings();

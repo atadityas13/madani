@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Madrasah;
 use App\Models\OrangTua;
+use App\Models\Rombel;
 use App\Models\Siswa;
 use App\Models\SiswaPeriodik;
 use BaconQrCode\Renderer\GDLibRenderer;
@@ -194,7 +195,7 @@ class PortofolioPdfService
             ->sortBy(fn ($rombel) => sprintf(
                 '%s-%02d-%010d',
                 $rombel->tahunAjaran?->tanggal_mulai?->format('Ymd') ?? '00000000',
-                (int) ($rombel->tingkat ?? 0),
+                Rombel::tingkatOrder($rombel->tingkat),
                 (int) $rombel->id,
             ))
             ->values();
@@ -204,15 +205,15 @@ class PortofolioPdfService
                 $keterangan = $masukKeterangan;
             } else {
                 $prev = $chronological[$index - 1];
-                $prevTingkat = $prev->tingkat;
-                $currTingkat = $rombel->tingkat;
-                $prevLabel = $prevTingkat !== null && $prevTingkat !== ''
-                    ? (string) $prevTingkat
+                $prevOrder = Rombel::tingkatOrder($prev->tingkat);
+                $currOrder = Rombel::tingkatOrder($rombel->tingkat);
+                $prevLabel = filled($prev->tingkat)
+                    ? (string) $prev->tingkat
                     : ($prev->nama ?: '-');
 
-                if ($prevTingkat !== null && $currTingkat !== null && (int) $currTingkat === (int) $prevTingkat) {
+                if ($prevOrder > 0 && $currOrder > 0 && $currOrder === $prevOrder) {
                     $keterangan = 'Mengulang — kelas '.$prevLabel;
-                } elseif ($prevTingkat !== null && $currTingkat !== null && (int) $currTingkat < (int) $prevTingkat) {
+                } elseif ($prevOrder > 0 && $currOrder > 0 && $currOrder < $prevOrder) {
                     $keterangan = 'Pindah rombel — dari kelas '.$prevLabel;
                 } else {
                     $keterangan = 'Naik kelas — kelas '.$prevLabel;
@@ -221,7 +222,7 @@ class PortofolioPdfService
 
             return [
                 'tahun_ajaran' => $rombel->tahunAjaran?->label(),
-                'tingkat' => $rombel->tingkat !== null ? 'Kelas '.$rombel->tingkat : null,
+                'tingkat' => filled($rombel->tingkat) ? (string) $rombel->tingkat : null,
                 'rombel' => $rombel->nama,
                 'status' => $rombel->pivot->status === 'aktif' ? 'Aktif' : 'Nonaktif',
                 'keterangan' => $keterangan,

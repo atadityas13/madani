@@ -62,7 +62,7 @@ class PenggunaTest extends TestCase
 
         $rombel = Rombel::query()->create([
             'tahun_ajaran_id' => $tahun->id,
-            'tingkat' => 7,
+            'tingkat' => 'VII',
             'nama' => 'A',
             'gtk_id' => $gtk->id,
         ]);

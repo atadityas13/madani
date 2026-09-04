@@ -241,9 +241,9 @@ return [
     ],
 
     'tingkat_rombel' => [
-        7 => 'Kelas 7',
-        8 => 'Kelas 8',
-        9 => 'Kelas 9',
+        'VII' => 'VII',
+        'VIII' => 'VIII',
+        'IX' => 'IX',
     ],
 
     'jenis_rombel' => [

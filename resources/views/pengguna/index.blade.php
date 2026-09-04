@@ -39,7 +39,7 @@
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 @can('delete', $item)
-                                    <form method="POST" action="{{ route('pengguna.destroy', $item) }}" onsubmit="return confirm('Hapus pengguna ini?')">
+                                    <form method="POST" action="{{ route('pengguna.destroy', $item) }}" data-confirm="Hapus pengguna ini?" data-confirm-title="Hapus" data-loading-text="Menghapus…">
                                         @csrf
                                         @method('DELETE')
                                         <button class="emis-aksi-btn" type="submit" title="Hapus">

@@ -98,7 +98,7 @@ class KelembagaanTest extends TestCase
         $gtk = Gtk::query()->create(['nama' => 'Wali', 'status' => 'aktif']);
         Rombel::query()->create([
             'tahun_ajaran_id' => $aktif->id,
-            'tingkat' => 7,
+            'tingkat' => 'VII',
             'nama' => 'A',
             'gtk_id' => $gtk->id,
         ]);

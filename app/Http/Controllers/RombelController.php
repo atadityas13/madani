@@ -178,14 +178,14 @@ class RombelController extends Controller
     private function validated(Request $request, int $tahunAjaranId, ?Rombel $rombel = null): array
     {
         return $request->validate([
-            'tingkat' => ['required', 'integer', Rule::in([7, 8, 9])],
+            'tingkat' => ['required', 'string', Rule::in(array_keys(config('emis.tingkat_rombel')))],
             'nama' => [
                 'required',
                 'string',
                 'max:30',
                 Rule::unique('rombels', 'nama')
                     ->where('tahun_ajaran_id', $tahunAjaranId)
-                    ->where('tingkat', $request->integer('tingkat'))
+                    ->where('tingkat', $request->input('tingkat'))
                     ->ignore($rombel?->id),
             ],
             'gtk_id' => ['nullable', 'exists:gtks,id'],

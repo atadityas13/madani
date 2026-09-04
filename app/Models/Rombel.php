@@ -37,6 +37,23 @@ class Rombel extends Model
 
     public function label(): string
     {
-        return $this->tingkat.' '.$this->nama;
+        $tingkat = filled($this->tingkat) ? (string) $this->tingkat : '';
+        $nama = filled($this->nama) ? (string) $this->nama : '';
+
+        if ($tingkat !== '' && $nama !== '') {
+            return $tingkat.'-'.$nama;
+        }
+
+        return $tingkat !== '' ? $tingkat : $nama;
+    }
+
+    public static function tingkatOrder(mixed $tingkat): int
+    {
+        return match (strtoupper(trim((string) $tingkat))) {
+            '7', 'VII' => 7,
+            '8', 'VIII' => 8,
+            '9', 'IX' => 9,
+            default => is_numeric($tingkat) ? (int) $tingkat : 0,
+        };
     }
 }

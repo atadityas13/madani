@@ -11,7 +11,7 @@
         @can('update', $rombel)
             <button class="btn btn-madani" type="button" data-bs-toggle="modal" data-bs-target="#rombelSiswaModal">Tambah siswa</button>
             <a class="btn btn-outline-secondary" href="{{ route('rombel.edit', $rombel) }}">Ubah rombel</a>
-            <form method="POST" action="{{ route('rombel.destroy', $rombel) }}" onsubmit="return confirm('Hapus rombel ini?')">
+            <form method="POST" action="{{ route('rombel.destroy', $rombel) }}" data-confirm="Hapus rombel ini?" data-confirm-title="Hapus" data-loading-text="Menghapus…">
                 @csrf
                 @method('DELETE')
                 <button class="btn btn-outline-danger" type="submit">Hapus</button>
@@ -78,7 +78,7 @@
                         <td>{{ $siswa->jenis_kelamin ?: '—' }}</td>
                         <td class="text-end">
                             @can('update', $rombel)
-                                <form method="POST" action="{{ route('rombel.anggota.destroy', [$rombel, $siswa]) }}" onsubmit="return confirm('Keluarkan siswa dari rombel?')">
+                                <form method="POST" action="{{ route('rombel.anggota.destroy', [$rombel, $siswa]) }}" data-confirm="Keluarkan siswa dari rombel?" data-confirm-title="Keluarkan siswa" data-loading-text="Memproses…">
                                     @csrf
                                     @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger" type="submit">Keluarkan</button>

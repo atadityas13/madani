@@ -43,7 +43,7 @@ class MenuAkademikTest extends TestCase
         $this->assertSame('Aktif', $tahun->labelStatus());
 
         $this->post('/rombel', [
-            'tingkat' => 7,
+            'tingkat' => 'VII',
             'nama' => 'A',
             'gtk_id' => $gtk->id,
             'jenis_rombel' => 'Reguler',

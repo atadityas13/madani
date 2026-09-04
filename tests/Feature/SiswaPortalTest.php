@@ -743,12 +743,12 @@ class SiswaPortalTest extends TestCase
 
         $rombel7 = Rombel::query()->create([
             'tahun_ajaran_id' => $tahunLama->id,
-            'tingkat' => 7,
+            'tingkat' => 'VII',
             'nama' => 'A',
         ]);
         $rombel8 = Rombel::query()->create([
             'tahun_ajaran_id' => $tahunBaru->id,
-            'tingkat' => 8,
+            'tingkat' => 'VIII',
             'nama' => 'B',
         ]);
 
@@ -760,10 +760,10 @@ class SiswaPortalTest extends TestCase
         $aktivitas = app(PortofolioPdfService::class)->viewData($siswa->fresh())['aktivitas'];
 
         $this->assertCount(2, $aktivitas);
-        $this->assertSame('Naik kelas — kelas 7', $aktivitas[0]['keterangan']);
-        $this->assertSame('Kelas 8', $aktivitas[0]['tingkat']);
+        $this->assertSame('Naik kelas — kelas VII', $aktivitas[0]['keterangan']);
+        $this->assertSame('VIII', $aktivitas[0]['tingkat']);
         $this->assertSame('Siswa Baru', $aktivitas[1]['keterangan']);
-        $this->assertSame('Kelas 7', $aktivitas[1]['tingkat']);
+        $this->assertSame('VII', $aktivitas[1]['tingkat']);
     }
 
     private function tokenSiswa(Siswa $siswa): string

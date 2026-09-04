@@ -13,7 +13,7 @@
 </div>
 
 @unless ($tahunAktif)
-    <div class="alert alert-warning">Aktifkan tahun ajaran di menu Kelembagaan sebelum membuat rombel.</div>
+    <div class="d-none" data-swal-warning="Aktifkan tahun ajaran di menu Kelembagaan sebelum membuat rombel."></div>
 @endunless
 
 <div class="madani-card p-0">

@@ -39,7 +39,7 @@
                             @endif
                         </td>
                         <td class="text-end">
-                            <form method="POST" action="{{ $relasiAction }}" onsubmit="return confirm('Hapus data ini?')">
+                            <form method="POST" action="{{ $relasiAction }}" data-confirm="Hapus data ini?" data-confirm-title="Hapus" data-loading-text="Menghapus…">
                                 @csrf
                                 @method('DELETE')
                                 <input type="hidden" name="jenis" value="prestasi">

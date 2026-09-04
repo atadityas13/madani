@@ -44,7 +44,7 @@
                         <div class="emis-topbar-sub">{{ $operator?->labelPeran() ?? 'Pengguna' }}</div>
                     </div>
                     <div class="emis-userchip-avatar">{{ $inisial }}</div>
-                    <form method="POST" action="{{ route('logout') }}">
+                    <form method="POST" action="{{ route('logout') }}" data-no-loading>
                         @csrf
                         <button class="btn btn-link btn-sm text-secondary text-decoration-none" type="submit">Keluar</button>
                     </form>
@@ -52,9 +52,6 @@
             </div>
         </header>
         <main class="p-3 p-md-4">
-            @if (session('status'))
-                <div class="alert alert-success">{{ session('status') }}</div>
-            @endif
             @yield('content')
         </main>
     </div>

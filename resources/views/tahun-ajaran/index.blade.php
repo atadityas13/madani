@@ -36,7 +36,7 @@
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 @if ($item->bisaDihapus())
-                                    <form method="POST" action="{{ route('tahun-ajaran.destroy', $item) }}" onsubmit="return confirm('Hapus tahun ajaran ini?')">
+                                    <form method="POST" action="{{ route('tahun-ajaran.destroy', $item) }}" data-confirm="Hapus tahun ajaran ini?" data-confirm-title="Hapus" data-loading-text="Menghapus…">
                                         @csrf
                                         @method('DELETE')
                                         <button class="emis-aksi-btn" type="submit" title="Hapus">

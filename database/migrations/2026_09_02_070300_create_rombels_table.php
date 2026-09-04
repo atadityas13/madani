@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('rombels', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tahun_ajaran_id')->constrained('tahun_ajarans')->cascadeOnDelete();
-            $table->unsignedTinyInteger('tingkat');
+            $table->string('tingkat', 10);
             $table->string('nama', 30);
             $table->string('program', 50)->nullable();
             $table->foreignId('wali_kelas_id')->nullable()->constrained('users')->nullOnDelete();
