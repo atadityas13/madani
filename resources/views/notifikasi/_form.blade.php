@@ -211,11 +211,15 @@
         const dates = form.querySelector('.js-periode-dates');
         if (dates) dates.style.display = (jenis === 'pengingat' && checked) ? '' : 'none';
     };
-    const renderPreview = (tpl) => tpl
-        .replaceAll('{{'+'nama}}', 'Budi Santoso')
-        .replaceAll('{{'+'nip}}', '198001012005011001')
-        .replaceAll('{{'+'nisn}}', '0123456789')
-        .replaceAll('{{'+'rombel}}', 'VII A');
+    const renderPreview = (tpl) => {
+        const o = '{' + '{';
+        const c = '}' + '}';
+        return tpl
+            .replaceAll(o + 'nama' + c, 'Budi Santoso')
+            .replaceAll(o + 'nip' + c, '198001012005011001')
+            .replaceAll(o + 'nisn' + c, '0123456789')
+            .replaceAll(o + 'rombel' + c, 'VII A');
+    };
     const syncPreview = () => {
         form.querySelector('.js-preview-title').textContent = renderPreview(form.querySelector('.js-judul')?.value || 'Judul');
         form.querySelector('.js-preview-body').textContent = renderPreview(form.querySelector('.js-isi')?.value || 'Isi notifikasi');
