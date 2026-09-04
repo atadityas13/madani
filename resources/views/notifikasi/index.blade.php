@@ -12,11 +12,7 @@
     <div class="alert alert-success">{{ session('success') }}</div>
 @endif
 
-<div class="d-flex justify-content-between align-items-center gap-3 mb-3 flex-wrap">
-    <p class="text-secondary mb-0">
-        Notifikasi → lonceng. Pengumuman → lonceng + section. Pengingat → section.
-        Placeholder: <code>@{{nama}}</code> (diganti nama penerima saat dikirim).
-    </p>
+<div class="d-flex justify-content-end align-items-center gap-3 mb-3 flex-wrap">
     <div class="d-flex gap-2">
         <a href="{{ route('notifikasi.media.index') }}" class="btn btn-outline-secondary">Pustaka media</a>
         <button class="btn btn-madani" type="button" data-bs-toggle="modal" data-bs-target="#modalTambahNotifikasi">
@@ -67,7 +63,6 @@
                         <td class="text-secondary small">
                             @if ($item->gambar_url) <i class="bi bi-image" title="Gambar"></i> @endif
                             @if ($item->audio_url) <i class="bi bi-music-note-beamed" title="Audio"></i> @endif
-                            @if ($item->deep_link) <i class="bi bi-box-arrow-up-right" title="Deep-link"></i> @endif
                             @if ($item->scheduled_at && ! $item->sent_at)
                                 <span class="badge text-bg-warning">jadwal</span>
                             @elseif ($item->sent_at)

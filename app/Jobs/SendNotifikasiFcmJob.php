@@ -74,7 +74,6 @@ class SendNotifikasiFcmJob implements ShouldQueue
                     'sound' => (string) ($notifikasi->sound_key ?? Notifikasi::SOUND_DEFAULT),
                     'sound_url' => (string) ($notifikasi->audio_url ?? ''),
                     'priority' => (string) ($notifikasi->priority ?? Notifikasi::PRIORITY_NORMAL),
-                    'deep_link' => (string) ($notifikasi->deep_link ?? ''),
                     'use_periode' => $notifikasi->use_periode ? '1' : '0',
                     'reader_type' => $recipient instanceof User ? 'guru' : 'siswa',
                     'reader_id' => (string) $recipient->getKey(),

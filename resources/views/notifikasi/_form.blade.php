@@ -4,7 +4,6 @@
     $usePeriode = (string) old('use_periode', ($item->use_periode ?? false) ? '1' : '0') === '1';
     $soundKey = old('sound_key', $item->sound_key ?? 'default');
     $priority = old('priority', $item->priority ?? 'normal');
-    $deepLink = old('deep_link', $item->deep_link ?? '');
     $selectedIds = collect(old('audience_ids', $item->audience_ids ?? []))->map(fn ($v) => (string) $v)->all();
     $mediaImages = $mediaImages ?? collect();
     $mediaAudios = $mediaAudios ?? collect();
@@ -20,7 +19,6 @@
                         <option value="{{ $value }}" @selected($jenis === $value)>{{ $label }}</option>
                     @endforeach
                 </select>
-                <div class="form-text">Notifikasi → lonceng. Pengumuman → lonceng + section. Pengingat → section.</div>
             </div>
             <div class="col-md-6">
                 <label class="form-label">Penerima</label>
@@ -80,28 +78,20 @@
                 </select>
             </div>
             <div class="col-md-6">
-                <label class="form-label">Tautan eksternal</label>
+                <label class="form-label">Tautan eksternal (opsional)</label>
                 <input class="form-control" type="url" name="link" maxlength="500"
                     value="{{ old('link', $item->link ?? '') }}" placeholder="https://...">
             </div>
             <div class="col-md-6">
-                <label class="form-label">Deep-link layar Ta'lim</label>
-                <select class="form-select" name="deep_link">
-                    <option value="">—</option>
-                    @foreach (\App\Models\Notifikasi::deepLinkOptions() as $value => $label)
-                        <option value="{{ $value }}" @selected($deepLink === $value)>{{ $label }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-4">
                 <label class="form-label">Channel suara</label>
                 <select class="form-select" name="sound_key">
                     @foreach (\App\Models\Notifikasi::soundOptions() as $value => $label)
                         <option value="{{ $value }}" @selected($soundKey === $value)>{{ $label }}</option>
                     @endforeach
                 </select>
+                <div class="form-text">Alarm = bunyi lewat stream alarm (bisa terdengar saat HP hening), seperti CBTApp.</div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="form-label">Prioritas</label>
                 <select class="form-select" name="priority">
                     @foreach (\App\Models\Notifikasi::priorityOptions() as $value => $label)
@@ -109,11 +99,11 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="form-label">Jadwal kirim</label>
                 <input class="form-control" type="datetime-local" name="scheduled_at"
                     value="{{ old('scheduled_at', $item?->scheduled_at?->timezone('Asia/Jakarta')->format('Y-m-d\\TH:i')) }}">
-                <div class="form-text">Kosongkan = kirim segera.</div>
+                <div class="form-text">Kosongkan = segera.</div>
             </div>
             <div class="col-12 js-audience-targets" data-audience="gtk" @style(['display: none' => $audience !== 'gtk'])>
                 <label class="form-label">Pilih GTK</label>

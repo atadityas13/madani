@@ -33,13 +33,13 @@ class NotifMediaController extends Controller
         ]);
 
         $folder = $data['type'] === 'audio' ? 'notifikasi/media/audio' : 'notifikasi/media/image';
-        $path = $request->file('file')->store($folder, 'public');
+        $path = $request->file('file')->store($folder, 'r2');
 
         NotifMedia::query()->create([
             'label' => $data['label'],
             'type' => $data['type'],
             'path' => $path,
-            'url' => Storage::disk('public')->url($path),
+            'url' => Storage::disk('r2')->url($path),
             'created_by' => $request->user()?->id,
         ]);
 
@@ -49,7 +49,7 @@ class NotifMediaController extends Controller
     public function destroy(NotifMedia $media): RedirectResponse
     {
         if ($media->path !== '') {
-            Storage::disk('public')->delete($media->path);
+            Storage::disk('r2')->delete($media->path);
         }
         $media->delete();
 

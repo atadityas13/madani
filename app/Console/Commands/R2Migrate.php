@@ -5,8 +5,10 @@ namespace App\Console\Commands;
 use App\Models\Beasiswa;
 use App\Models\Dokumen;
 use App\Models\Madrasah;
+use App\Models\NotifMedia;
 use App\Models\Prestasi;
 use App\Models\Siswa;
+use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 
@@ -79,6 +81,35 @@ class R2Migrate extends Command
                 $failed++;
             }
         }
+
+        // 6. Foto profil guru (user_photos)
+        User::query()->whereNotNull('foto')->chunkById(50, function ($users) use ($public, $r2, $dry, &$moved, &$failed) {
+            foreach ($users as $user) {
+                $foto = (string) $user->foto;
+                if (str_starts_with($foto, 'http://') || str_starts_with($foto, 'https://')) {
+                    continue;
+                }
+                if ($this->migrateFile($public, $r2, $foto, $dry)) {
+                    $moved++;
+                } else {
+                    $failed++;
+                }
+            }
+        });
+
+        // 7. Pustaka media notifikasi
+        NotifMedia::query()->whereNotNull('path')->chunkById(50, function ($items) use ($public, $r2, $dry, &$moved, &$failed) {
+            foreach ($items as $item) {
+                if ($this->migrateFile($public, $r2, (string) $item->path, $dry)) {
+                    $moved++;
+                    if (! $dry) {
+                        $item->forceFill(['url' => $r2->url($item->path)])->save();
+                    }
+                } else {
+                    $failed++;
+                }
+            }
+        });
 
         $this->newLine();
         $this->info("Selesai. Dipindahkan: {$moved}, Gagal/tidak ada: {$failed}");

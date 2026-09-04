@@ -194,9 +194,8 @@ class NotifikasiApiTest extends TestCase
             'jenis' => Notifikasi::JENIS_NOTIFIKASI,
             'audience' => Notifikasi::AUDIENCE_SEMUA_GURU,
             'audio_url' => 'https://example.com/a.mp3',
-            'sound_key' => Notifikasi::SOUND_URGENT,
+            'sound_key' => Notifikasi::SOUND_ALARM,
             'priority' => Notifikasi::PRIORITY_HIGH,
-            'deep_link' => 'calendar',
             'is_active' => true,
             'published_at' => now(),
             'sent_at' => now(),
@@ -209,9 +208,8 @@ class NotifikasiApiTest extends TestCase
             ->assertJsonPath('data.0.judul', 'Halo Budi')
             ->assertJsonPath('data.0.isi', 'NIP Anda 198001012005011001')
             ->assertJsonPath('data.0.audio_url', 'https://example.com/a.mp3')
-            ->assertJsonPath('data.0.sound_key', 'urgent')
-            ->assertJsonPath('data.0.priority', 'high')
-            ->assertJsonPath('data.0.deep_link', 'calendar');
+            ->assertJsonPath('data.0.sound_key', 'alarm')
+            ->assertJsonPath('data.0.priority', 'high');
     }
 
     public function test_future_scheduled_notifikasi_hidden_until_due(): void

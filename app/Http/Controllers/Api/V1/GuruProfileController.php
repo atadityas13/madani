@@ -69,15 +69,16 @@ class GuruProfileController extends Controller
             'foto.max' => 'Ukuran foto maksimal 2MB.',
         ]);
 
-        if ($user->foto && Storage::disk('public')->exists($user->foto)) {
+        if (filled($user->foto) && ! str_starts_with((string) $user->foto, 'http')) {
+            Storage::disk('r2')->delete($user->foto);
             Storage::disk('public')->delete($user->foto);
         }
 
-        $path = $request->file('foto')->store('user_photos', 'public');
+        $path = $request->file('foto')->store('user_photos', 'r2');
         $user->foto = $path;
         $user->save();
 
-        $user->gtk?->update(['foto_url' => Storage::disk('public')->url($path)]);
+        $user->gtk?->update(['foto_url' => Storage::disk('r2')->url($path)]);
 
         return response()->json([
             'success' => true,

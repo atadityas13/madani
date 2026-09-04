@@ -124,7 +124,7 @@ class GuruAuthApiTest extends TestCase
 
     public function test_update_foto(): void
     {
-        Storage::fake('public');
+        Storage::fake('r2');
         $user = $this->buatAkunGuru();
         Sanctum::actingAs($user);
 
@@ -135,6 +135,7 @@ class GuruAuthApiTest extends TestCase
             ->assertJsonPath('success', true);
 
         $this->assertNotNull($user->fresh()->foto);
+        Storage::disk('r2')->assertExists($user->fresh()->foto);
     }
 
     public function test_akun_tanpa_gtk_ditolak(): void

@@ -68,7 +68,6 @@ class NotifikasiController extends Controller
                 'audio_url' => $item->audio_url,
                 'sound_key' => $item->sound_key ?: Notifikasi::SOUND_DEFAULT,
                 'priority' => $item->priority ?: Notifikasi::PRIORITY_NORMAL,
-                'deep_link' => $item->deep_link,
                 'use_periode' => (bool) $item->use_periode,
                 'dismissible' => $item->isDismissible(),
                 'starts_at' => $item->starts_at?->timezone('Asia/Jakarta')->toIso8601String(),

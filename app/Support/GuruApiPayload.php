@@ -4,7 +4,6 @@ namespace App\Support;
 
 use App\Models\Gtk;
 use App\Models\User;
-use Illuminate\Support\Facades\Storage;
 
 class GuruApiPayload
 {
@@ -68,7 +67,12 @@ class GuruApiPayload
     private static function fotoUrl(User $user, ?Gtk $gtk): ?string
     {
         if (filled($user->foto)) {
-            return Storage::disk('public')->url($user->foto);
+            $foto = (string) $user->foto;
+            if (str_starts_with($foto, 'http://') || str_starts_with($foto, 'https://')) {
+                return $foto;
+            }
+
+            return R2Url::temporary($foto);
         }
 
         if (filled($gtk?->foto_url)) {

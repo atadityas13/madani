@@ -129,7 +129,6 @@ class NotifikasiController extends Controller
             'link' => ['nullable', 'url', 'max:500'],
             'sound_key' => ['nullable', Rule::in(array_keys(Notifikasi::soundOptions()))],
             'priority' => ['nullable', Rule::in(array_keys(Notifikasi::priorityOptions()))],
-            'deep_link' => ['nullable', Rule::in(array_keys(Notifikasi::deepLinkOptions()))],
             'use_periode' => ['nullable', 'boolean'],
             'starts_at' => ['nullable', 'date'],
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
@@ -156,7 +155,6 @@ class NotifikasiController extends Controller
         $data['link'] = $data['link'] ?? null;
         $data['sound_key'] = $data['sound_key'] ?? Notifikasi::SOUND_DEFAULT;
         $data['priority'] = $data['priority'] ?? Notifikasi::PRIORITY_NORMAL;
-        $data['deep_link'] = $data['deep_link'] ?? null;
         $data['scheduled_at'] = $data['scheduled_at'] ?? null;
 
         if ($data['use_periode']) {
@@ -171,8 +169,8 @@ class NotifikasiController extends Controller
         }
 
         if ($request->hasFile('gambar')) {
-            $path = $request->file('gambar')->store('notifikasi', 'public');
-            $data['gambar_url'] = Storage::disk('public')->url($path);
+            $path = $request->file('gambar')->store('notifikasi', 'r2');
+            $data['gambar_url'] = Storage::disk('r2')->url($path);
         } elseif (! empty($data['gambar_media_id'])) {
             $media = NotifMedia::query()->find($data['gambar_media_id']);
             if ($media?->type === NotifMedia::TYPE_IMAGE) {
@@ -185,8 +183,8 @@ class NotifikasiController extends Controller
         }
 
         if ($request->hasFile('audio')) {
-            $path = $request->file('audio')->store('notifikasi/audio', 'public');
-            $data['audio_url'] = Storage::disk('public')->url($path);
+            $path = $request->file('audio')->store('notifikasi/audio', 'r2');
+            $data['audio_url'] = Storage::disk('r2')->url($path);
         } elseif (! empty($data['audio_media_id'])) {
             $media = NotifMedia::query()->find($data['audio_media_id']);
             if ($media?->type === NotifMedia::TYPE_AUDIO) {

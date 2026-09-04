@@ -18,7 +18,6 @@ use Illuminate\Support\Collection;
     'audio_url',
     'sound_key',
     'priority',
-    'deep_link',
     'jenis',
     'audience',
     'audience_ids',
@@ -55,8 +54,12 @@ class Notifikasi extends Model
 
     public const SOUND_DEFAULT = 'default';
 
+    public const SOUND_ALARM = 'alarm';
+
+    /** @deprecated Diganti SOUND_ALARM; tetap dikenali untuk data lama. */
     public const SOUND_SOFT = 'soft';
 
+    /** @deprecated Diganti SOUND_ALARM; tetap dikenali untuk data lama. */
     public const SOUND_URGENT = 'urgent';
 
     protected function casts(): array
@@ -126,10 +129,14 @@ class Notifikasi extends Model
     public function androidChannelId(): string
     {
         return match ($this->sound_key) {
-            self::SOUND_SOFT => 'madani_push_soft',
-            self::SOUND_URGENT => 'madani_push_urgent',
+            self::SOUND_ALARM, self::SOUND_URGENT => 'madani_push_alarm',
             default => 'madani_push_default',
         };
+    }
+
+    public function usesAlarmChannel(): bool
+    {
+        return in_array($this->sound_key, [self::SOUND_ALARM, self::SOUND_URGENT], true);
     }
 
     /**
@@ -165,8 +172,7 @@ class Notifikasi extends Model
     {
         return [
             self::SOUND_DEFAULT => 'Default',
-            self::SOUND_SOFT => 'Lembut',
-            self::SOUND_URGENT => 'Mendesak',
+            self::SOUND_ALARM => 'Alarm (bunyi meski hening)',
         ];
     }
 
@@ -178,21 +184,6 @@ class Notifikasi extends Model
         return [
             self::PRIORITY_NORMAL => 'Normal',
             self::PRIORITY_HIGH => 'Tinggi',
-        ];
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    public static function deepLinkOptions(): array
-    {
-        return [
-            'notifikasi' => 'Pusat notifikasi',
-            'home' => 'Beranda guru',
-            'calendar' => 'Kalender',
-            'pengumuman' => 'Pengumuman dibaca',
-            'siswa_home' => 'Beranda siswa',
-            'siswa_data' => 'Data siswa',
         ];
     }
 
