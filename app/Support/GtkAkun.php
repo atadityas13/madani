@@ -78,7 +78,7 @@ class GtkAkun
         return $password;
     }
 
-    private function emailUntuk(Gtk $gtk, string $nip): string
+    public function emailUntuk(Gtk $gtk, string $nip): string
     {
         $email = trim((string) $gtk->email);
         if ($email !== '' && ! User::query()->where('email', $email)->exists()) {
