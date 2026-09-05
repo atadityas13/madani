@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AppStatusController;
 use App\Http\Controllers\Api\V1\AppUpdateController;
 use App\Http\Controllers\Api\V1\DeviceTokenController;
 use App\Http\Controllers\Api\V1\GuruAuthController;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::get('app-update/{platform}', [AppUpdateController::class, 'show']);
+    Route::get('app-status', [AppStatusController::class, 'show']);
     Route::post('siswa/login', [SiswaAuthController::class, 'login'])->middleware('throttle:5,1');
     Route::post('guru/login', [GuruAuthController::class, 'login'])->middleware('throttle:5,1');
     Route::post('token/introspect', TokenIntrospectController::class)->middleware('throttle:60,1');

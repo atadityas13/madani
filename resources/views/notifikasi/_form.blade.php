@@ -108,22 +108,32 @@
             <div class="col-12 js-audience-targets" data-audience="gtk" @style(['display: none' => $audience !== 'gtk'])>
                 <label class="form-label">Pilih GTK</label>
                 <select class="form-select" name="audience_ids[]" multiple size="6">
-                    @foreach ($gtks as $gtk)
+                    @forelse ($gtks as $gtk)
                         <option value="{{ $gtk->id }}" @selected(in_array((string) $gtk->id, $selectedIds, true))>
                             {{ $gtk->nama }} @if($gtk->nip) ({{ $gtk->nip }}) @endif
                         </option>
-                    @endforeach
+                    @empty
+                        <option value="" disabled>Belum ada guru dengan perangkat Ta'lim terdaftar.</option>
+                    @endforelse
                 </select>
+                <div class="form-text">
+                    Hanya guru yang sudah pernah login Ta'lim (punya FCM). Yang belum login tidak muncul di daftar.
+                </div>
             </div>
             <div class="col-12 js-audience-targets" data-audience="siswa" @style(['display: none' => $audience !== 'siswa'])>
                 <label class="form-label">Pilih siswa</label>
                 <select class="form-select" name="audience_ids[]" multiple size="6">
-                    @foreach ($siswas as $siswa)
+                    @forelse ($siswas as $siswa)
                         <option value="{{ $siswa->id }}" @selected(in_array((string) $siswa->id, $selectedIds, true))>
                             {{ $siswa->nama }} @if($siswa->nisn) ({{ $siswa->nisn }}) @endif
                         </option>
-                    @endforeach
+                    @empty
+                        <option value="" disabled>Belum ada siswa dengan perangkat Ta'lim terdaftar.</option>
+                    @endforelse
                 </select>
+                <div class="form-text">
+                    Hanya siswa yang sudah pernah login Ta'lim (punya FCM). Yang belum login tidak muncul di daftar.
+                </div>
             </div>
             <div class="col-12 js-audience-targets" data-audience="rombel" @style(['display: none' => $audience !== 'rombel'])>
                 <label class="form-label">Pilih rombel</label>

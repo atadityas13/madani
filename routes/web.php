@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AppMaintenanceController;
 use App\Http\Controllers\AppUpdateController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CalendarEventController;
@@ -7,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GtkController;
 use App\Http\Controllers\KelembagaanController;
 use App\Http\Controllers\NotifikasiController;
+use App\Http\Controllers\NotifikasiPembacaController;
 use App\Http\Controllers\NotifMediaController;
 use App\Http\Controllers\Portal\SiswaAuthController;
 use App\Http\Controllers\Portal\SiswaPortalController;
@@ -60,6 +62,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('gtk', GtkController::class)->except(['show']);
         Route::get('pengaturan/update-app', [AppUpdateController::class, 'index'])->name('app-updates.index');
         Route::post('pengaturan/update-app', [AppUpdateController::class, 'store'])->name('app-updates.store');
+        Route::get('pengaturan/maintenance', [AppMaintenanceController::class, 'index'])->name('app-maintenance.index');
+        Route::post('pengaturan/maintenance', [AppMaintenanceController::class, 'store'])->name('app-maintenance.store');
         Route::get('pengaturan/notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi.index');
         Route::get('pengaturan/notifikasi/media', [NotifMediaController::class, 'index'])->name('notifikasi.media.index');
         Route::post('pengaturan/notifikasi/media', [NotifMediaController::class, 'store'])->name('notifikasi.media.store');
@@ -68,6 +72,7 @@ Route::middleware('auth')->group(function () {
         Route::put('pengaturan/notifikasi/{notifikasi}', [NotifikasiController::class, 'update'])->name('notifikasi.update');
         Route::delete('pengaturan/notifikasi/{notifikasi}', [NotifikasiController::class, 'destroy'])->name('notifikasi.destroy');
         Route::post('pengaturan/notifikasi/{notifikasi}/resend', [NotifikasiController::class, 'resend'])->name('notifikasi.resend');
+        Route::get('pengaturan/notifikasi/{notifikasi}/pembaca', [NotifikasiPembacaController::class, 'show'])->name('notifikasi.pembaca');
         Route::redirect('pengaturan/pengumuman', '/pengaturan/notifikasi')->name('pengumuman.index');
         Route::get('pengaturan/kalender', [CalendarEventController::class, 'index'])->name('calendar-events.index');
         Route::post('pengaturan/kalender', [CalendarEventController::class, 'store'])->name('calendar-events.store');

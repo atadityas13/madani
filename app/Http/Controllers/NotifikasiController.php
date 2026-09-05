@@ -3,14 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\SendNotifikasiFcmJob;
+use App\Models\DeviceToken;
 use App\Models\Gtk;
 use App\Models\Notifikasi;
 use App\Models\NotifMedia;
 use App\Models\Rombel;
 use App\Models\Siswa;
+use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -31,13 +34,25 @@ class NotifikasiController extends Controller
             session()->flash('error', 'Tabel notifikasi belum tersedia. Jalankan: php artisan migrate');
         }
 
-        $gtks = Gtk::query()->where('status', 'aktif')->orderBy('nama')->get(['id', 'nama', 'nip']);
+        $gtkIdsWithFcm = $this->gtkIdsWithFcm();
+
+        $gtks = Gtk::query()
+            ->where('status', 'aktif')
+            ->whereIn('id', $gtkIdsWithFcm)
+            ->orderBy('nama')
+            ->get(['id', 'nama', 'nip']);
+
         $rombels = Rombel::query()->orderBy('nama')->get(['id', 'nama', 'tingkat']);
+
+        $siswaIdsWithFcm = $this->siswaIdsWithFcm();
+
         $siswas = Siswa::query()
             ->where('status_keaktifan', '!=', 'nonaktif')
+            ->whereIn('id', $siswaIdsWithFcm)
             ->orderBy('nama')
             ->limit(500)
             ->get(['id', 'nama', 'nisn']);
+
         $mediaImages = NotifMedia::query()->where('type', NotifMedia::TYPE_IMAGE)->orderByDesc('id')->limit(100)->get();
         $mediaAudios = NotifMedia::query()->where('type', NotifMedia::TYPE_AUDIO)->orderByDesc('id')->limit(100)->get();
         $scheduled = $items->filter(fn (Notifikasi $n) => $n->scheduled_at !== null && $n->sent_at === null);
@@ -150,6 +165,26 @@ class NotifikasiController extends Controller
             ]);
         }
 
+        if ($data['audience'] === Notifikasi::AUDIENCE_GTK) {
+            $allowed = $this->gtkIdsWithFcm()->map(fn ($id) => (string) $id)->all();
+            $ids = array_values(array_intersect($ids, $allowed));
+            if ($ids === []) {
+                throw ValidationException::withMessages([
+                    'audience_ids' => 'Pilih guru yang sudah pernah login Ta\'lim (punya perangkat terdaftar).',
+                ]);
+            }
+        }
+
+        if ($data['audience'] === Notifikasi::AUDIENCE_SISWA) {
+            $allowed = $this->siswaIdsWithFcm()->map(fn ($id) => (string) $id)->all();
+            $ids = array_values(array_intersect($ids, $allowed));
+            if ($ids === []) {
+                throw ValidationException::withMessages([
+                    'audience_ids' => 'Pilih siswa yang sudah pernah login Ta\'lim (punya perangkat terdaftar).',
+                ]);
+            }
+        }
+
         $data['audience_ids'] = $needsIds ? $ids : null;
         $data['use_periode'] = $data['jenis'] === Notifikasi::JENIS_PENGINGAT && $request->boolean('use_periode');
         $data['link'] = $data['link'] ?? null;
@@ -199,6 +234,32 @@ class NotifikasiController extends Controller
         unset($data['gambar'], $data['audio'], $data['gambar_media_id'], $data['audio_media_id']);
 
         return $data;
+    }
+
+    /**
+     * @return Collection<int, int|string>
+     */
+    private function gtkIdsWithFcm()
+    {
+        return User::query()
+            ->whereNotNull('gtk_id')
+            ->whereIn(
+                'id',
+                DeviceToken::query()
+                    ->where('tokenable_type', User::class)
+                    ->select('tokenable_id'),
+            )
+            ->pluck('gtk_id');
+    }
+
+    /**
+     * @return Collection<int, int|string>
+     */
+    private function siswaIdsWithFcm()
+    {
+        return DeviceToken::query()
+            ->where('tokenable_type', Siswa::class)
+            ->pluck('tokenable_id');
     }
 
     private function shouldDispatchFcm(Notifikasi $notifikasi): bool

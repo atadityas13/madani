@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Siswa;
+use App\Support\AppMaintenanceGate;
 use App\Support\SiswaPassword;
 use App\Support\SiswaPortalPayload;
 use Illuminate\Http\JsonResponse;
@@ -16,6 +17,10 @@ class SiswaAuthController extends Controller
 {
     public function login(Request $request): JsonResponse
     {
+        if ($denied = AppMaintenanceGate::denyIfActive()) {
+            return $denied;
+        }
+
         $data = $request->validate([
             'nisn' => ['required', 'digits:10'],
             'password' => ['required', 'string'],

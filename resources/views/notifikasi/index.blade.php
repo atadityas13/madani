@@ -81,6 +81,9 @@
                         </td>
                         <td class="text-end">
                             <div class="emis-aksi">
+                                <a class="emis-aksi-btn" href="{{ route('notifikasi.pembaca', $item) }}" title="Lihat pembaca">
+                                    <i class="bi bi-eye"></i>
+                                </a>
                                 <form method="POST" action="{{ route('notifikasi.resend', $item) }}" class="d-inline">
                                     @csrf
                                     <button class="emis-aksi-btn" type="submit" title="Kirim ulang FCM">

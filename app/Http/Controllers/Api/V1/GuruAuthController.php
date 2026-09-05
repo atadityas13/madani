@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Gtk;
 use App\Models\User;
+use App\Support\AppMaintenanceGate;
 use App\Support\GuruApiPayload;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,10 @@ class GuruAuthController extends Controller
 {
     public function login(Request $request): JsonResponse
     {
+        if ($denied = AppMaintenanceGate::denyIfActive()) {
+            return $denied;
+        }
+
         $credentials = $request->validate([
             'username' => ['required', 'string'],
             'password' => ['required', 'string'],
