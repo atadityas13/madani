@@ -21,7 +21,8 @@
         .kop-text .line3 { font-size: 12px; font-weight: bold; margin-top: 1px; }
         .kop-text .line4 { font-size: 9.5px; margin-top: 2px; white-space: nowrap; }
         .kop-text .line5 { font-size: 9.5px; margin-top: 1px; white-space: nowrap; }
-        .kop-qr { width: 82px; }
+        .kop-qr { width: 82px; text-align: right; }
+        .kop-qr img { width: 74px; height: 74px; }
         .kop-line {
             border: 0;
             border-top: 3px solid #111;
@@ -81,14 +82,14 @@
         }
         .pernyataan-box p { margin: 0 0 6px; }
         .pernyataan-box .penutup { margin: 0; }
-        .surat-wrap { padding: 24px 14px 0; }
+        .surat-wrap { padding: 28px 32px 0; }
         .surat-title {
             text-align: center;
             font-size: 14px;
             font-weight: bold;
             text-decoration: underline;
             text-transform: uppercase;
-            margin: 0 0 14px;
+            margin: 0 0 28px;
             letter-spacing: 0.5px;
         }
         .surat-body { text-align: justify; font-size: 11px; line-height: 1.5; }
@@ -101,20 +102,22 @@
         .identitas-surat .colon { width: 14px; }
         .ttd-table { width: 100%; border-collapse: collapse; margin-top: 34px; }
         .ttd-table > tbody > tr > td { vertical-align: top; width: 50%; padding: 0; }
-        .ttd-inner { width: 175px; border-collapse: collapse; }
+        .ttd-inner { width: 230px; border-collapse: collapse; }
         .ttd-inner td {
             text-align: left;
             font-size: 11px;
             line-height: 1.15;
             padding: 0;
         }
+        .ttd-date { white-space: nowrap; }
         .ttd-img {
-            width: 150px;
-            height: 72px;
-            margin: 10px 0 4px;
+            height: 64px;
+            width: auto;
+            max-width: 160px;
+            margin: 8px 0 4px;
             display: block;
         }
-        .ttd-spacer { width: 150px; height: 72px; margin: 10px 0 4px; }
+        .ttd-spacer { width: 120px; height: 64px; margin: 8px 0 4px; }
         .footer {
             position: fixed;
             left: 0;
@@ -167,7 +170,11 @@
                 <div class="line5">{{ $kontakKop }}</div>
             @endif
         </td>
-        <td class="kop-qr"></td>
+        <td class="kop-qr">
+            @if ($qrDataUri)
+                <img src="{{ $qrDataUri }}" alt="QR verifikasi">
+            @endif
+        </td>
     </tr>
 </table>
 <hr class="kop-line">

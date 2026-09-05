@@ -73,7 +73,6 @@ class PernyataanPdfService
         $tanggal = $tandaTangan['tanggal'];
 
         return array_merge($base, [
-            'qrDataUri' => null,
             'jenjangRows' => $this->jenjangRows($siswa, $siswa->rekamDidik),
             'teksPoin1' => $teks['poin_1'],
             'teksPenutupBiodata' => $teks['penutup_biodata'],

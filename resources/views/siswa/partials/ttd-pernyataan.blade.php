@@ -1,7 +1,7 @@
 <table class="ttd-table" width="100%">
     <tr>
         <td width="50%" valign="top" align="left">
-            <table class="ttd-inner" width="175" align="left">
+            <table class="ttd-inner" width="230" align="left">
                 <tr><td>Mengetahui</td></tr>
                 <tr><td>Orang tua/wali</td></tr>
                 <tr>
@@ -17,8 +17,8 @@
             </table>
         </td>
         <td width="50%" valign="top" align="right">
-            <table class="ttd-inner" width="175" align="right">
-                <tr><td>{{ $kota }}, {{ $tanggalSurat }}</td></tr>
+            <table class="ttd-inner" width="230" align="right">
+                <tr><td class="ttd-date">{{ $kota }}, {{ $tanggalSurat }}</td></tr>
                 <tr><td>Peserta Didik</td></tr>
                 <tr>
                     <td>
