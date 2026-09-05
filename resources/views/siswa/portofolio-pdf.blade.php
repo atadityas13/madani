@@ -65,11 +65,11 @@
         .section-first { margin-top: 0; margin-bottom: 4px; }
         .page-break { page-break-before: always; }
         .page-break .section:first-child { margin-top: 0; }
-        .rows { width: 100%; border-collapse: collapse; }
+        .rows { width: 100%; border-collapse: collapse; table-layout: fixed; }
         .rows td { padding: 2.5px 0; vertical-align: top; font-size: 11px; }
-        .rows .label { width: 38%; }
-        .rows .colon { width: 14px; }
-        .rows .value { }
+        .rows .label { width: 168px; }
+        .rows .colon { width: 12px; }
+        .rows .value { width: auto; }
         table.data {
             width: 100%;
             border-collapse: collapse;

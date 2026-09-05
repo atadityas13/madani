@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Biodata dan Surat Pernyataan — {{ $siswa->nama }}</title>
     <style>
-        @page { margin: 36px 48px 44px; }
+        @page { margin: 36px 64px 44px; }
         body {
             font-family: DejaVu Sans, sans-serif;
             font-size: 11px;
@@ -64,10 +64,11 @@
         .section-first { margin-top: 0; margin-bottom: 3px; }
         .page-break { page-break-before: always; }
         .page-break .section:first-child { margin-top: 0; }
-        .rows { width: 100%; border-collapse: collapse; }
+        .rows { width: 100%; border-collapse: collapse; table-layout: fixed; }
         .rows td { padding: 2px 0; vertical-align: top; font-size: 11px; }
-        .rows .label { width: 38%; }
-        .rows .colon { width: 14px; }
+        .rows .label { width: 168px; }
+        .rows .colon { width: 12px; }
+        .rows .value { width: auto; }
         .pernyataan-box {
             margin-top: 0;
             text-align: justify;
@@ -76,6 +77,9 @@
         }
         .pernyataan-box p { margin: 0 0 6px; }
         .pernyataan-box .penutup { margin: 0; }
+        .surat-wrap {
+            padding: 28px 18px 0;
+        }
         .surat-title {
             text-align: center;
             font-size: 14px;
@@ -91,21 +95,26 @@
         .surat-body li { margin-bottom: 3px; }
         .identitas-surat { width: 100%; border-collapse: collapse; margin: 8px 0 10px; }
         .identitas-surat td { padding: 1.5px 0; vertical-align: top; }
-        .identitas-surat .label { width: 160px; }
-        .identitas-surat .colon { width: 14px; }
+        .identitas-surat .label { width: 168px; }
+        .identitas-surat .colon { width: 12px; }
         .ttd-table {
             width: 100%;
             margin: 34px 0 0;
             border-collapse: collapse;
             table-layout: fixed;
         }
-        .ttd-table .ttd-edge { width: 7%; padding: 0; }
-        .ttd-table .ttd-col {
-            width: 43%;
+        .ttd-side {
+            width: 50%;
             vertical-align: top;
-            text-align: left;
             font-size: 11px;
-            padding: 0 10px;
+            padding: 0;
+        }
+        .ttd-side-left { text-align: left; }
+        .ttd-side-right { text-align: right; }
+        .ttd-block {
+            width: 168px;
+            text-align: left;
+            display: inline-block;
         }
         .ttd-meta {
             line-height: 1.1;
@@ -113,12 +122,15 @@
             padding: 0;
         }
         .ttd-img {
+            width: 150px;
             height: 72px;
-            max-width: 150px;
+            object-fit: contain;
+            object-position: left center;
             margin: 10px 0 4px;
             display: block;
         }
         .ttd-spacer {
+            width: 150px;
             height: 72px;
             margin: 10px 0 4px;
         }
@@ -271,6 +283,7 @@
 
 {{-- ========== SURAT PERNYATAAN ========== --}}
 <div class="page-break">
+<div class="surat-wrap">
 <div class="surat-title">Surat Pernyataan Peserta Didik</div>
 
 <div class="surat-body">
@@ -305,6 +318,7 @@
     'ttdSiswaDataUri' => $ttdSiswaDataUri,
     'ttdWaliDataUri' => $ttdWaliDataUri,
 ])
+</div>
 </div>
 
 <div class="footer">
