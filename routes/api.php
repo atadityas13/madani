@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\DeviceTokenController;
 use App\Http\Controllers\Api\V1\GuruAuthController;
 use App\Http\Controllers\Api\V1\GuruCalendarEventController;
 use App\Http\Controllers\Api\V1\GuruElapkinController;
+use App\Http\Controllers\Api\V1\GuruJurnalController;
 use App\Http\Controllers\Api\V1\GuruProfileController;
 use App\Http\Controllers\Api\V1\NotifikasiController;
 use App\Http\Controllers\Api\V1\PengumumanController;
@@ -44,6 +45,14 @@ Route::prefix('v1')->group(function () {
         Route::get('elapkin-sso', [GuruElapkinController::class, 'ssoToken']);
         Route::post('elapkin-bridge', [GuruElapkinController::class, 'bridgeSession']);
         Route::get('hari-libur', [GuruElapkinController::class, 'hariLibur']);
+
+        Route::get('jurnal', [GuruJurnalController::class, 'index']);
+        Route::get('jurnal/entries-by-tanggal', [GuruJurnalController::class, 'entriesByTanggal']);
+        Route::get('jurnal/cetak', [GuruJurnalController::class, 'cetak']);
+        Route::get('jurnal/{kelasId}', [GuruJurnalController::class, 'entries'])->whereNumber('kelasId');
+        Route::post('jurnal', [GuruJurnalController::class, 'store']);
+        Route::put('jurnal/{id}', [GuruJurnalController::class, 'update'])->whereNumber('id');
+        Route::delete('jurnal/{id}', [GuruJurnalController::class, 'destroy'])->whereNumber('id');
     });
 
     Route::middleware(['auth:sanctum', 'siswa.api'])->group(function () {
