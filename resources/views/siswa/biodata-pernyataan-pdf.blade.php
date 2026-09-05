@@ -60,21 +60,22 @@
             color: #888;
             font-size: 10px;
         }
-        .section { font-size: 12px; font-weight: bold; margin: 12px 0 4px; text-transform: uppercase; }
-        .section-first { margin-top: 0; margin-bottom: 4px; }
+        .section { font-size: 12px; font-weight: bold; margin: 8px 0 3px; text-transform: uppercase; }
+        .section-first { margin-top: 0; margin-bottom: 3px; }
         .page-break { page-break-before: always; }
         .page-break .section:first-child { margin-top: 0; }
         .rows { width: 100%; border-collapse: collapse; }
-        .rows td { padding: 2.5px 0; vertical-align: top; font-size: 11px; }
+        .rows td { padding: 2px 0; vertical-align: top; font-size: 11px; }
         .rows .label { width: 38%; }
         .rows .colon { width: 14px; }
         .pernyataan-box {
-            margin-top: 10px;
+            margin-top: 0;
             text-align: justify;
             font-size: 11px;
             line-height: 1.45;
         }
-        .pernyataan-box .penutup { margin-top: 8px; }
+        .pernyataan-box p { margin: 0 0 6px; }
+        .pernyataan-box .penutup { margin: 0; }
         .surat-title {
             text-align: center;
             font-size: 14px;
@@ -85,19 +86,26 @@
             letter-spacing: 0.5px;
         }
         .surat-body { text-align: justify; font-size: 11px; line-height: 1.5; }
+        .surat-body p { margin: 0 0 6px; }
         .surat-body ol { margin: 6px 0 6px 18px; padding: 0; }
         .surat-body li { margin-bottom: 3px; }
         .identitas-surat { width: 100%; border-collapse: collapse; margin: 8px 0 10px; }
         .identitas-surat td { padding: 1.5px 0; vertical-align: top; }
         .identitas-surat .label { width: 160px; }
         .identitas-surat .colon { width: 14px; }
-        .ttd-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-        .ttd-table td {
-            width: 50%;
+        .ttd-table {
+            width: 100%;
+            margin: 34px 0 0;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .ttd-table .ttd-edge { width: 7%; padding: 0; }
+        .ttd-table .ttd-col {
+            width: 43%;
             vertical-align: top;
-            text-align: center;
+            text-align: left;
             font-size: 11px;
-            padding: 0 18px;
+            padding: 0 10px;
         }
         .ttd-meta {
             line-height: 1.1;
@@ -107,12 +115,12 @@
         .ttd-img {
             height: 72px;
             max-width: 150px;
-            margin: 10px auto 4px;
+            margin: 10px 0 4px;
             display: block;
         }
         .ttd-spacer {
             height: 72px;
-            margin: 10px auto 4px;
+            margin: 10px 0 4px;
         }
         .ttd-name {
             line-height: 1.15;
