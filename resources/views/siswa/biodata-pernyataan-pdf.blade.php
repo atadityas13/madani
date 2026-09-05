@@ -4,12 +4,12 @@
     <meta charset="utf-8">
     <title>Biodata dan Surat Pernyataan — {{ $siswa->nama }}</title>
     <style>
-        @page { margin: 56px 60px 52px; }
+        @page { margin: 36px 48px 44px; }
         body {
             font-family: DejaVu Sans, sans-serif;
             font-size: 11px;
             color: #111;
-            line-height: 1.45;
+            line-height: 1.4;
         }
         .kop { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
         .kop td { vertical-align: middle; }
@@ -63,48 +63,62 @@
         .section { font-size: 12px; font-weight: bold; margin: 12px 0 4px; text-transform: uppercase; }
         .section-first { margin-top: 0; margin-bottom: 4px; }
         .page-break { page-break-before: always; }
+        .page-break .section:first-child { margin-top: 0; }
         .rows { width: 100%; border-collapse: collapse; }
         .rows td { padding: 2.5px 0; vertical-align: top; font-size: 11px; }
         .rows .label { width: 38%; }
         .rows .colon { width: 14px; }
         .pernyataan-box {
-            margin-top: 14px;
+            margin-top: 10px;
             text-align: justify;
             font-size: 11px;
-            line-height: 1.55;
+            line-height: 1.45;
         }
-        .pernyataan-box .penutup { margin-top: 10px; }
+        .pernyataan-box .penutup { margin-top: 8px; }
         .surat-title {
             text-align: center;
             font-size: 14px;
             font-weight: bold;
             text-decoration: underline;
             text-transform: uppercase;
-            margin: 0 0 16px;
+            margin: 0 0 14px;
             letter-spacing: 0.5px;
         }
-        .surat-body { text-align: justify; font-size: 11px; line-height: 1.6; }
-        .surat-body ol { margin: 8px 0 8px 18px; padding: 0; }
-        .surat-body li { margin-bottom: 4px; }
-        .identitas-surat { width: 100%; border-collapse: collapse; margin: 10px 0 12px; }
-        .identitas-surat td { padding: 2px 0; vertical-align: top; }
+        .surat-body { text-align: justify; font-size: 11px; line-height: 1.5; }
+        .surat-body ol { margin: 6px 0 6px 18px; padding: 0; }
+        .surat-body li { margin-bottom: 3px; }
+        .identitas-surat { width: 100%; border-collapse: collapse; margin: 8px 0 10px; }
+        .identitas-surat td { padding: 1.5px 0; vertical-align: top; }
         .identitas-surat .label { width: 160px; }
         .identitas-surat .colon { width: 14px; }
-        .ttd-table { width: 100%; border-collapse: collapse; margin-top: 28px; }
+        .ttd-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
         .ttd-table td {
             width: 50%;
             vertical-align: top;
-            text-align: left;
+            text-align: center;
             font-size: 11px;
-            padding: 0 8px;
+            padding: 0 18px;
+        }
+        .ttd-meta {
+            line-height: 1.1;
+            margin: 0;
+            padding: 0;
         }
         .ttd-img {
-            height: 64px;
-            max-width: 160px;
-            margin: 6px 0;
+            height: 72px;
+            max-width: 150px;
+            margin: 10px auto 4px;
             display: block;
         }
-        .ttd-spacer { height: 64px; }
+        .ttd-spacer {
+            height: 72px;
+            margin: 10px auto 4px;
+        }
+        .ttd-name {
+            line-height: 1.15;
+            margin: 0;
+            padding: 0;
+        }
         .footer {
             position: fixed;
             left: 0;
