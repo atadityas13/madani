@@ -31,6 +31,8 @@ class AppMaintenanceTest extends TestCase
                 'title' => 'Sedang dilakukan perbaikan pada server',
                 'message' => 'Migrasi data Simpatisans ke Madani.',
                 'is_active' => '1',
+                'show_countdown' => '1',
+                'ends_at' => now('Asia/Jakarta')->addDay()->format('Y-m-d H:i:s'),
             ])
             ->assertRedirect(route('app-maintenance.index'))
             ->assertSessionHas('success');
@@ -38,7 +40,24 @@ class AppMaintenanceTest extends TestCase
         $this->assertDatabaseHas('app_maintenances', [
             'is_active' => true,
             'message' => 'Migrasi data Simpatisans ke Madani.',
+            'show_countdown' => true,
         ]);
+    }
+
+    public function test_admin_requires_ends_at_when_countdown_enabled(): void
+    {
+        $admin = $this->admin();
+
+        $this->actingAs($admin)
+            ->from(route('app-maintenance.index'))
+            ->post(route('app-maintenance.store'), [
+                'title' => 'Perbaikan',
+                'message' => 'Tunggu',
+                'is_active' => '1',
+                'show_countdown' => '1',
+            ])
+            ->assertRedirect(route('app-maintenance.index'))
+            ->assertSessionHasErrors('ends_at');
     }
 
     public function test_admin_can_disable_maintenance(): void

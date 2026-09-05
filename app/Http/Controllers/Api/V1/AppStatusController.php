@@ -18,6 +18,9 @@ class AppStatusController extends Controller
         }
 
         $active = (bool) ($item?->is_active);
+        $countdown = $active && $item
+            ? $item->countdownPayload()
+            : ['show_countdown' => false, 'ends_at' => null];
 
         return response()->json([
             'success' => true,
@@ -29,6 +32,8 @@ class AppStatusController extends Controller
                 'message' => $active
                     ? ($item?->message ?: 'Mohon maaf, layanan sementara tidak dapat digunakan.')
                     : null,
+                'show_countdown' => $countdown['show_countdown'],
+                'ends_at' => $countdown['ends_at'],
                 'updated_at' => $active
                     ? $item?->updated_at?->copy()->timezone('Asia/Jakarta')->toIso8601String()
                     : null,

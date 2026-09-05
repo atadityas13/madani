@@ -8,6 +8,11 @@
 @php
     $value = fn (string $key) => old($key, $item?->{$key} ?? $defaults[$key] ?? null);
     $isActive = old('is_active', $item?->is_active ?? $defaults['is_active']);
+    $showCountdown = old('show_countdown', $item?->show_countdown ?? $defaults['show_countdown']);
+    $endsAtValue = old('ends_at');
+    if ($endsAtValue === null && $item?->ends_at) {
+        $endsAtValue = $item->ends_at->timezone('Asia/Jakarta')->format('Y-m-d\TH:i');
+    }
 @endphp
 
 @if (session('error'))
@@ -20,7 +25,7 @@
 <div class="d-flex justify-content-between align-items-start gap-3 mb-3 flex-wrap">
     <p class="text-secondary mb-0">
         Saat aktif, halaman masuk guru/siswa di Ta'lim menampilkan layar maintenance dengan pesan di bawah.
-        Pengingat lokal dan FCM tetap berjalan.
+        Opsional: tampilkan countdown sampai waktu selesai.
     </p>
     @if ($isActive)
         <span class="badge text-bg-warning align-self-center">Maintenance aktif</span>
@@ -60,6 +65,26 @@
                 @enderror
             </div>
 
+            <hr class="my-4">
+
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" name="show_countdown" value="1" id="show_countdown"
+                    @checked($showCountdown)>
+                <label class="form-check-label fw-semibold" for="show_countdown">
+                    Tampilkan countdown di aplikasi
+                </label>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="ends_at">Perkiraan selesai</label>
+                <input class="form-control" type="datetime-local" name="ends_at" id="ends_at"
+                    value="{{ $endsAtValue }}">
+                <div class="form-text">Zona waktu Asia/Jakarta. Contoh tampilan di app: 1 hari 3 jam 2 menit 9 detik.</div>
+                @error('ends_at')
+                    <div class="text-danger small mt-1">{{ $message }}</div>
+                @enderror
+            </div>
+
             <div class="d-flex justify-content-end">
                 <button class="btn btn-madani" type="submit">Simpan</button>
             </div>
@@ -73,6 +98,7 @@
                 <li class="mb-2">Muncul di halaman login guru dan siswa.</li>
                 <li class="mb-2">Tombol konfirmasi mengembalikan user ke pilih peran.</li>
                 <li class="mb-2">Login API ditolak selama maintenance aktif.</li>
+                <li class="mb-2">Countdown hanya tampilan; maintenance tetap aktif sampai Anda nonaktifkan manual.</li>
                 <li>Push FCM dan pengingat lokal perangkat tidak dihentikan.</li>
             </ul>
         </div>

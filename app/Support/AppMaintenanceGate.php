@@ -20,6 +20,8 @@ class AppMaintenanceGate
             return null;
         }
 
+        $countdown = $item->countdownPayload();
+
         return response()->json([
             'success' => false,
             'maintenance' => true,
@@ -27,6 +29,8 @@ class AppMaintenanceGate
                 ?: 'Sedang dilakukan perbaikan pada server. Silakan coba lagi nanti.',
             'title' => $item->title
                 ?: 'Sedang dilakukan perbaikan pada server',
+            'show_countdown' => $countdown['show_countdown'],
+            'ends_at' => $countdown['ends_at'],
         ], 503);
     }
 }

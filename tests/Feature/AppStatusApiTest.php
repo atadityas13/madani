@@ -31,6 +31,8 @@ class AppStatusApiTest extends TestCase
             'is_active' => true,
             'title' => 'Sedang dilakukan perbaikan pada server',
             'message' => 'Migrasi sedang berjalan.',
+            'show_countdown' => true,
+            'ends_at' => now('Asia/Jakarta')->addDay(),
         ]);
 
         $this->getJson('/api/v1/app-status')
@@ -38,7 +40,25 @@ class AppStatusApiTest extends TestCase
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.maintenance', true)
             ->assertJsonPath('data.title', 'Sedang dilakukan perbaikan pada server')
-            ->assertJsonPath('data.message', 'Migrasi sedang berjalan.');
+            ->assertJsonPath('data.message', 'Migrasi sedang berjalan.')
+            ->assertJsonPath('data.show_countdown', true)
+            ->assertJsonStructure(['data' => ['ends_at']]);
+    }
+
+    public function test_app_status_hides_countdown_when_disabled(): void
+    {
+        AppMaintenance::query()->create([
+            'is_active' => true,
+            'title' => 'Maintenance',
+            'message' => 'Tunggu',
+            'show_countdown' => false,
+            'ends_at' => now('Asia/Jakarta')->addHours(2),
+        ]);
+
+        $this->getJson('/api/v1/app-status')
+            ->assertOk()
+            ->assertJsonPath('data.show_countdown', false)
+            ->assertJsonPath('data.ends_at', null);
     }
 
     public function test_guru_login_returns_503_during_maintenance(): void
