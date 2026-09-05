@@ -3,6 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Gtk;
+use App\Models\Rombel;
+use App\Models\Siswa;
+use App\Models\TahunAjaran;
 use App\Models\User;
 use App\Support\Peran;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -49,8 +52,45 @@ class TokenIntrospectTest extends TestCase
         ])
             ->assertOk()
             ->assertJsonPath('active', true)
+            ->assertJsonPath('role', 'guru')
             ->assertJsonPath('username', '198001012005011001')
             ->assertJsonPath('nip', '198001012005011001');
+    }
+
+    public function test_introspect_siswa_aktif_dengan_rombel(): void
+    {
+        $this->seed();
+        $siswa = Siswa::query()->create([
+            'nama' => 'Siswa Introspect',
+            'nisn' => '3344556677',
+            'nik' => '3210010101120088',
+            'tempat_lahir' => 'Majalengka',
+            'tanggal_lahir' => '2012-09-02',
+            'jenis_kelamin' => 'L',
+            'agama' => 'Islam',
+            'status_keaktifan' => 'aktif',
+        ]);
+        $tahun = TahunAjaran::aktif();
+        $this->assertNotNull($tahun);
+        $rombel = Rombel::query()->create([
+            'tahun_ajaran_id' => $tahun->id,
+            'tingkat' => 'VII',
+            'nama' => '1',
+            'program' => 'Reguler',
+        ]);
+        $siswa->rombels()->attach($rombel->id, ['status' => 'aktif']);
+        $token = $siswa->createToken('talim')->plainTextToken;
+
+        $this->postJson('/api/v1/token/introspect', ['token' => $token], [
+            'X-Madani-Introspect-Secret' => 'test-introspect-secret',
+        ])
+            ->assertOk()
+            ->assertJsonPath('active', true)
+            ->assertJsonPath('role', 'siswa')
+            ->assertJsonPath('nisn', '3344556677')
+            ->assertJsonPath('rombel.label', 'VII-1')
+            ->assertJsonPath('rombel.tingkat', 'VII')
+            ->assertJsonPath('rombel.nama', '1');
     }
 
     public function test_introspect_ditolak_tanpa_secret(): void
