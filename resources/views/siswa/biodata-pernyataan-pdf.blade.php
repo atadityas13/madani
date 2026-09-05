@@ -134,7 +134,7 @@
 <body>
 @php
     $dash = fn ($v) => filled($v) ? $v : '-';
-    $namaMadrasah = strtoupper($madrasah->nama ?: 'MADRASAH TSANAWIYAH NEGERI 11 MAJALENGKA');
+    $namaMadrasah = $madrasah->namaKop();
     $kontakKop = collect([
         $madrasah->telepon ? 'Telp. '.$madrasah->telepon : null,
         $madrasah->email ? 'E-mail: '.$madrasah->email : null,

@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use App\Support\R2Url;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
-use App\Support\R2Url;
 
 #[Fillable([
     'nama', 'npsn', 'nsm', 'jenjang', 'status', 'akreditasi', 'alamat', 'desa',
@@ -48,5 +48,13 @@ class Madrasah extends Model
         }
 
         return R2Url::temporary($this->logo_path);
+    }
+
+    /**
+     * Nama resmi untuk baris ketiga kop surat (selalu huruf besar).
+     */
+    public function namaKop(): string
+    {
+        return (string) config('madrasah.nama_kop', 'MADRASAH TSANAWIYAH NEGERI 11 MAJALENGKA');
     }
 }

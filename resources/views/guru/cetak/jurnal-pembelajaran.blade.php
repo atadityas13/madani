@@ -336,7 +336,7 @@
             <div class="cover-bottom">
                 <div class="nama">{{ $guru->nama_lengkap }}</div>
                 <div class="nip">NIP. {{ $guru->username }}</div>
-                <div class="school">MTsN 11 Majalengka</div>
+                <div class="school">{{ \App\Models\Madrasah::saatIni()->namaKop() }}</div>
                 <div class="agency">Kementerian Agama Kabupaten Majalengka</div>
             </div>
         </div>

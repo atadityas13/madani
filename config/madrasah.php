@@ -2,6 +2,7 @@
 
 return [
     'nama' => 'MTsN 11 Majalengka',
+    'nama_kop' => 'MADRASAH TSANAWIYAH NEGERI 11 MAJALENGKA',
     'npsn' => '',
     'nsm' => '',
     'jenjang' => 'MTs',
