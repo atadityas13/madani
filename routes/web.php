@@ -35,6 +35,11 @@ Route::get('/portofolio/cek/{siswa}', [SiswaController::class, 'cekPortofolio'])
     ->name('portofolio.cek')
     ->whereUuid('siswa');
 
+Route::get('/kartu-e-pelajar/cek/{siswa}', [SiswaController::class, 'cekKartuEPelajar'])
+    ->middleware('signed')
+    ->name('kartu-e-pelajar.cek')
+    ->whereUuid('siswa');
+
 Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')->name('logout');
 Route::post('/siswa/keluar', [SiswaAuthController::class, 'destroy'])->middleware('auth:siswa')->name('siswa.keluar');
 

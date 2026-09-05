@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PengajuanPerubahanSiswa;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
+use App\Services\KartuEPelajarService;
 use App\Services\PernyataanPdfService;
 use App\Services\PortofolioPdfService;
 use App\Services\SiswaBiodataService;
@@ -215,6 +216,14 @@ class SiswaController extends Controller
     {
         return view('siswa.portofolio-cek', [
             'siswa' => $siswa,
+        ]);
+    }
+
+    public function cekKartuEPelajar(Siswa $siswa, KartuEPelajarService $kartu): View
+    {
+        return view('siswa.kartu-e-pelajar-cek', [
+            'siswa' => $siswa,
+            'kartu' => $kartu->payload($siswa),
         ]);
     }
 
