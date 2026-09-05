@@ -237,6 +237,49 @@ class ElapkinBridge
     }
 
     /**
+     * Hari libur tingkat madrasah (tanpa sesi guru pemanggil).
+     * Dipakai API siswa; autentikasi e-Lapkin lewat akun kepala/service.
+     *
+     * @return array{success: bool, message?: string, status?: int, tahun?: int, data?: list<mixed>, count?: int}
+     */
+    public function hariLiburMadrasah(int $tahun): array
+    {
+        $user = $this->resolveServiceUser();
+        if (! $user) {
+            return [
+                'success' => false,
+                'message' => 'Akun layanan kalender (kepala) belum dikonfigurasi.',
+                'status' => 503,
+            ];
+        }
+
+        return $this->hariLibur($user, $tahun);
+    }
+
+    private function resolveServiceUser(): ?User
+    {
+        $kepala = $this->resolveKepalaMadrasah();
+        if ($kepala === null) {
+            return null;
+        }
+
+        $nip = trim((string) $kepala['nip']);
+        if ($nip === '') {
+            return null;
+        }
+
+        $gtk = Gtk::query()->where('nip', $nip)->first();
+        if ($gtk) {
+            $user = User::query()->where('gtk_id', $gtk->id)->where('is_aktif', true)->first();
+            if ($user) {
+                return $user;
+            }
+        }
+
+        return User::query()->where('username', $nip)->where('is_aktif', true)->first();
+    }
+
+    /**
      * @return array{nip: string, nama: string, jabatan: string, peran: string}|null
      */
     private function resolveKepalaMadrasah(): ?array

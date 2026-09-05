@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\NotifikasiController;
 use App\Http\Controllers\Api\V1\PengumumanController;
 use App\Http\Controllers\Api\V1\ReferensiController;
 use App\Http\Controllers\Api\V1\SiswaAuthController;
+use App\Http\Controllers\Api\V1\SiswaCalendarController;
 use App\Http\Controllers\Api\V1\SiswaController;
 use App\Http\Controllers\Api\V1\TokenIntrospectController;
 use Illuminate\Support\Facades\Route;
@@ -61,6 +62,8 @@ Route::prefix('v1')->group(function () {
         Route::put('siswa/password', [SiswaAuthController::class, 'updatePassword']);
         Route::get('referensi', [ReferensiController::class, 'emis']);
         Route::get('wilayah', [ReferensiController::class, 'wilayah']);
+        Route::get('siswa/calendar-events', [SiswaCalendarController::class, 'calendarEvents']);
+        Route::get('siswa/hari-libur', [SiswaCalendarController::class, 'hariLibur']);
 
         Route::middleware('siswa.password')->group(function () {
             Route::put('siswa/{bagian}', [SiswaController::class, 'update'])
