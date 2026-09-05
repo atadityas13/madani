@@ -38,10 +38,13 @@
             letter-spacing: 0.6px;
             margin: 0 0 12px;
         }
-        .head-data { width: 100%; border-collapse: collapse; margin-bottom: 2px; }
-        .head-data td { vertical-align: top; }
-        .foto-box { width: 96px; text-align: right; }
-        .foto-box img {
+        .foto-float {
+            float: right;
+            width: 90px;
+            margin: 0 0 10px 14px;
+            text-align: right;
+        }
+        .foto-float img {
             width: 86px;
             height: 108px;
             object-fit: cover;
@@ -61,15 +64,16 @@
             color: #888;
             font-size: 10px;
         }
+        .clear { clear: both; height: 0; }
         .section { font-size: 12px; font-weight: bold; margin: 12px 0 4px; text-transform: uppercase; }
         .section-first { margin-top: 0; margin-bottom: 4px; }
         .page-break { page-break-before: always; }
         .page-break .section:first-child { margin-top: 0; }
-        .rows { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        .ortu-block { page-break-inside: avoid; }
+        .rows { width: 100%; border-collapse: collapse; }
         .rows td { padding: 2.5px 0; vertical-align: top; font-size: 11px; }
-        .rows .label { width: 168px; }
-        .rows .colon { width: 12px; }
-        .rows .value { width: auto; }
+        .rows .label { width: 38%; }
+        .rows .colon { width: 14px; }
         table.data {
             width: 100%;
             border-collapse: collapse;
@@ -135,58 +139,56 @@
 
 <div class="doc-title">PORTOFOLIO SISWA</div>
 
-<table class="head-data">
+<div class="foto-float">
+    @if ($fotoDataUri)
+        <img src="{{ $fotoDataUri }}" alt="Foto siswa">
+    @else
+        <table class="foto-placeholder"><tr><td>Foto</td></tr></table>
+    @endif
+</div>
+
+<div class="section section-first">Data siswa</div>
+<table class="rows" width="100%">
     <tr>
-        <td>
-            <div class="section section-first">Data siswa</div>
-            <table class="rows">
-                <tr>
-                    <td class="label">NAMA</td>
-                    <td class="colon">:</td>
-                    <td class="value">{{ $dash($siswa->nama) }}</td>
-                </tr>
-                @foreach ($identitasRows as [$label, $value])
-                    <tr>
-                        <td class="label">{{ strtoupper($label) }}</td>
-                        <td class="colon">:</td>
-                        <td class="value">{{ $dash($value) }}</td>
-                    </tr>
-                @endforeach
-            </table>
-        </td>
-        <td class="foto-box">
-            @if ($fotoDataUri)
-                <img src="{{ $fotoDataUri }}" alt="Foto siswa">
-            @else
-                <table class="foto-placeholder"><tr><td>Foto</td></tr></table>
-            @endif
-        </td>
+        <td class="label" width="38%">NAMA</td>
+        <td class="colon" width="2%">:</td>
+        <td class="value" width="60%">{{ $dash($siswa->nama) }}</td>
     </tr>
+    @foreach ($identitasRows as [$label, $value])
+        <tr>
+            <td class="label" width="38%">{{ strtoupper($label) }}</td>
+            <td class="colon" width="2%">:</td>
+            <td class="value" width="60%">{{ $dash($value) }}</td>
+        </tr>
+    @endforeach
 </table>
+<div class="clear"></div>
 
 <div class="section">Alamat siswa</div>
-<table class="rows">
+<table class="rows" width="100%">
     @foreach ($alamatRows as [$label, $value])
         <tr>
-            <td class="label">{{ strtoupper($label) }}</td>
-            <td class="colon">:</td>
-            <td class="value">{{ $dash($value) }}</td>
+            <td class="label" width="38%">{{ strtoupper($label) }}</td>
+            <td class="colon" width="2%">:</td>
+            <td class="value" width="60%">{{ $dash($value) }}</td>
         </tr>
     @endforeach
 </table>
 
 <div class="page-break">
 @foreach ([['Ayah kandung', $ayahRows], ['Ibu kandung', $ibuRows], ['Wali', $waliRows]] as [$judulOrtu, $rowsOrtu])
-    <div class="section{{ $loop->first ? ' section-first' : '' }}">{{ $judulOrtu }}</div>
-    <table class="rows">
-        @foreach ($rowsOrtu as [$label, $value])
-            <tr>
-                <td class="label">{{ strtoupper($label) }}</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $dash($value) }}</td>
-            </tr>
-        @endforeach
-    </table>
+    <div class="ortu-block">
+        <div class="section{{ $loop->first ? ' section-first' : '' }}">{{ $judulOrtu }}</div>
+        <table class="rows" width="100%">
+            @foreach ($rowsOrtu as [$label, $value])
+                <tr>
+                    <td class="label" width="38%">{{ strtoupper($label) }}</td>
+                    <td class="colon" width="2%">:</td>
+                    <td class="value" width="60%">{{ $dash($value) }}</td>
+                </tr>
+            @endforeach
+        </table>
+    </div>
 @endforeach
 </div>
 

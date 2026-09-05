@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Biodata dan Surat Pernyataan — {{ $siswa->nama }}</title>
     <style>
-        @page { margin: 36px 64px 44px; }
+        @page { margin: 40px 54px 48px; }
         body {
             font-family: DejaVu Sans, sans-serif;
             font-size: 11px;
@@ -37,10 +37,13 @@
             letter-spacing: 0.6px;
             margin: 0 0 12px;
         }
-        .head-data { width: 100%; border-collapse: collapse; margin-bottom: 2px; }
-        .head-data td { vertical-align: top; }
-        .foto-box { width: 96px; text-align: right; }
-        .foto-box img {
+        .foto-float {
+            float: right;
+            width: 90px;
+            margin: 0 0 10px 14px;
+            text-align: right;
+        }
+        .foto-float img {
             width: 86px;
             height: 108px;
             object-fit: cover;
@@ -60,15 +63,16 @@
             color: #888;
             font-size: 10px;
         }
-        .section { font-size: 12px; font-weight: bold; margin: 8px 0 3px; text-transform: uppercase; }
+        .clear { clear: both; height: 0; }
+        .section { font-size: 12px; font-weight: bold; margin: 10px 0 3px; text-transform: uppercase; }
         .section-first { margin-top: 0; margin-bottom: 3px; }
         .page-break { page-break-before: always; }
         .page-break .section:first-child { margin-top: 0; }
-        .rows { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        .ortu-block { page-break-inside: avoid; }
+        .rows { width: 100%; border-collapse: collapse; }
         .rows td { padding: 2px 0; vertical-align: top; font-size: 11px; }
-        .rows .label { width: 168px; }
-        .rows .colon { width: 12px; }
-        .rows .value { width: auto; }
+        .rows .label { width: 38%; }
+        .rows .colon { width: 14px; text-align: left; }
         .pernyataan-box {
             margin-top: 0;
             text-align: justify;
@@ -77,9 +81,7 @@
         }
         .pernyataan-box p { margin: 0 0 6px; }
         .pernyataan-box .penutup { margin: 0; }
-        .surat-wrap {
-            padding: 28px 18px 0;
-        }
+        .surat-wrap { padding: 24px 14px 0; }
         .surat-title {
             text-align: center;
             font-size: 14px;
@@ -95,50 +97,24 @@
         .surat-body li { margin-bottom: 3px; }
         .identitas-surat { width: 100%; border-collapse: collapse; margin: 8px 0 10px; }
         .identitas-surat td { padding: 1.5px 0; vertical-align: top; }
-        .identitas-surat .label { width: 168px; }
-        .identitas-surat .colon { width: 12px; }
-        .ttd-table {
-            width: 100%;
-            margin: 34px 0 0;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-        .ttd-side {
-            width: 50%;
-            vertical-align: top;
-            font-size: 11px;
-            padding: 0;
-        }
-        .ttd-side-left { text-align: left; }
-        .ttd-side-right { text-align: right; }
-        .ttd-block {
-            width: 168px;
+        .identitas-surat .label { width: 38%; }
+        .identitas-surat .colon { width: 14px; }
+        .ttd-table { width: 100%; border-collapse: collapse; margin-top: 34px; }
+        .ttd-table > tbody > tr > td { vertical-align: top; width: 50%; padding: 0; }
+        .ttd-inner { width: 175px; border-collapse: collapse; }
+        .ttd-inner td {
             text-align: left;
-            display: inline-block;
-        }
-        .ttd-meta {
-            line-height: 1.1;
-            margin: 0;
+            font-size: 11px;
+            line-height: 1.15;
             padding: 0;
         }
         .ttd-img {
             width: 150px;
             height: 72px;
-            object-fit: contain;
-            object-position: left center;
             margin: 10px 0 4px;
             display: block;
         }
-        .ttd-spacer {
-            width: 150px;
-            height: 72px;
-            margin: 10px 0 4px;
-        }
-        .ttd-name {
-            line-height: 1.15;
-            margin: 0;
-            padding: 0;
-        }
+        .ttd-spacer { width: 150px; height: 72px; margin: 10px 0 4px; }
         .footer {
             position: fixed;
             left: 0;
@@ -169,6 +145,7 @@
         $siswa->tempat_lahir,
         $siswa->tanggal_lahir?->locale('id')->translatedFormat('d F Y'),
     ])->filter()->implode(', ');
+    $identitasAll = array_merge([['Nama', $siswa->nama]], $identitasRows);
 @endphp
 
 {{-- ========== BIODATA SISWA ========== --}}
@@ -197,69 +174,62 @@
 
 <div class="doc-title">Biodata Siswa</div>
 
-<table class="head-data">
-    <tr>
-        <td>
-            <div class="section section-first">Data siswa</div>
-            <table class="rows">
-                <tr>
-                    <td class="label">NAMA</td>
-                    <td class="colon">:</td>
-                    <td class="value">{{ $dash($siswa->nama) }}</td>
-                </tr>
-                @foreach ($identitasRows as [$label, $value])
-                    <tr>
-                        <td class="label">{{ strtoupper($label) }}</td>
-                        <td class="colon">:</td>
-                        <td class="value">{{ $dash($value) }}</td>
-                    </tr>
-                @endforeach
-            </table>
-        </td>
-        <td class="foto-box">
-            @if ($fotoDataUri)
-                <img src="{{ $fotoDataUri }}" alt="Foto siswa">
-            @else
-                <table class="foto-placeholder"><tr><td>Foto</td></tr></table>
-            @endif
-        </td>
-    </tr>
+<div class="foto-float">
+    @if ($fotoDataUri)
+        <img src="{{ $fotoDataUri }}" alt="Foto siswa">
+    @else
+        <table class="foto-placeholder"><tr><td>Foto</td></tr></table>
+    @endif
+</div>
+
+<div class="section section-first">Data siswa</div>
+<table class="rows" width="100%">
+    @foreach ($identitasAll as [$label, $value])
+        <tr>
+            <td class="label" width="38%">{{ strtoupper($label) }}</td>
+            <td class="colon" width="2%">:</td>
+            <td class="value" width="60%">{{ $dash($value) }}</td>
+        </tr>
+    @endforeach
 </table>
+<div class="clear"></div>
 
 <div class="section">Alamat siswa</div>
-<table class="rows">
+<table class="rows" width="100%">
     @foreach ($alamatRows as [$label, $value])
         <tr>
-            <td class="label">{{ strtoupper($label) }}</td>
-            <td class="colon">:</td>
-            <td class="value">{{ $dash($value) }}</td>
+            <td class="label" width="38%">{{ strtoupper($label) }}</td>
+            <td class="colon" width="2%">:</td>
+            <td class="value" width="60%">{{ $dash($value) }}</td>
         </tr>
     @endforeach
 </table>
 
 <div class="page-break">
 @foreach ([['Ayah kandung', $ayahRows], ['Ibu kandung', $ibuRows], ['Wali', $waliRows]] as [$judulOrtu, $rowsOrtu])
-    <div class="section{{ $loop->first ? ' section-first' : '' }}">{{ $judulOrtu }}</div>
-    <table class="rows">
-        @foreach ($rowsOrtu as [$label, $value])
-            <tr>
-                <td class="label">{{ strtoupper($label) }}</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $dash($value) }}</td>
-            </tr>
-        @endforeach
-    </table>
+    <div class="ortu-block">
+        <div class="section{{ $loop->first ? ' section-first' : '' }}">{{ $judulOrtu }}</div>
+        <table class="rows" width="100%">
+            @foreach ($rowsOrtu as [$label, $value])
+                <tr>
+                    <td class="label" width="38%">{{ strtoupper($label) }}</td>
+                    <td class="colon" width="2%">:</td>
+                    <td class="value" width="60%">{{ $dash($value) }}</td>
+                </tr>
+            @endforeach
+        </table>
+    </div>
 @endforeach
 </div>
 
 <div class="page-break">
 <div class="section section-first">Data jenjang sebelumnya</div>
-<table class="rows">
+<table class="rows" width="100%">
     @foreach ($jenjangRows as [$label, $value])
         <tr>
-            <td class="label">{{ strtoupper($label) }}</td>
-            <td class="colon">:</td>
-            <td class="value">{{ $dash($value) }}</td>
+            <td class="label" width="38%">{{ strtoupper($label) }}</td>
+            <td class="colon" width="2%">:</td>
+            <td class="value" width="60%">{{ $dash($value) }}</td>
         </tr>
     @endforeach
 </table>
@@ -288,14 +258,42 @@
 
 <div class="surat-body">
     <p>Yang bertanda tangan di bawah ini:</p>
-    <table class="identitas-surat">
-        <tr><td class="label">Nama</td><td class="colon">:</td><td>{{ $dash($siswa->nama) }}</td></tr>
-        <tr><td class="label">NISN</td><td class="colon">:</td><td>{{ $dash($siswa->nisn) }}</td></tr>
-        <tr><td class="label">NIS</td><td class="colon">:</td><td>{{ $dash($siswa->nis) }}</td></tr>
-        <tr><td class="label">NIK</td><td class="colon">:</td><td>{{ $dash($siswa->nik) }}</td></tr>
-        <tr><td class="label">Tempat, tanggal lahir</td><td class="colon">:</td><td>{{ $dash($ttl) }}</td></tr>
-        <tr><td class="label">Jenis Kelamin</td><td class="colon">:</td><td>{{ $dash($jk) }}</td></tr>
-        <tr><td class="label">Nama orang tua/wali</td><td class="colon">:</td><td>{{ $dash($namaWaliEfektif) }}</td></tr>
+    <table class="identitas-surat" width="100%">
+        <tr>
+            <td class="label" width="38%">Nama</td>
+            <td class="colon" width="2%">:</td>
+            <td width="60%">{{ $dash($siswa->nama) }}</td>
+        </tr>
+        <tr>
+            <td class="label" width="38%">NISN</td>
+            <td class="colon" width="2%">:</td>
+            <td width="60%">{{ $dash($siswa->nisn) }}</td>
+        </tr>
+        <tr>
+            <td class="label" width="38%">NIS</td>
+            <td class="colon" width="2%">:</td>
+            <td width="60%">{{ $dash($siswa->nis) }}</td>
+        </tr>
+        <tr>
+            <td class="label" width="38%">NIK</td>
+            <td class="colon" width="2%">:</td>
+            <td width="60%">{{ $dash($siswa->nik) }}</td>
+        </tr>
+        <tr>
+            <td class="label" width="38%">Tempat, tanggal lahir</td>
+            <td class="colon" width="2%">:</td>
+            <td width="60%">{{ $dash($ttl) }}</td>
+        </tr>
+        <tr>
+            <td class="label" width="38%">Jenis Kelamin</td>
+            <td class="colon" width="2%">:</td>
+            <td width="60%">{{ $dash($jk) }}</td>
+        </tr>
+        <tr>
+            <td class="label" width="38%">Nama orang tua/wali</td>
+            <td class="colon" width="2%">:</td>
+            <td width="60%">{{ $dash($namaWaliEfektif) }}</td>
+        </tr>
     </table>
 
     <p>Dengan ini menyatakan yang sesungguhnya bahwa sebagai peserta didik di MTsN 11 Majalengka, saya bersedia dan sanggup untuk:</p>

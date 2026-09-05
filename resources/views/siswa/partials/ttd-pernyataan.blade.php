@@ -1,29 +1,37 @@
-<table class="ttd-table">
+<table class="ttd-table" width="100%">
     <tr>
-        <td class="ttd-side ttd-side-left">
-            <div class="ttd-block">
-                <div class="ttd-meta">Mengetahui</div>
-                <div class="ttd-meta">Orang tua/wali</div>
-                @if (filled($ttdWaliDataUri))
-                    <img class="ttd-img" src="{{ $ttdWaliDataUri }}" alt="TTD wali">
-                @else
-                    <div class="ttd-spacer"></div>
-                @endif
-                <div class="ttd-name"><strong>{{ $namaWali ?: '—' }}</strong></div>
-            </div>
+        <td width="50%" valign="top" align="left">
+            <table class="ttd-inner" width="175" align="left">
+                <tr><td>Mengetahui</td></tr>
+                <tr><td>Orang tua/wali</td></tr>
+                <tr>
+                    <td>
+                        @if (filled($ttdWaliDataUri))
+                            <img class="ttd-img" src="{{ $ttdWaliDataUri }}" alt="TTD wali">
+                        @else
+                            <div class="ttd-spacer"></div>
+                        @endif
+                    </td>
+                </tr>
+                <tr><td><strong>{{ $namaWali ?: '—' }}</strong></td></tr>
+            </table>
         </td>
-        <td class="ttd-side ttd-side-right">
-            <div class="ttd-block">
-                <div class="ttd-meta">{{ $kota }}, {{ $tanggalSurat }}</div>
-                <div class="ttd-meta">Peserta Didik</div>
-                @if (filled($ttdSiswaDataUri))
-                    <img class="ttd-img" src="{{ $ttdSiswaDataUri }}" alt="TTD siswa">
-                @else
-                    <div class="ttd-spacer"></div>
-                @endif
-                <div class="ttd-name"><strong>{{ $namaSiswa }}</strong></div>
-                <div class="ttd-meta">NISN. {{ $nisn ?: '—' }}</div>
-            </div>
+        <td width="50%" valign="top" align="right">
+            <table class="ttd-inner" width="175" align="right">
+                <tr><td>{{ $kota }}, {{ $tanggalSurat }}</td></tr>
+                <tr><td>Peserta Didik</td></tr>
+                <tr>
+                    <td>
+                        @if (filled($ttdSiswaDataUri))
+                            <img class="ttd-img" src="{{ $ttdSiswaDataUri }}" alt="TTD siswa">
+                        @else
+                            <div class="ttd-spacer"></div>
+                        @endif
+                    </td>
+                </tr>
+                <tr><td><strong>{{ $namaSiswa }}</strong></td></tr>
+                <tr><td>NISN. {{ $nisn ?: '—' }}</td></tr>
+            </table>
         </td>
     </tr>
 </table>
