@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PengajuanPerubahanSiswa;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
+use App\Services\PernyataanPdfService;
 use App\Services\PortofolioPdfService;
 use App\Services\SiswaBiodataService;
 use App\Support\KelengkapanSiswa;
@@ -89,7 +90,7 @@ class SiswaController extends Controller
         $siswa->load([
             'orangTuas', 'periodiks.tahunAjaran', 'rombels.tahunAjaran',
             'beasiswas', 'prestasis', 'rekamDidik', 'dokumens', 'ayah', 'ibu',
-            'pengajuanPerubahans',
+            'pengajuanPerubahans', 'pernyataan',
         ]);
 
         $diminta = request('tab');
@@ -157,7 +158,7 @@ class SiswaController extends Controller
             ->with('status', 'Data dihapus.');
     }
 
-        public function destroyDokumen(Siswa $siswa, string $jenis): RedirectResponse
+    public function destroyDokumen(Siswa $siswa, string $jenis): RedirectResponse
     {
         $this->authorize('update', $siswa);
 
@@ -199,6 +200,15 @@ class SiswaController extends Controller
         $this->authorize('view', $siswa);
 
         return $portofolio->download($siswa);
+    }
+
+    public function pernyataanDownload(Siswa $siswa, PernyataanPdfService $pdf): Response
+    {
+        $this->authorize('view', $siswa);
+        $item = $siswa->pernyataan;
+        abort_unless($item, 404);
+
+        return $pdf->downloadSaved($item);
     }
 
     public function cekPortofolio(Siswa $siswa): View

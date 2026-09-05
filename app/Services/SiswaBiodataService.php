@@ -46,7 +46,7 @@ class SiswaBiodataService
     {
         $this->ensureRelasi($siswa);
 
-        return match ($bagian) {
+        $pesan = match ($bagian) {
             'orang-tua' => $this->updateOrangTua($request, $siswa),
             'alamat' => $this->updateAlamat($request, $siswa),
             'aktivitas' => $this->updateAktivitas($request, $siswa),
@@ -55,6 +55,8 @@ class SiswaBiodataService
             'rekam-didik' => $this->updateRekamDidik($request, $siswa),
             default => $this->updateDataSiswa($request, $siswa, $kunciIdentitas),
         };
+
+        return $pesan;
     }
 
     public function hapusRelasi(Siswa $siswa, string $jenis, int $id): string

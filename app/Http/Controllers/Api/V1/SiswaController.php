@@ -4,11 +4,15 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Siswa;
+use App\Services\PernyataanPdfService;
 use App\Services\PortofolioPdfService;
 use App\Services\SiswaBiodataService;
+use App\Services\SiswaPernyataanService;
 use App\Support\KelengkapanSiswa;
 use App\Support\R2Url;
+use App\Support\SiswaDataLock;
 use App\Support\SiswaPortalPayload;
+use Aws\S3\S3Client;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -27,6 +31,13 @@ class SiswaController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Riwayat akademik hanya dapat diubah oleh madrasah.',
+            ], 403);
+        }
+
+        if (SiswaDataLock::aktif($siswa) && SiswaDataLock::bagianTerkunci($bagian)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data wajib terkunci setelah pernyataan dikonfirmasi.',
             ], 403);
         }
 
@@ -82,6 +93,14 @@ class SiswaController extends Controller
     {
         /** @var Siswa $siswa */
         $siswa = $request->user();
+
+        if (SiswaDataLock::aktif($siswa) && SiswaDataLock::dokumenTerkunci($jenis)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data wajib terkunci setelah pernyataan dikonfirmasi.',
+            ], 403);
+        }
+
         $map = [
             'kk' => 'file_kk',
             'akta_lahir' => 'file_akta',
@@ -128,10 +147,18 @@ class SiswaController extends Controller
 
         /** @var Siswa $siswa */
         $siswa = $request->user();
+
+        if (SiswaDataLock::aktif($siswa) && SiswaDataLock::dokumenTerkunci($validated['jenis'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data wajib terkunci setelah pernyataan dikonfirmasi.',
+            ], 403);
+        }
+
         $ext = strtolower(pathinfo($validated['filename'], PATHINFO_EXTENSION) ?: 'jpg');
         $key = $this->objectKeyUntuk($siswa->id, $validated['jenis'], $ext);
 
-        /** @var \Aws\S3\S3Client $client */
+        /** @var S3Client $client */
         $client = Storage::disk('r2')->getClient();
         $cmd = $client->getCommand('PutObject', [
             'Bucket' => config('filesystems.disks.r2.bucket'),
@@ -156,6 +183,13 @@ class SiswaController extends Controller
 
         /** @var Siswa $siswa */
         $siswa = $request->user();
+
+        if (SiswaDataLock::aktif($siswa) && SiswaDataLock::dokumenTerkunci($validated['jenis'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data wajib terkunci setelah pernyataan dikonfirmasi.',
+            ], 403);
+        }
 
         if (! Storage::disk('r2')->exists($validated['object_key'])) {
             return response()->json([
@@ -212,6 +246,14 @@ class SiswaController extends Controller
     {
         /** @var Siswa $siswa */
         $siswa = $request->user();
+
+        if (SiswaDataLock::aktif($siswa)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data wajib terkunci setelah pernyataan dikonfirmasi.',
+            ], 403);
+        }
+
         $pesan = $this->biodata->ajukanPerubahan($request, $siswa);
 
         return response()->json([
@@ -235,5 +277,74 @@ class SiswaController extends Controller
         }
 
         return $portofolio->download($siswa);
+    }
+
+    public function previewPernyataan(
+        Request $request,
+        SiswaPernyataanService $pernyataan,
+        PernyataanPdfService $pdf,
+    ): Response|JsonResponse {
+        /** @var Siswa $siswa */
+        $siswa = $request->user();
+        $pernyataan->pastikanWajibLengkap($siswa);
+
+        $validated = $request->validate([
+            'setuju_poin_1' => ['accepted'],
+            'setuju_poin_2' => ['accepted'],
+            'ttd_siswa' => ['required', 'string'],
+            'ttd_wali' => ['required', 'string'],
+        ]);
+
+        $tanda = $pernyataan->siapkanTandaTangan($siswa, $validated['ttd_siswa'], $validated['ttd_wali']);
+
+        return $pdf->preview($siswa, [
+            'ttd_siswa_data_uri' => $tanda['ttd_siswa_data_uri'],
+            'ttd_wali_data_uri' => $tanda['ttd_wali_data_uri'],
+            'nama_wali' => $tanda['nama_wali'],
+            'tanggal' => $tanda['tanggal'],
+        ]);
+    }
+
+    public function storePernyataan(Request $request, SiswaPernyataanService $pernyataan): JsonResponse
+    {
+        /** @var Siswa $siswa */
+        $siswa = $request->user();
+
+        $validated = $request->validate([
+            'setuju_poin_1' => ['accepted'],
+            'setuju_poin_2' => ['accepted'],
+            'ttd_siswa' => ['required', 'string'],
+            'ttd_wali' => ['required', 'string'],
+        ]);
+
+        $pernyataan->simpan(
+            $siswa,
+            (bool) $validated['setuju_poin_1'],
+            (bool) $validated['setuju_poin_2'],
+            $validated['ttd_siswa'],
+            $validated['ttd_wali'],
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pernyataan berhasil dikirim.',
+            'data' => SiswaPortalPayload::make($siswa->fresh()),
+        ]);
+    }
+
+    public function downloadPernyataan(Request $request, PernyataanPdfService $pdf): Response|JsonResponse
+    {
+        /** @var Siswa $siswa */
+        $siswa = $request->user();
+        $item = $siswa->pernyataan()->first();
+
+        if (! $item) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pernyataan belum dikirim.',
+            ], 404);
+        }
+
+        return $pdf->downloadSaved($item);
     }
 }

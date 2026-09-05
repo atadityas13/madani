@@ -75,6 +75,9 @@ Route::prefix('v1')->group(function () {
             Route::post('siswa/upload-confirm', [SiswaController::class, 'confirmUpload']);
             Route::post('siswa/pengajuan-perubahan', [SiswaController::class, 'storePengajuan']);
             Route::get('siswa/portofolio.pdf', [SiswaController::class, 'portofolio']);
+            Route::post('siswa/pernyataan/preview', [SiswaController::class, 'previewPernyataan']);
+            Route::post('siswa/pernyataan', [SiswaController::class, 'storePernyataan']);
+            Route::get('siswa/pernyataan/unduh', [SiswaController::class, 'downloadPernyataan']);
         });
     });
 });

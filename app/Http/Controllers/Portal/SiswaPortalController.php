@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Siswa;
 use App\Services\SiswaBiodataService;
 use App\Support\KelengkapanSiswa;
+use App\Support\SiswaDataLock;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -61,6 +62,12 @@ class SiswaPortalController extends Controller
                 ->with('status', 'Riwayat akademik hanya dapat diubah oleh madrasah.');
         }
 
+        if (SiswaDataLock::aktif($siswa) && SiswaDataLock::bagianTerkunci($bagian)) {
+            return redirect()
+                ->route('siswa.portal', ['tab' => $bagian])
+                ->with('status', 'Data wajib terkunci setelah pernyataan dikonfirmasi.');
+        }
+
         $pesan = $this->biodata->updateBagian($request, $siswa, $bagian, kunciIdentitas: true);
         $tab = in_array($bagian, ['orang-tua', 'alamat', 'beasiswa', 'prestasi', 'rekam-didik'], true)
             ? $bagian
@@ -74,6 +81,13 @@ class SiswaPortalController extends Controller
     public function storePengajuan(Request $request): RedirectResponse
     {
         $siswa = $this->siswa();
+
+        if (SiswaDataLock::aktif($siswa)) {
+            return redirect()
+                ->route('siswa.portal', ['tab' => 'data-siswa'])
+                ->with('status', 'Data wajib terkunci setelah pernyataan dikonfirmasi.');
+        }
+
         $pesan = $this->biodata->ajukanPerubahan($request, $siswa);
 
         return redirect()

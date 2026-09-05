@@ -118,6 +118,7 @@ Route::middleware('auth')->group(function () {
     Route::get('siswa/{siswa}/portofolio', [SiswaController::class, 'portofolio'])->name('siswa.portofolio')->whereUuid('siswa');
     Route::get('siswa/{siswa}/portofolio/stream', [SiswaController::class, 'portofolioStream'])->name('siswa.portofolio.stream')->whereUuid('siswa');
     Route::get('siswa/{siswa}/portofolio.pdf', [SiswaController::class, 'portofolioDownload'])->name('siswa.portofolio.download')->whereUuid('siswa');
+    Route::get('siswa/{siswa}/pernyataan.pdf', [SiswaController::class, 'pernyataanDownload'])->name('siswa.pernyataan.download')->whereUuid('siswa');
     Route::delete('siswa/{siswa}/relasi', [SiswaController::class, 'destroyRelasi'])->name('siswa.relasi.destroy')->whereUuid('siswa');
     Route::delete('siswa/{siswa}/dokumen/{jenis}', [SiswaController::class, 'destroyDokumen'])
         ->name('siswa.dokumen.destroy')

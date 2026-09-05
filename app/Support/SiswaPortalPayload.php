@@ -8,6 +8,7 @@ use App\Models\RekamDidik;
 use App\Models\Siswa;
 use App\Models\SiswaPeriodik;
 use App\Models\TahunAjaran;
+
 class SiswaPortalPayload
 {
     /**
@@ -18,7 +19,7 @@ class SiswaPortalPayload
         $siswa->load([
             'orangTuas', 'periodiks.tahunAjaran', 'rombels.tahunAjaran',
             'beasiswas', 'prestasis', 'rekamDidik', 'dokumens', 'ayah', 'ibu', 'wali',
-            'pengajuanPerubahans',
+            'pengajuanPerubahans', 'pernyataan',
         ]);
 
         $periodik = $siswa->periodikAktif();
@@ -109,6 +110,25 @@ class SiswaPortalPayload
                 ],
             ]),
             'data_masuk' => $siswa->dataMasukAkademik(),
+            'pernyataan' => self::pernyataan($siswa),
+            'nama_wali_efektif' => PernyataanSiswa::namaWaliEfektif($siswa),
+            'teks_pernyataan' => PernyataanSiswa::teksAktif(),
+        ];
+    }
+
+    /**
+     * @return array{sudah: bool, data_terkunci: bool, dikonfirmasi_at: ?string, nama_wali: ?string}
+     */
+    private static function pernyataan(Siswa $siswa): array
+    {
+        $item = $siswa->pernyataan;
+        $sudah = $item !== null;
+
+        return [
+            'sudah' => $sudah,
+            'data_terkunci' => $sudah,
+            'dikonfirmasi_at' => $item?->dikonfirmasi_at?->toIso8601String(),
+            'nama_wali' => $item?->nama_wali,
         ];
     }
 

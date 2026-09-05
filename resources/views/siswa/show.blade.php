@@ -27,11 +27,17 @@
         <div class="emis-student-meta">
             NISN {{ $siswa->nisn ?: 'belum ada' }}
             · {{ str_replace('_', ' ', $siswa->status_keaktifan) }}
+            @if ($siswa->pernyataan)
+                · <span class="text-success">Pernyataan {{ $siswa->pernyataan->dikonfirmasi_at?->timezone(config('app.timezone'))->format('d/m/Y') }}</span>
+            @endif
         </div>
     </div>
     @if (! $portal)
         <div class="ms-auto d-flex gap-2 flex-wrap justify-content-end">
             <a class="btn btn-outline-secondary btn-sm" href="{{ route('siswa.portofolio', $siswa) }}">Portofolio</a>
+            @if ($siswa->pernyataan)
+                <a class="btn btn-outline-secondary btn-sm" href="{{ route('siswa.pernyataan.download', $siswa) }}">Pernyataan PDF</a>
+            @endif
             @if (auth()->user()?->mengampu($siswa) && $siswa->tanggal_lahir)
                 <form method="POST" action="{{ route('siswa.reset-password', $siswa) }}" data-confirm="Reset password ke tanggal lahir (ddmmyyyy)? Siswa wajib mengubahnya saat masuk." data-confirm-title="Reset password" data-loading-text="Mereset…">
                     @csrf

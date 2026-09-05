@@ -166,6 +166,11 @@ class Siswa extends Authenticatable
         return $this->hasOne(RekamDidik::class);
     }
 
+    public function pernyataan(): HasOne
+    {
+        return $this->hasOne(SiswaPernyataan::class);
+    }
+
     public function rombelAktif(): ?Rombel
     {
         return $this->rombels()
