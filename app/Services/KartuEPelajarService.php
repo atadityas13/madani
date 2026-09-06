@@ -108,27 +108,33 @@ class KartuEPelajarService
     private function formatAlamatMadrasah(Madrasah $madrasah): string
     {
         $alamat = trim((string) ($madrasah->alamat ?? ''));
-        $haystack = mb_strtolower($alamat);
+        $haystack = mb_strtolower(preg_replace('/\s+/', ' ', $alamat) ?? $alamat);
 
-        $extras = [];
+        $segments = [];
+        if ($alamat !== '') {
+            $segments[] = $alamat;
+        }
+
         foreach ([
             filled($madrasah->desa) ? ['Desa '.$madrasah->desa, (string) $madrasah->desa] : null,
             filled($madrasah->kecamatan) ? ['Kec. '.$madrasah->kecamatan, (string) $madrasah->kecamatan] : null,
             filled($madrasah->kota) ? ['Kab. '.$madrasah->kota, (string) $madrasah->kota] : null,
+            filled($madrasah->provinsi) ? [(string) $madrasah->provinsi, (string) $madrasah->provinsi] : null,
+            filled($madrasah->kode_pos) ? [(string) $madrasah->kode_pos, (string) $madrasah->kode_pos] : null,
         ] as $pair) {
             if ($pair === null) {
                 continue;
             }
             [$label, $needle] = $pair;
-            if ($needle !== '' && ! str_contains($haystack, mb_strtolower($needle))) {
-                $extras[] = $label;
+            $needle = mb_strtolower(trim($needle));
+            if ($needle === '' || str_contains($haystack, $needle)) {
+                continue;
             }
+            $segments[] = $label;
+            $haystack .= ' '.$needle;
         }
 
-        $line = trim($alamat.' '.implode(' ', $extras));
-        if (filled($madrasah->kode_pos) && ! str_contains($line, (string) $madrasah->kode_pos)) {
-            $line = trim($line.' '.$madrasah->kode_pos);
-        }
+        $line = trim(implode(', ', $segments));
 
         return $line !== '' ? $line : (string) config('madrasah.alamat', '');
     }
