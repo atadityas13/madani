@@ -112,14 +112,22 @@ class KartuEPelajarService
 
     private function formatAlamatMadrasah(Madrasah $madrasah): string
     {
-        $line = trim(implode(', ', array_filter([
-            $madrasah->alamat,
-            $madrasah->desa,
-            $madrasah->kecamatan ? 'Kec. '.$madrasah->kecamatan : null,
-            $madrasah->kota ? 'Kab. '.$madrasah->kota : null,
+        // Samakan gaya kop surat: alamat jalan + wilayah ringkas, tanpa dobel.
+        $parts = [];
+        if (filled($madrasah->alamat)) {
+            $parts[] = (string) $madrasah->alamat;
+        }
+        $wilayah = array_filter([
+            filled($madrasah->kecamatan) ? 'Kec. '.$madrasah->kecamatan : null,
+            filled($madrasah->kota) ? 'Kab. '.$madrasah->kota : null,
             $madrasah->provinsi,
             $madrasah->kode_pos,
-        ], fn ($v) => filled($v))));
+        ], fn ($v) => filled($v));
+        if ($wilayah !== []) {
+            $parts[] = implode(', ', $wilayah);
+        }
+
+        $line = trim(implode(' ', $parts));
 
         return $line !== '' ? $line : (string) config('madrasah.alamat', '');
     }
