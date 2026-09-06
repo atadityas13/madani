@@ -67,10 +67,10 @@ class NotifikasiController extends Controller
                 'audio_url' => $item->audio_url,
                 'sound_key' => $item->sound_key ?: Notifikasi::SOUND_DEFAULT,
                 'priority' => $item->priority ?: Notifikasi::PRIORITY_NORMAL,
-                'use_periode' => (bool) $item->use_periode,
+                'use_periode' => false,
                 'dismissible' => $item->isDismissible(),
-                'starts_at' => $item->starts_at?->timezone('Asia/Jakarta')->toIso8601String(),
-                'ends_at' => $item->ends_at?->timezone('Asia/Jakarta')->toIso8601String(),
+                'starts_at' => null,
+                'ends_at' => null,
                 'published_at' => $at?->copy()->timezone('Asia/Jakarta')->toIso8601String(),
                 'is_read' => $read !== null && $read->read_at !== null,
             ];

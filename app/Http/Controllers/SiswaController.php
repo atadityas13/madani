@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PengajuanPerubahanSiswa;
+use App\Models\PeriodePendataan;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Services\KartuEPelajarService;
@@ -55,7 +56,9 @@ class SiswaController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('siswa.index', compact('siswas', 'q'));
+        $periodePendataan = PeriodePendataan::current();
+
+        return view('siswa.index', compact('siswas', 'q', 'periodePendataan'));
     }
 
     public function create(): View

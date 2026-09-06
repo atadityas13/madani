@@ -1,7 +1,6 @@
 @php
     $jenis = old('jenis', $item->jenis ?? 'notifikasi');
     $audience = old('audience', $item->audience ?? 'semua_guru');
-    $usePeriode = (string) old('use_periode', ($item->use_periode ?? false) ? '1' : '0') === '1';
     $soundKey = old('sound_key', $item->sound_key ?? 'default');
     $priority = old('priority', $item->priority ?? 'normal');
     $selectedIds = collect(old('audience_ids', $item->audience_ids ?? []))->map(fn ($v) => (string) $v)->all();
@@ -145,27 +144,6 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-12 js-periode-wrap" @style(['display: none' => $jenis !== 'pengingat'])>
-                <div class="form-check mb-2">
-                    <input class="form-check-input js-use-periode" type="checkbox" name="use_periode" value="1" id="usePeriode{{ $item->id ?? 'new' }}"
-                        @checked($usePeriode)>
-                    <label class="form-check-label" for="usePeriode{{ $item->id ?? 'new' }}">
-                        Gunakan periode waktu (tidak bisa ditutup + countdown)
-                    </label>
-                </div>
-                <div class="row g-3 js-periode-dates" @style(['display: none' => ! $usePeriode])>
-                    <div class="col-md-6">
-                        <label class="form-label">Mulai</label>
-                        <input class="form-control" type="datetime-local" name="starts_at"
-                            value="{{ old('starts_at', $item?->starts_at?->timezone('Asia/Jakarta')->format('Y-m-d\\TH:i')) }}">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Selesai</label>
-                        <input class="form-control" type="datetime-local" name="ends_at"
-                            value="{{ old('ends_at', $item?->ends_at?->timezone('Asia/Jakarta')->format('Y-m-d\\TH:i')) }}">
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
     <div class="col-lg-4">
@@ -194,18 +172,6 @@
             box.style.display = match ? '' : 'none';
             box.querySelectorAll('select').forEach((el) => { el.disabled = !match; });
         });
-    };
-    const syncJenis = () => {
-        const jenis = form.querySelector('.js-jenis')?.value;
-        const wrap = form.querySelector('.js-periode-wrap');
-        if (wrap) wrap.style.display = jenis === 'pengingat' ? '' : 'none';
-        syncPeriode();
-    };
-    const syncPeriode = () => {
-        const jenis = form.querySelector('.js-jenis')?.value;
-        const checked = form.querySelector('.js-use-periode')?.checked;
-        const dates = form.querySelector('.js-periode-dates');
-        if (dates) dates.style.display = (jenis === 'pengingat' && checked) ? '' : 'none';
     };
     const renderPreview = (tpl) => {
         const o = '{' + '{';
@@ -252,8 +218,6 @@
     });
 
     form.querySelector('.js-audience')?.addEventListener('change', syncAudience);
-    form.querySelector('.js-jenis')?.addEventListener('change', syncJenis);
-    form.querySelector('.js-use-periode')?.addEventListener('change', syncPeriode);
     form.querySelector('.js-judul')?.addEventListener('input', syncPreview);
     form.querySelector('.js-isi')?.addEventListener('input', syncPreview);
     form.querySelector('.js-gambar-file')?.addEventListener('change', syncPreview);
@@ -266,7 +230,6 @@
     @endif
 
     syncAudience();
-    syncJenis();
     syncPreview();
 })();
 </script>

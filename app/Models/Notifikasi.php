@@ -97,13 +97,6 @@ class Notifikasi extends Model
                 $q->whereNull('scheduled_at')
                     ->orWhereNotNull('sent_at')
                     ->orWhere('scheduled_at', '<=', now());
-            })
-            ->where(function (Builder $q): void {
-                // Pengingat berperiode yang sudah lewat tidak ditampilkan.
-                $q->where('jenis', '!=', self::JENIS_PENGINGAT)
-                    ->orWhere('use_periode', false)
-                    ->orWhereNull('ends_at')
-                    ->orWhere('ends_at', '>=', now());
             });
     }
 
@@ -126,11 +119,7 @@ class Notifikasi extends Model
 
     public function isDismissible(): bool
     {
-        if ($this->jenis !== self::JENIS_PENGINGAT) {
-            return true;
-        }
-
-        return ! $this->use_periode;
+        return true;
     }
 
     public function androidChannelId(): string

@@ -144,9 +144,6 @@ class NotifikasiController extends Controller
             'link' => ['nullable', 'url', 'max:500'],
             'sound_key' => ['nullable', Rule::in(array_keys(Notifikasi::soundOptions()))],
             'priority' => ['nullable', Rule::in(array_keys(Notifikasi::priorityOptions()))],
-            'use_periode' => ['nullable', 'boolean'],
-            'starts_at' => ['nullable', 'date'],
-            'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
             'published_at' => ['nullable', 'date'],
             'scheduled_at' => ['nullable', 'date'],
             'is_active' => ['nullable', 'boolean'],
@@ -186,22 +183,13 @@ class NotifikasiController extends Controller
         }
 
         $data['audience_ids'] = $needsIds ? $ids : null;
-        $data['use_periode'] = $data['jenis'] === Notifikasi::JENIS_PENGINGAT && $request->boolean('use_periode');
+        $data['use_periode'] = false;
+        $data['starts_at'] = null;
+        $data['ends_at'] = null;
         $data['link'] = $data['link'] ?? null;
         $data['sound_key'] = $data['sound_key'] ?? Notifikasi::SOUND_DEFAULT;
         $data['priority'] = $data['priority'] ?? Notifikasi::PRIORITY_NORMAL;
         $data['scheduled_at'] = $data['scheduled_at'] ?? null;
-
-        if ($data['use_periode']) {
-            if (empty($data['starts_at']) || empty($data['ends_at'])) {
-                throw ValidationException::withMessages([
-                    'starts_at' => 'Periode pengingat membutuhkan tanggal mulai dan selesai.',
-                ]);
-            }
-        } else {
-            $data['starts_at'] = null;
-            $data['ends_at'] = null;
-        }
 
         if ($request->hasFile('gambar')) {
             $path = $request->file('gambar')->store('notifikasi', 'r2');

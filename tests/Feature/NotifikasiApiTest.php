@@ -132,11 +132,11 @@ class NotifikasiApiTest extends TestCase
             ->assertJsonPath('data.0.dismissible', true);
     }
 
-    public function test_pengingat_periode_is_not_dismissible(): void
+    public function test_pengingat_with_legacy_use_periode_is_dismissible_and_ignores_periode(): void
     {
         $guru = $this->guruUser();
         Notifikasi::query()->create([
-            'judul' => 'Periode',
+            'judul' => 'Periode lama',
             'isi' => 'Wajib',
             'jenis' => Notifikasi::JENIS_PENGINGAT,
             'audience' => Notifikasi::AUDIENCE_SEMUA_GURU,
@@ -151,8 +151,10 @@ class NotifikasiApiTest extends TestCase
 
         $this->getJson('/api/v1/notifikasi?jenis=pengingat')
             ->assertOk()
-            ->assertJsonPath('data.0.use_periode', true)
-            ->assertJsonPath('data.0.dismissible', false);
+            ->assertJsonPath('data.0.use_periode', false)
+            ->assertJsonPath('data.0.dismissible', true)
+            ->assertJsonPath('data.0.starts_at', null)
+            ->assertJsonPath('data.0.ends_at', null);
     }
 
     public function test_clear_hides_lonceng_items(): void
@@ -184,7 +186,7 @@ class NotifikasiApiTest extends TestCase
             ->assertJsonCount(0, 'data');
     }
 
-    public function test_expired_periode_pengingat_is_hidden(): void
+    public function test_expired_legacy_periode_pengingat_still_listed(): void
     {
         $guru = $this->guruUser();
         Notifikasi::query()->create([
@@ -203,7 +205,9 @@ class NotifikasiApiTest extends TestCase
 
         $this->getJson('/api/v1/notifikasi?jenis=pengingat')
             ->assertOk()
-            ->assertJsonCount(0, 'data');
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.judul', 'Sudah lewat')
+            ->assertJsonPath('data.0.use_periode', false);
     }
 
     public function test_dismiss_pengingat_hides_item(): void

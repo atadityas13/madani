@@ -10,6 +10,7 @@ use App\Http\Controllers\KelembagaanController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\NotifikasiPembacaController;
 use App\Http\Controllers\NotifMediaController;
+use App\Http\Controllers\PeriodePendataanController;
 use App\Http\Controllers\Portal\SiswaAuthController;
 use App\Http\Controllers\Portal\SiswaPortalController;
 use App\Http\Controllers\RombelController;
@@ -85,6 +86,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('pengaturan/kalender/{calendarEvent}', [CalendarEventController::class, 'destroy'])->name('calendar-events.destroy');
         Route::get('siswa/create', [SiswaController::class, 'create'])->name('siswa.create');
         Route::post('siswa', [SiswaController::class, 'store'])->name('siswa.store');
+        Route::put('siswa/periode-pendataan', [PeriodePendataanController::class, 'update'])->name('siswa.periode-pendataan.update');
         Route::post('rombel/{rombel}/anggota', [RombelController::class, 'storeAnggota'])->name('rombel.anggota.store');
         Route::delete('rombel/{rombel}/anggota/{siswa}', [RombelController::class, 'destroyAnggota'])->name('rombel.anggota.destroy');
         Route::resource('rombel', RombelController::class)->except(['index', 'show']);
