@@ -89,8 +89,39 @@ class KartuEPelajarService
             return null;
         }
 
+        $base = trim((string) ($periodik->alamat ?? ''));
+        $haystack = mb_strtolower(preg_replace('/\s+/', ' ', $base) ?? $base);
+
+        // Jika kolom alamat sudah berisi format lengkap Madani, jangan dobel Blok/RT/Desa.
+        if ($base !== '' && (
+            str_contains($haystack, 'blok')
+            || str_contains($haystack, 'rt')
+            || str_contains($haystack, 'desa')
+            || str_contains($haystack, 'kec')
+        )) {
+            $segments = [$base];
+            foreach ([
+                filled($periodik->kota) ? [(string) $periodik->kota, (string) $periodik->kota] : null,
+                filled($periodik->provinsi) ? [(string) $periodik->provinsi, (string) $periodik->provinsi] : null,
+                filled($periodik->kode_pos) ? [(string) $periodik->kode_pos, (string) $periodik->kode_pos] : null,
+            ] as $pair) {
+                if ($pair === null) {
+                    continue;
+                }
+                [$label, $needle] = $pair;
+                $needle = mb_strtolower(trim($needle));
+                if ($needle === '' || str_contains($haystack, $needle)) {
+                    continue;
+                }
+                $segments[] = $label;
+                $haystack .= ' '.$needle;
+            }
+
+            return implode(', ', $segments);
+        }
+
         $parts = array_filter([
-            $periodik->alamat,
+            $base !== '' ? $base : null,
             filled($periodik->blok) ? 'Blok '.$periodik->blok : null,
             filled($periodik->rt) || filled($periodik->rw)
                 ? 'RT '.($periodik->rt ?: '-').'/RW '.($periodik->rw ?: '-')
