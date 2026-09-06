@@ -26,7 +26,7 @@ class SiswaKartuEPelajarTest extends TestCase
             ->assertJsonPath('data.nisn', $siswa->nisn)
             ->assertJsonPath('data.nis', $siswa->nis)
             ->assertJsonPath('data.jenis_kelamin_label', 'Laki-laki')
-            ->assertJsonPath('data.alamat', 'DESA RAWA KEC. CINGAMBUL KAB. MAJALENGKA')
+            ->assertJsonPath('data.alamat', 'Kp. Rawa, Blok A, RT 001/RW 002, Rawa, Kec. Cingambul, Majalengka, Jawa Barat, 45467')
             ->assertJsonStructure([
                 'data' => [
                     'ttl',
@@ -83,9 +83,15 @@ class SiswaKartuEPelajarTest extends TestCase
         SiswaPeriodik::query()->create([
             'siswa_id' => $siswa->id,
             'tahun_ajaran_id' => $tahun->id,
+            'alamat' => 'Kp. Rawa',
+            'blok' => 'A',
+            'rt' => '001',
+            'rw' => '002',
             'desa' => 'Rawa',
             'kecamatan' => 'Cingambul',
             'kota' => 'Majalengka',
+            'provinsi' => 'Jawa Barat',
+            'kode_pos' => '45467',
         ]);
 
         $token = $this->postJson('/api/v1/siswa/login', [

@@ -90,44 +90,45 @@ class KartuEPelajarService
         }
 
         $parts = array_filter([
-            filled($periodik->desa) ? 'DESA '.mb_strtoupper((string) $periodik->desa) : null,
-            filled($periodik->kecamatan) ? 'KEC. '.mb_strtoupper((string) $periodik->kecamatan) : null,
-            filled($periodik->kota) ? 'KAB. '.mb_strtoupper((string) $periodik->kota) : null,
-        ]);
-
-        if ($parts !== []) {
-            return implode(' ', $parts);
-        }
-
-        $fallback = array_filter([
             $periodik->alamat,
             filled($periodik->blok) ? 'Blok '.$periodik->blok : null,
+            filled($periodik->rt) || filled($periodik->rw)
+                ? 'RT '.($periodik->rt ?: '-').'/RW '.($periodik->rw ?: '-')
+                : null,
             $periodik->desa,
-            $periodik->kecamatan,
+            filled($periodik->kecamatan) ? 'Kec. '.$periodik->kecamatan : null,
             $periodik->kota,
+            $periodik->provinsi,
+            $periodik->kode_pos,
         ], fn ($v) => filled($v));
 
-        return $fallback === [] ? null : implode(', ', $fallback);
+        return $parts === [] ? null : implode(', ', $parts);
     }
 
     private function formatAlamatMadrasah(Madrasah $madrasah): string
     {
-        // Samakan gaya kop surat: alamat jalan + wilayah ringkas, tanpa dobel.
-        $parts = [];
-        if (filled($madrasah->alamat)) {
-            $parts[] = (string) $madrasah->alamat;
-        }
-        $wilayah = array_filter([
-            filled($madrasah->kecamatan) ? 'Kec. '.$madrasah->kecamatan : null,
-            filled($madrasah->kota) ? 'Kab. '.$madrasah->kota : null,
-            $madrasah->provinsi,
-            $madrasah->kode_pos,
-        ], fn ($v) => filled($v));
-        if ($wilayah !== []) {
-            $parts[] = implode(', ', $wilayah);
+        $alamat = trim((string) ($madrasah->alamat ?? ''));
+        $haystack = mb_strtolower($alamat);
+
+        $extras = [];
+        foreach ([
+            filled($madrasah->desa) ? ['Desa '.$madrasah->desa, (string) $madrasah->desa] : null,
+            filled($madrasah->kecamatan) ? ['Kec. '.$madrasah->kecamatan, (string) $madrasah->kecamatan] : null,
+            filled($madrasah->kota) ? ['Kab. '.$madrasah->kota, (string) $madrasah->kota] : null,
+        ] as $pair) {
+            if ($pair === null) {
+                continue;
+            }
+            [$label, $needle] = $pair;
+            if ($needle !== '' && ! str_contains($haystack, mb_strtolower($needle))) {
+                $extras[] = $label;
+            }
         }
 
-        $line = trim(implode(' ', $parts));
+        $line = trim($alamat.' '.implode(' ', $extras));
+        if (filled($madrasah->kode_pos) && ! str_contains($line, (string) $madrasah->kode_pos)) {
+            $line = trim($line.' '.$madrasah->kode_pos);
+        }
 
         return $line !== '' ? $line : (string) config('madrasah.alamat', '');
     }
