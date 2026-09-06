@@ -31,7 +31,7 @@ class SiswaKartuEPelajarTest extends TestCase
                 'data' => [
                     'ttl',
                     'verify_url',
-                    'madrasah' => ['nama', 'alamat', 'logo_kemenag_url'],
+                    'madrasah' => ['nama', 'alamat', 'kontak', 'logo_kemenag_url'],
                 ],
             ]);
     }

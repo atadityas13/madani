@@ -25,6 +25,7 @@ class KartuEPelajarService
      *         nama: string,
      *         nama_singkat: string,
      *         alamat: string,
+     *         kontak: string,
      *         instansi_1: string,
      *         instansi_2: string,
      *         logo_url: ?string,
@@ -51,6 +52,7 @@ class KartuEPelajarService
                 'nama' => $madrasah->namaKop(),
                 'nama_singkat' => (string) $madrasah->nama,
                 'alamat' => $this->formatAlamatMadrasah($madrasah),
+                'kontak' => $this->formatKontakMadrasah($madrasah),
                 'instansi_1' => 'KEMENTERIAN AGAMA REPUBLIK INDONESIA',
                 'instansi_2' => 'KANTOR KEMENTERIAN AGAMA KABUPATEN MAJALENGKA',
                 'logo_url' => $madrasah->urlLogo(),
@@ -120,5 +122,13 @@ class KartuEPelajarService
         ], fn ($v) => filled($v))));
 
         return $line !== '' ? $line : (string) config('madrasah.alamat', '');
+    }
+
+    private function formatKontakMadrasah(Madrasah $madrasah): string
+    {
+        return collect([
+            filled($madrasah->telepon) ? 'Telp. '.$madrasah->telepon : null,
+            filled($madrasah->email) ? 'E-mail: '.$madrasah->email : null,
+        ])->filter()->implode(' ');
     }
 }
