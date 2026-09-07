@@ -3,10 +3,10 @@
 namespace App\Models;
 
 use App\Support\AppMenuHost;
+use App\Support\R2Url;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
     'type',
@@ -61,15 +61,8 @@ class AppMenu extends Model
 
     public function iconUrl(): ?string
     {
-        if ($this->icon_path === null || $this->icon_path === '') {
-            return null;
-        }
-
-        if (str_starts_with($this->icon_path, 'http://') || str_starts_with($this->icon_path, 'https://')) {
-            return $this->icon_path;
-        }
-
-        return Storage::disk('r2')->url($this->icon_path);
+        // Temporary signed URL agar ikon tetap terbaca meski bucket R2 privat.
+        return R2Url::temporary($this->icon_path, 60 * 24);
     }
 
     public function allowsRequiresAuth(): bool

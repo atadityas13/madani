@@ -166,7 +166,7 @@ class AppMenuController extends Controller
             'play_store_url' => ['nullable', 'string', 'max:500'],
             'requires_auth' => ['nullable', 'boolean'],
             'is_active' => ['nullable', 'boolean'],
-            'icon' => ['nullable', 'image', 'max:2048'],
+            'icon' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
         ]);
 
         if ($existing !== null) {
@@ -211,7 +211,14 @@ class AppMenuController extends Controller
             return null;
         }
 
-        return $request->file('icon')->store('app-menus', 'r2');
+        $path = $request->file('icon')->store('app-menus', 'r2');
+        if ($path === false || $path === null || $path === '') {
+            throw ValidationException::withMessages([
+                'icon' => 'Gagal mengunggah ikon ke penyimpanan. Periksa konfigurasi R2.',
+            ]);
+        }
+
+        return $path;
     }
 
     private function deleteIcon(?string $path): void

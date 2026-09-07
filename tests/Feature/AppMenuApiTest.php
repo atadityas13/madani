@@ -149,6 +149,19 @@ class AppMenuApiTest extends TestCase
         $this->assertFalse(Cache::has('app_menu_webview_ticket:'.$ticket));
     }
 
+    public function test_menu_payload_includes_icon_url_for_stored_path(): void
+    {
+        $menu = AppMenu::query()->where('key', 'website')->where('audience', 'guru')->firstOrFail();
+        $menu->update(['icon_path' => 'https://cdn.example.test/app-menus/demo-icon.png']);
+
+        Sanctum::actingAs($this->guruUser());
+
+        $response = $this->getJson('/api/v1/menus')->assertOk();
+        $website = collect($response->json('data'))->firstWhere('key', 'website');
+        $this->assertNotNull($website);
+        $this->assertSame('https://cdn.example.test/app-menus/demo-icon.png', $website['icon_url']);
+    }
+
     public function test_admin_can_reorder_builtin_menu(): void
     {
         Role::findOrCreate(Peran::ADMIN);
