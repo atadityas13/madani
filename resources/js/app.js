@@ -866,9 +866,10 @@ function bindAlamatSiswa() {
 
         const initial = parseKoordinat(koordinat?.value) || defaultCenter;
         map = L.map(mapEl, { scrollWheelZoom: true }).setView(initial, koordinat?.value ? 16 : 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             maxZoom: 19,
-            attribution: '&copy; OpenStreetMap',
+            attribution: '&copy; OpenStreetMap &copy; CARTO',
+            subdomains: 'abcd',
         }).addTo(map);
         setMarker(initial, koordinat?.value ? 16 : 13);
         setTimeout(() => map.invalidateSize(), 80);
@@ -957,8 +958,10 @@ function bindAlamatSiswa() {
                 ensureMap();
                 map?.invalidateSize();
             }, 50);
+            setTimeout(() => map?.invalidateSize(), 300);
         } else if (status !== '') {
             setTimeout(() => ensureMap(), 50);
+            setTimeout(() => map?.invalidateSize(), 300);
         }
 
         if (status === 'Asrama Madrasah' && root?._wilayah) {
