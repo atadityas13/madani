@@ -8,6 +8,7 @@ use App\Models\NotifikasiRead;
 use App\Models\Siswa;
 use App\Models\User;
 use App\Support\NotifikasiPersonalizer;
+use App\Support\R2Url;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -62,9 +63,9 @@ class NotifikasiController extends Controller
                 'judul' => $this->personalizer->render($item->judul, $reader),
                 'isi' => $this->personalizer->render($item->isi, $reader),
                 'jenis' => $item->jenis,
-                'gambar_url' => $item->gambar_url,
+                'gambar_url' => R2Url::readable($item->gambar_url),
                 'link' => $item->link,
-                'audio_url' => $item->audio_url,
+                'audio_url' => R2Url::readable($item->audio_url),
                 'sound_key' => $item->sound_key ?: Notifikasi::SOUND_DEFAULT,
                 'priority' => $item->priority ?: Notifikasi::PRIORITY_NORMAL,
                 'use_periode' => false,

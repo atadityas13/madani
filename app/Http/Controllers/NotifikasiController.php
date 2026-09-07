@@ -15,7 +15,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -193,11 +192,12 @@ class NotifikasiController extends Controller
 
         if ($request->hasFile('gambar')) {
             $path = $request->file('gambar')->store('notifikasi', 'r2');
-            $data['gambar_url'] = Storage::disk('r2')->url($path);
+            // Simpan object path; API/FCM mengubah ke signed URL via R2Url::readable.
+            $data['gambar_url'] = $path ?: ($existing?->gambar_url);
         } elseif (! empty($data['gambar_media_id'])) {
             $media = NotifMedia::query()->find($data['gambar_media_id']);
             if ($media?->type === NotifMedia::TYPE_IMAGE) {
-                $data['gambar_url'] = $media->url;
+                $data['gambar_url'] = $media->path ?: $media->url;
             } else {
                 $data['gambar_url'] = $existing?->gambar_url;
             }
@@ -207,11 +207,11 @@ class NotifikasiController extends Controller
 
         if ($request->hasFile('audio')) {
             $path = $request->file('audio')->store('notifikasi/audio', 'r2');
-            $data['audio_url'] = Storage::disk('r2')->url($path);
+            $data['audio_url'] = $path ?: ($existing?->audio_url);
         } elseif (! empty($data['audio_media_id'])) {
             $media = NotifMedia::query()->find($data['audio_media_id']);
             if ($media?->type === NotifMedia::TYPE_AUDIO) {
-                $data['audio_url'] = $media->url;
+                $data['audio_url'] = $media->path ?: $media->url;
             } else {
                 $data['audio_url'] = $existing?->audio_url;
             }

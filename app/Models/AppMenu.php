@@ -62,7 +62,7 @@ class AppMenu extends Model
     public function iconUrl(): ?string
     {
         // Temporary signed URL agar ikon tetap terbaca meski bucket R2 privat.
-        return R2Url::temporary($this->icon_path, 60 * 24);
+        return R2Url::readable($this->icon_path, 60 * 24);
     }
 
     public function allowsRequiresAuth(): bool

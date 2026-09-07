@@ -34,6 +34,33 @@ class NotifikasiApiTest extends TestCase
         return $user;
     }
 
+    public function test_notifikasi_gambar_url_is_readable_for_clients(): void
+    {
+        config(['filesystems.disks.r2.url' => 'https://cdn.example.test']);
+
+        $guru = $this->guruUser();
+        Notifikasi::query()->create([
+            'judul' => 'Dengan gambar',
+            'isi' => 'Ada foto',
+            'jenis' => Notifikasi::JENIS_NOTIFIKASI,
+            'audience' => Notifikasi::AUDIENCE_SEMUA_GURU,
+            'gambar_url' => 'https://cdn.example.test/notifikasi/demo.png',
+            'is_active' => true,
+            'published_at' => now()->subMinute(),
+        ]);
+
+        Sanctum::actingAs($guru);
+
+        $url = $this->getJson('/api/v1/notifikasi')
+            ->assertOk()
+            ->json('data.0.gambar_url');
+
+        $this->assertIsString($url);
+        $this->assertNotSame('', $url);
+        // Fake disk falls back to public URL when temporaryUrl is unavailable.
+        $this->assertStringContainsString('notifikasi/demo.png', $url);
+    }
+
     public function test_guru_receives_targeted_pengumuman_and_can_mark_read(): void
     {
         $guru = $this->guruUser();

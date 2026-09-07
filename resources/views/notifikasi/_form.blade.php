@@ -48,7 +48,7 @@
                 <label class="form-label">Gambar (upload)</label>
                 <input class="form-control js-gambar-file" type="file" name="gambar" accept="image/*">
                 @if (! empty($item?->gambar_url))
-                    <div class="form-text">Saat ini: <a href="{{ $item->gambar_url }}" target="_blank" rel="noopener">lihat</a></div>
+                    <div class="form-text">Saat ini: <a href="{{ \App\Support\R2Url::readable($item->gambar_url) }}" target="_blank" rel="noopener">lihat</a></div>
                 @endif
             </div>
             <div class="col-md-6">
@@ -226,7 +226,7 @@
     form.querySelector('input[name=audio]')?.addEventListener('change', syncPreview);
 
     @if (! empty($item?->gambar_url))
-    form.querySelector('.js-preview-img').dataset.existing = @json($item->gambar_url);
+    form.querySelector('.js-preview-img').dataset.existing = @json(\App\Support\R2Url::readable($item->gambar_url));
     @endif
 
     syncAudience();

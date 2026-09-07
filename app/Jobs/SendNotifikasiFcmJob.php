@@ -7,6 +7,7 @@ use App\Models\Notifikasi;
 use App\Models\User;
 use App\Support\FcmSender;
 use App\Support\NotifikasiPersonalizer;
+use App\Support\R2Url;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -68,11 +69,11 @@ class SendNotifikasiFcmJob implements ShouldQueue
                     'title' => $title,
                     'body' => $body,
                     'message' => $body,
-                    'image' => (string) ($notifikasi->gambar_url ?? ''),
+                    'image' => (string) (R2Url::readable($notifikasi->gambar_url, 60 * 24 * 7) ?? ''),
                     'link' => (string) ($notifikasi->link ?? ''),
-                    'audio' => (string) ($notifikasi->audio_url ?? ''),
+                    'audio' => (string) (R2Url::readable($notifikasi->audio_url, 60 * 24 * 7) ?? ''),
                     'sound' => (string) ($notifikasi->sound_key ?? Notifikasi::SOUND_DEFAULT),
-                    'sound_url' => (string) ($notifikasi->audio_url ?? ''),
+                    'sound_url' => (string) (R2Url::readable($notifikasi->audio_url, 60 * 24 * 7) ?? ''),
                     'priority' => (string) ($notifikasi->priority ?? Notifikasi::PRIORITY_NORMAL),
                     'use_periode' => '0',
                     'reader_type' => $recipient instanceof User ? 'guru' : 'siswa',
