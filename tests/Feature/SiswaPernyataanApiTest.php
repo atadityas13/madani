@@ -74,6 +74,38 @@ class SiswaPernyataanApiTest extends TestCase
             ->assertJsonPath('success', false);
     }
 
+    public function test_can_confirm_pernyataan_when_periode_closed(): void
+    {
+        Storage::fake('r2');
+        $this->seed();
+        PeriodePendataan::query()->create([
+            'judul' => 'Ditutup',
+            'pesan' => null,
+            'is_active' => false,
+            'starts_at' => null,
+            'ends_at' => null,
+        ]);
+        $siswa = $this->buatSiswaLengkap();
+        $token = $this->tokenSiswa($siswa);
+
+        $this->withToken($token)
+            ->getJson('/api/v1/siswa/me')
+            ->assertOk()
+            ->assertJsonPath('data.pernyataan.data_terkunci', true)
+            ->assertJsonPath('data.pernyataan.periode_terbuka', false);
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/data-siswa', ['hobi' => 'Olahraga'])
+            ->assertForbidden();
+
+        $this->withToken($token)
+            ->postJson('/api/v1/siswa/pernyataan', $this->payloadPernyataan())
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.pernyataan.sudah', true)
+            ->assertJsonPath('data.pernyataan.alasan_kunci', 'pernyataan');
+    }
+
     public function test_admin_can_batalkan_pernyataan_to_reopen_edit(): void
     {
         Storage::fake('r2');

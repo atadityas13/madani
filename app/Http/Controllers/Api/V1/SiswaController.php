@@ -285,13 +285,6 @@ class SiswaController extends Controller
         /** @var Siswa $siswa */
         $siswa = $request->user();
 
-        if (! SiswaDataLock::periodeTerbuka()) {
-            return response()->json([
-                'success' => false,
-                'message' => SiswaDataLock::pesan($siswa),
-            ], 403);
-        }
-
         $pernyataan->pastikanWajibLengkap($siswa);
 
         $validated = $request->validate([
@@ -315,13 +308,6 @@ class SiswaController extends Controller
     {
         /** @var Siswa $siswa */
         $siswa = $request->user();
-
-        if (! SiswaDataLock::periodeTerbuka()) {
-            return response()->json([
-                'success' => false,
-                'message' => SiswaDataLock::pesan($siswa),
-            ], 403);
-        }
 
         $validated = $request->validate([
             'setuju_poin_1' => ['accepted'],
