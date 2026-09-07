@@ -14,6 +14,7 @@ use App\Http\Controllers\NotifMediaController;
 use App\Http\Controllers\PeriodePendataanController;
 use App\Http\Controllers\Portal\SiswaAuthController;
 use App\Http\Controllers\Portal\SiswaPortalController;
+use App\Http\Controllers\PrivacyPolicyController;
 use App\Http\Controllers\RombelController;
 use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\TahunAjaranController;
@@ -22,6 +23,9 @@ use App\Http\Controllers\WebviewEnterController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/webview/enter', WebviewEnterController::class)->name('webview.enter');
+
+Route::get('/privacy-policy', PrivacyPolicyController::class)->name('privacy-policy');
+Route::redirect('/kebijakan-privasi', '/privacy-policy');
 
 Route::middleware('guest')->group(function () {
     Route::get('/', [LoginController::class, 'create'])->name('login');
