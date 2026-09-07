@@ -865,13 +865,18 @@ function bindAlamatSiswa() {
         }
 
         const initial = parseKoordinat(koordinat?.value) || defaultCenter;
-        map = L.map(mapEl, { scrollWheelZoom: true }).setView(initial, koordinat?.value ? 16 : 13);
-        // Esri public basemap — no API key; OSM default / Carto free tiles are blocked or key-gated.
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+        map = L.map(mapEl, { scrollWheelZoom: true }).setView(initial, koordinat?.value ? 17 : 14);
+        // Esri World Imagery — tanpa API key; satelit agar atap/rumah lebih jelas daripada street map.
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             maxZoom: 19,
             attribution: 'Tiles &copy; Esri',
         }).addTo(map);
-        setMarker(initial, koordinat?.value ? 16 : 13);
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            opacity: 0.85,
+            attribution: '',
+        }).addTo(map);
+        setMarker(initial, koordinat?.value ? 17 : 14);
         setTimeout(() => map.invalidateSize(), 80);
         setTimeout(() => map.invalidateSize(), 350);
     };
@@ -926,6 +931,9 @@ function bindAlamatSiswa() {
         const status = tempat?.value || '';
         const isiBlocks = form.querySelectorAll('[data-siswa-alamat-isi]');
         const autoCopy = status === 'Asrama Madrasah' || status === 'Tinggal dengan Orang Tua/Wali';
+        // Alamat wilayah boleh terkunci saat otomatis, tapi pin/GPS tetap bisa
+        // disesuaikan kecuali Asrama (titik tetap milik madrasah).
+        const pinLocked = status === 'Asrama Madrasah';
 
         isiBlocks.forEach((block) => {
             block.hidden = status === '';
@@ -938,15 +946,15 @@ function bindAlamatSiswa() {
         });
 
         if (koordinat) {
-            koordinat.readOnly = autoCopy;
+            koordinat.readOnly = true;
         }
 
         if (lokasiBtn) {
-            lokasiBtn.disabled = autoCopy;
+            lokasiBtn.disabled = pinLocked;
         }
 
         if (marker?.dragging) {
-            if (autoCopy) {
+            if (pinLocked) {
                 marker.dragging.disable();
             } else {
                 marker.dragging.enable();
@@ -1054,7 +1062,7 @@ function bindAlamatSiswa() {
                 }
                 pinSource = 'gps';
                 setStatus();
-                lokasiBtn.disabled = tempat?.value === 'Asrama Madrasah' || tempat?.value === 'Tinggal dengan Orang Tua/Wali';
+                lokasiBtn.disabled = tempat?.value === 'Asrama Madrasah';
             },
             (error) => {
                 const messages = {
@@ -1064,7 +1072,7 @@ function bindAlamatSiswa() {
                 };
 
                 setStatus(messages[error?.code] || 'Gagal mengambil lokasi perangkat.');
-                lokasiBtn.disabled = tempat?.value === 'Asrama Madrasah' || tempat?.value === 'Tinggal dengan Orang Tua/Wali';
+                lokasiBtn.disabled = tempat?.value === 'Asrama Madrasah';
             },
             { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
         );
