@@ -866,10 +866,10 @@ function bindAlamatSiswa() {
 
         const initial = parseKoordinat(koordinat?.value) || defaultCenter;
         map = L.map(mapEl, { scrollWheelZoom: true }).setView(initial, koordinat?.value ? 16 : 13);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        // Esri public basemap — no API key; OSM default / Carto free tiles are blocked or key-gated.
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
             maxZoom: 19,
-            attribution: '&copy; OpenStreetMap &copy; CARTO',
-            subdomains: 'abcd',
+            attribution: 'Tiles &copy; Esri',
         }).addTo(map);
         setMarker(initial, koordinat?.value ? 16 : 13);
         setTimeout(() => map.invalidateSize(), 80);
