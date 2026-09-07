@@ -8,7 +8,6 @@ use App\Services\PernyataanPdfService;
 use App\Services\PortofolioPdfService;
 use App\Services\SiswaBiodataService;
 use App\Services\SiswaPernyataanService;
-use App\Support\KelengkapanSiswa;
 use App\Support\R2Url;
 use App\Support\SiswaDataLock;
 use App\Support\SiswaPortalPayload;
@@ -268,12 +267,11 @@ class SiswaController extends Controller
         /** @var Siswa $siswa */
         $siswa = $request->user();
 
-        $kelengkapan = KelengkapanSiswa::ringkasan($siswa);
-        if (! ($kelengkapan['wajib_semua_selesai'] ?? false)) {
+        if (! SiswaDataLock::bolehAksesKartuDanPortofolio($siswa)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Lengkapi semua data wajib terlebih dahulu sebelum membuka portofolio.',
-            ], 422);
+                'message' => SiswaDataLock::pesanKartuDanPortofolio($siswa),
+            ], 403);
         }
 
         return $portofolio->download($siswa);

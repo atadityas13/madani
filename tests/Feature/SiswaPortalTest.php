@@ -12,6 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class SiswaPortalTest extends TestCase
@@ -699,9 +700,9 @@ class SiswaPortalTest extends TestCase
 
         $this->withToken($token)
             ->get('/api/v1/siswa/portofolio.pdf')
-            ->assertStatus(422)
+            ->assertForbidden()
             ->assertJsonPath('success', false)
-            ->assertJsonPath('message', 'Lengkapi semua data wajib terlebih dahulu sebelum membuka portofolio.');
+            ->assertJsonPath('message', 'Lengkapi semua data wajib terlebih dahulu sebelum membuka kartu atau portofolio.');
     }
 
     public function test_portofolio_signed_verification_page_works(): void
@@ -709,7 +710,7 @@ class SiswaPortalTest extends TestCase
         $this->seed();
         $siswa = $this->buatSiswa(['nis' => '2026003']);
 
-        $url = \Illuminate\Support\Facades\URL::signedRoute(
+        $url = URL::signedRoute(
             'portofolio.cek',
             ['siswa' => $siswa->id],
         );

@@ -73,6 +73,28 @@ class SiswaDataLock
         };
     }
 
+    public static function bolehAksesKartuDanPortofolio(Siswa $siswa): bool
+    {
+        $lengkap = KelengkapanSiswa::ringkasan($siswa)['wajib_semua_selesai'] ?? false;
+
+        return $lengkap && self::pernyataanMengunci($siswa);
+    }
+
+    public static function pesanKartuDanPortofolio(Siswa $siswa): string
+    {
+        $lengkap = KelengkapanSiswa::ringkasan($siswa)['wajib_semua_selesai'] ?? false;
+
+        if (! $lengkap) {
+            return 'Lengkapi semua data wajib terlebih dahulu sebelum membuka kartu atau portofolio.';
+        }
+
+        if (! self::pernyataanMengunci($siswa)) {
+            return 'Konfirmasi pernyataan terlebih dahulu sebelum membuka kartu atau portofolio.';
+        }
+
+        return 'Kartu dan portofolio belum dapat dibuka.';
+    }
+
     public static function bagianTerkunci(string $bagian): bool
     {
         return in_array($bagian, self::BAGIAN_TERKUNCI, true);
