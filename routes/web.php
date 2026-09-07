@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AppMaintenanceController;
+use App\Http\Controllers\AppMenuController;
 use App\Http\Controllers\AppUpdateController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CalendarEventController;
@@ -17,7 +18,10 @@ use App\Http\Controllers\RombelController;
 use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\TahunAjaranController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WebviewEnterController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/webview/enter', WebviewEnterController::class)->name('webview.enter');
 
 Route::middleware('guest')->group(function () {
     Route::get('/', [LoginController::class, 'create'])->name('login');
@@ -84,6 +88,12 @@ Route::middleware('auth')->group(function () {
         Route::post('pengaturan/kalender', [CalendarEventController::class, 'store'])->name('calendar-events.store');
         Route::put('pengaturan/kalender/{calendarEvent}', [CalendarEventController::class, 'update'])->name('calendar-events.update');
         Route::delete('pengaturan/kalender/{calendarEvent}', [CalendarEventController::class, 'destroy'])->name('calendar-events.destroy');
+        Route::get('pengaturan/menus', [AppMenuController::class, 'index'])->name('app-menus.index');
+        Route::post('pengaturan/menus', [AppMenuController::class, 'store'])->name('app-menus.store');
+        Route::put('pengaturan/menus/{appMenu}', [AppMenuController::class, 'update'])->name('app-menus.update');
+        Route::delete('pengaturan/menus/{appMenu}', [AppMenuController::class, 'destroy'])->name('app-menus.destroy');
+        Route::post('pengaturan/menus/{appMenu}/move-up', [AppMenuController::class, 'moveUp'])->name('app-menus.move-up');
+        Route::post('pengaturan/menus/{appMenu}/move-down', [AppMenuController::class, 'moveDown'])->name('app-menus.move-down');
         Route::get('siswa/create', [SiswaController::class, 'create'])->name('siswa.create');
         Route::post('siswa', [SiswaController::class, 'store'])->name('siswa.store');
         Route::put('siswa/periode-pendataan', [PeriodePendataanController::class, 'update'])->name('siswa.periode-pendataan.update');

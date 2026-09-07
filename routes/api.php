@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AppMenuController;
 use App\Http\Controllers\Api\V1\AppStatusController;
 use App\Http\Controllers\Api\V1\AppUpdateController;
 use App\Http\Controllers\Api\V1\DeviceTokenController;
@@ -27,6 +28,8 @@ Route::prefix('v1')->group(function () {
     Route::post('token/introspect', TokenIntrospectController::class)->middleware('throttle:60,1');
 
     Route::middleware(['auth:sanctum'])->group(function () {
+        Route::get('menus', [AppMenuController::class, 'index']);
+        Route::get('menus/{menu}/launch', [AppMenuController::class, 'launch']);
         Route::get('pengumuman', [PengumumanController::class, 'index']);
         Route::post('device-token', [DeviceTokenController::class, 'store']);
         Route::delete('device-token', [DeviceTokenController::class, 'destroy']);

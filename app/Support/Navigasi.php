@@ -68,7 +68,7 @@ class Navigasi
             [
                 'label' => 'Aplikasi',
                 'icon' => 'bi-phone',
-                'match' => ['app-updates.*', 'app-maintenance.*', 'notifikasi.*', 'pengumuman.*', 'calendar-events.*'],
+                'match' => ['app-updates.*', 'app-maintenance.*', 'notifikasi.*', 'pengumuman.*', 'calendar-events.*', 'app-menus.*'],
                 'roles' => [Peran::SUPERADMIN, Peran::ADMIN],
                 'children' => [
                     [
@@ -81,6 +81,12 @@ class Navigasi
                         'label' => 'Maintenance Ta\'lim',
                         'route' => 'app-maintenance.index',
                         'match' => 'app-maintenance.*',
+                        'roles' => [Peran::SUPERADMIN, Peran::ADMIN],
+                    ],
+                    [
+                        'label' => 'Menu Ta\'lim',
+                        'route' => 'app-menus.index',
+                        'match' => 'app-menus.*',
                         'roles' => [Peran::SUPERADMIN, Peran::ADMIN],
                     ],
                     [

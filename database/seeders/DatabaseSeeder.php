@@ -42,5 +42,7 @@ class DatabaseSeeder extends Seeder
                 'status' => TahunAjaran::STATUS_AKTIF,
             ]
         );
+
+        $this->call(AppMenuSeeder::class);
     }
 }
