@@ -27,7 +27,6 @@ class SiswaDataLock
         'kks',
         'pkh',
         'ijazah_sd',
-        'foto',
     ];
 
     public static function periodeTerbuka(): bool

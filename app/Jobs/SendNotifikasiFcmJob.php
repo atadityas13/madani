@@ -38,6 +38,15 @@ class SendNotifikasiFcmJob implements ShouldQueue
             return;
         }
 
+        // Jangan tandai sent_at jika FCM belum dikonfigurasi — agar scheduler/resend masih bisa mengirim nanti.
+        if (! $fcm->isConfigured()) {
+            Log::warning('fcm.notifikasi_skipped_unconfigured', [
+                'notifikasi_id' => $notifikasi->id,
+            ]);
+
+            return;
+        }
+
         $sent = 0;
         $failed = 0;
 

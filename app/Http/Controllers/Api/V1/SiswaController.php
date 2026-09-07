@@ -93,6 +93,13 @@ class SiswaController extends Controller
         /** @var Siswa $siswa */
         $siswa = $request->user();
 
+        if ($jenis === 'foto') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Foto siswa hanya dapat dikelola oleh madrasah.',
+            ], 403);
+        }
+
         if (SiswaDataLock::aktif($siswa) && SiswaDataLock::dokumenTerkunci($jenis)) {
             return response()->json([
                 'success' => false,
@@ -107,7 +114,6 @@ class SiswaController extends Controller
             'kks' => 'file_kks',
             'pkh' => 'file_pkh',
             'ijazah_sd' => 'file_ijazah',
-            'foto' => 'foto',
         ];
 
         if (! isset($map[$jenis])) {
@@ -119,16 +125,10 @@ class SiswaController extends Controller
 
         $field = $map[$jenis];
         $request->validate([
-            $field => $jenis === 'foto'
-                ? ['required', 'image', 'mimes:jpg,jpeg,png', 'max:1024']
-                : ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
+            $field => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
         ]);
 
-        if ($jenis === 'foto') {
-            $this->biodata->simpanFoto($request, $siswa);
-        } else {
-            $this->biodata->simpanDokumen($request, $siswa, $field, $jenis);
-        }
+        $this->biodata->simpanDokumen($request, $siswa, $field, $jenis);
 
         return response()->json([
             'success' => true,
@@ -140,7 +140,7 @@ class SiswaController extends Controller
     public function requestUploadUrl(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'jenis' => ['required', 'string', 'in:kk,akta_lahir,kip,kks,pkh,ijazah_sd,foto'],
+            'jenis' => ['required', 'string', 'in:kk,akta_lahir,kip,kks,pkh,ijazah_sd'],
             'filename' => ['required', 'string', 'max:255'],
         ]);
 
@@ -176,7 +176,7 @@ class SiswaController extends Controller
     {
         $validated = $request->validate([
             'object_key' => ['required', 'string', 'max:500'],
-            'jenis' => ['required', 'string', 'in:kk,akta_lahir,kip,kks,pkh,ijazah_sd,foto'],
+            'jenis' => ['required', 'string', 'in:kk,akta_lahir,kip,kks,pkh,ijazah_sd'],
             'nama_asli' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -197,21 +197,22 @@ class SiswaController extends Controller
             ], 422);
         }
 
-        if ($validated['jenis'] === 'foto') {
-            $lama = $siswa->foto;
-            $siswa->update(['foto' => $validated['object_key']]);
-            $this->hapusObjectLama($lama, $validated['object_key']);
-        } else {
-            $lama = $siswa->dokumens()->where('jenis', $validated['jenis'])->value('path');
-            $siswa->dokumens()->updateOrCreate(
-                ['jenis' => $validated['jenis']],
-                [
-                    'path' => $validated['object_key'],
-                    'nama_asli' => $validated['nama_asli'] ?? basename($validated['object_key']),
-                ],
-            );
-            $this->hapusObjectLama($lama, $validated['object_key']);
+        if (! $this->objectKeyMilikSiswa($siswa->id, $validated['jenis'], $validated['object_key'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Object key tidak valid untuk akun ini.',
+            ], 422);
         }
+
+        $lama = $siswa->dokumens()->where('jenis', $validated['jenis'])->value('path');
+        $siswa->dokumens()->updateOrCreate(
+            ['jenis' => $validated['jenis']],
+            [
+                'path' => $validated['object_key'],
+                'nama_asli' => $validated['nama_asli'] ?? basename($validated['object_key']),
+            ],
+        );
+        $this->hapusObjectLama($lama, $validated['object_key']);
 
         return response()->json([
             'success' => true,
@@ -225,11 +226,15 @@ class SiswaController extends Controller
     {
         $ext = preg_replace('/[^a-z0-9]/', '', strtolower($ext)) ?: 'jpg';
 
-        if ($jenis === 'foto') {
-            return "foto/{$siswaId}/profil.{$ext}";
-        }
-
         return "dokumen/{$siswaId}/{$jenis}.{$ext}";
+    }
+
+    private function objectKeyMilikSiswa(string $siswaId, string $jenis, string $objectKey): bool
+    {
+        $prefix = "dokumen/{$siswaId}/";
+
+        return str_starts_with($objectKey, $prefix)
+            && ! str_contains($objectKey, '..');
     }
 
     private function hapusObjectLama(?string $lama, string $baru): void

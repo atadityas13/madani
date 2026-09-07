@@ -1,5 +1,5 @@
 @php
-    $jenis = old('jenis', $item->jenis ?? 'notifikasi');
+    $jenis = old('jenis', $item->jenis ?? 'pengumuman');
     $audience = old('audience', $item->audience ?? 'semua_guru');
     $soundKey = old('sound_key', $item->sound_key ?? 'default');
     $priority = old('priority', $item->priority ?? 'normal');
@@ -18,6 +18,11 @@
                         <option value="{{ $value }}" @selected($jenis === $value)>{{ $label }}</option>
                     @endforeach
                 </select>
+                <div class="form-text">
+                    <strong>Pengumuman</strong> tampil di beranda + lonceng.
+                    <strong>Notifikasi</strong> hanya lonceng.
+                    <strong>Pengingat</strong> di section pengingat beranda.
+                </div>
             </div>
             <div class="col-md-6">
                 <label class="form-label">Penerima</label>
@@ -26,6 +31,9 @@
                         <option value="{{ $value }}" @selected($audience === $value)>{{ $label }}</option>
                     @endforeach
                 </select>
+                <div class="form-text">
+                    Guru hanya melihat audience guru; siswa hanya audience siswa/rombel. Salah pilih = tidak muncul di app.
+                </div>
             </div>
             <div class="col-12">
                 <label class="form-label">Judul</label>

@@ -9,8 +9,8 @@ use Throwable;
 class R2Url
 {
     /**
-     * URL publik permanen (R2_URL). Cocok untuk aset yang di-cache di app
-     * (foto profil, media notifikasi) agar tidak kedaluwarsa seperti temporary URL.
+     * URL publik permanen (R2_URL). Hanya aman jika bucket/object memang public.
+     * Untuk aset privat (foto, dokumen, media notifikasi) pakai readable()/temporary().
      */
     public static function public(?string $path): ?string
     {

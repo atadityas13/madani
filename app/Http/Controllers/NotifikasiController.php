@@ -85,11 +85,16 @@ class NotifikasiController extends Controller
 
         if ($this->shouldDispatchFcm($notifikasi)) {
             SendNotifikasiFcmJob::dispatch($notifikasi->id);
+            $fcmQueued = true;
+        } else {
+            $fcmQueued = false;
         }
 
-        $msg = $notifikasi->scheduled_at && $notifikasi->scheduled_at->isFuture()
-            ? 'Notifikasi dijadwalkan.'
-            : 'Notifikasi disimpan dan antrean FCM dipicu.';
+        $msg = match (true) {
+            $notifikasi->scheduled_at && $notifikasi->scheduled_at->isFuture() => 'Notifikasi dijadwalkan.',
+            $fcmQueued => 'Notifikasi disimpan dan antrean FCM dipicu.',
+            default => 'Notifikasi disimpan.',
+        };
 
         return redirect()->route('notifikasi.index')->with('success', $msg);
     }
@@ -103,7 +108,19 @@ class NotifikasiController extends Controller
             'published_at' => $data['published_at'] ?? $notifikasi->published_at,
         ]);
 
-        return redirect()->route('notifikasi.index')->with('success', 'Notifikasi diperbarui.');
+        $notifikasi->refresh();
+        $fcmQueued = false;
+        // Kirim FCM jika belum pernah terkirim dan sudah jatuh tempo (mis. diaktifkan setelah draft).
+        if ($notifikasi->sent_at === null && $this->shouldDispatchFcm($notifikasi)) {
+            SendNotifikasiFcmJob::dispatch($notifikasi->id);
+            $fcmQueued = true;
+        }
+
+        $msg = $fcmQueued
+            ? 'Notifikasi diperbarui dan antrean FCM dipicu.'
+            : 'Notifikasi diperbarui.';
+
+        return redirect()->route('notifikasi.index')->with('success', $msg);
     }
 
     public function destroy(Notifikasi $notifikasi): RedirectResponse

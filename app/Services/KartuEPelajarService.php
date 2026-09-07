@@ -46,7 +46,7 @@ class KartuEPelajarService
             'jenis_kelamin' => $siswa->jenis_kelamin,
             'jenis_kelamin_label' => $this->formatJenisKelamin($siswa->jenis_kelamin),
             'alamat' => $this->formatAlamatKartu($periodik) ?: '—',
-            'foto_url' => R2Url::temporary($siswa->foto),
+            'foto_url' => R2Url::readable($siswa->foto),
             'verify_url' => URL::signedRoute('kartu-e-pelajar.cek', ['siswa' => $siswa->id]),
             'madrasah' => [
                 'nama' => $madrasah->namaKop(),

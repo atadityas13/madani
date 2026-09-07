@@ -136,6 +136,8 @@ class GuruAuthApiTest extends TestCase
 
         $this->assertNotNull($user->fresh()->foto);
         Storage::disk('r2')->assertExists($user->fresh()->foto);
+        $this->assertSame($user->fresh()->foto, $user->fresh()->gtk?->foto_url);
+        $this->assertDoesNotMatchRegularExpression('#^https?://#', (string) $user->fresh()->gtk?->foto_url);
     }
 
     public function test_akun_tanpa_gtk_ditolak(): void

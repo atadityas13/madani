@@ -47,7 +47,7 @@ class SiswaPortalPayload
             'tidak_punya_email' => (bool) $siswa->tidak_punya_email,
             'status_keaktifan' => $siswa->status_keaktifan,
             'must_change_password' => (bool) $siswa->must_change_password,
-            'foto_url' => R2Url::temporary($siswa->foto),
+            'foto_url' => R2Url::readable($siswa->foto),
             'tahun_ajaran' => $tahun?->label(),
             'rombel' => $rombel ? [
                 'id' => $rombel->id,

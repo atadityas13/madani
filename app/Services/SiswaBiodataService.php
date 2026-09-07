@@ -105,7 +105,10 @@ class SiswaBiodataService
         $this->simpanDokumen($request, $siswa, 'file_kk', 'kk');
         $this->simpanDokumen($request, $siswa, 'file_akta', 'akta_lahir');
         $this->simpanDokumen($request, $siswa, 'file_kip', 'kip');
-        $this->simpanFoto($request, $siswa);
+        // Foto profil hanya dikelola madrasah (bukan siswa via Ta’lim/API).
+        if (! $kunciIdentitas) {
+            $this->simpanFoto($request, $siswa);
+        }
 
         return 'Data siswa disimpan.';
     }
