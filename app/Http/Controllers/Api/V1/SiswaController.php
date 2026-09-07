@@ -37,7 +37,7 @@ class SiswaController extends Controller
         if (SiswaDataLock::aktif($siswa) && SiswaDataLock::bagianTerkunci($bagian)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Data wajib terkunci setelah pernyataan dikonfirmasi.',
+                'message' => SiswaDataLock::pesan($siswa),
             ], 403);
         }
 
@@ -97,7 +97,7 @@ class SiswaController extends Controller
         if (SiswaDataLock::aktif($siswa) && SiswaDataLock::dokumenTerkunci($jenis)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Data wajib terkunci setelah pernyataan dikonfirmasi.',
+                'message' => SiswaDataLock::pesan($siswa),
             ], 403);
         }
 
@@ -151,7 +151,7 @@ class SiswaController extends Controller
         if (SiswaDataLock::aktif($siswa) && SiswaDataLock::dokumenTerkunci($validated['jenis'])) {
             return response()->json([
                 'success' => false,
-                'message' => 'Data wajib terkunci setelah pernyataan dikonfirmasi.',
+                'message' => SiswaDataLock::pesan($siswa),
             ], 403);
         }
 
@@ -187,7 +187,7 @@ class SiswaController extends Controller
         if (SiswaDataLock::aktif($siswa) && SiswaDataLock::dokumenTerkunci($validated['jenis'])) {
             return response()->json([
                 'success' => false,
-                'message' => 'Data wajib terkunci setelah pernyataan dikonfirmasi.',
+                'message' => SiswaDataLock::pesan($siswa),
             ], 403);
         }
 
@@ -250,7 +250,7 @@ class SiswaController extends Controller
         if (SiswaDataLock::aktif($siswa)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Data wajib terkunci setelah pernyataan dikonfirmasi.',
+                'message' => SiswaDataLock::pesan($siswa),
             ], 403);
         }
 
@@ -286,6 +286,14 @@ class SiswaController extends Controller
     ): Response|JsonResponse {
         /** @var Siswa $siswa */
         $siswa = $request->user();
+
+        if (! SiswaDataLock::periodeTerbuka()) {
+            return response()->json([
+                'success' => false,
+                'message' => SiswaDataLock::pesan($siswa),
+            ], 403);
+        }
+
         $pernyataan->pastikanWajibLengkap($siswa);
 
         $validated = $request->validate([
@@ -309,6 +317,13 @@ class SiswaController extends Controller
     {
         /** @var Siswa $siswa */
         $siswa = $request->user();
+
+        if (! SiswaDataLock::periodeTerbuka()) {
+            return response()->json([
+                'success' => false,
+                'message' => SiswaDataLock::pesan($siswa),
+            ], 403);
+        }
 
         $validated = $request->validate([
             'setuju_poin_1' => ['accepted'],

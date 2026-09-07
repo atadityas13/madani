@@ -37,6 +37,19 @@
             <a class="btn btn-outline-secondary btn-sm" href="{{ route('siswa.portofolio', $siswa) }}">Portofolio</a>
             @if ($siswa->pernyataan)
                 <a class="btn btn-outline-secondary btn-sm" href="{{ route('siswa.pernyataan.download', $siswa) }}">Pernyataan PDF</a>
+                @can('update', $siswa)
+                    <form
+                        method="POST"
+                        action="{{ route('siswa.pernyataan.batalkan', $siswa) }}"
+                        data-confirm="Batalkan konfirmasi dan hapus pernyataan siswa ini? Akses edit data akan dibuka kembali selama periode pendataan terbuka."
+                        data-confirm-title="Batalkan pernyataan"
+                        data-loading-text="Membatalkan…"
+                    >
+                        @csrf
+                        @method('DELETE')
+                        <button class="btn btn-outline-danger btn-sm" type="submit">Batalkan pernyataan</button>
+                    </form>
+                @endcan
             @endif
             @if (auth()->user()?->mengampu($siswa) && $siswa->tanggal_lahir)
                 <form method="POST" action="{{ route('siswa.reset-password', $siswa) }}" data-confirm="Reset password ke tanggal lahir (ddmmyyyy)? Siswa wajib mengubahnya saat masuk." data-confirm-title="Reset password" data-loading-text="Mereset…">

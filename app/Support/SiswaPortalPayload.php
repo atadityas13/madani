@@ -117,7 +117,7 @@ class SiswaPortalPayload
     }
 
     /**
-     * @return array{sudah: bool, data_terkunci: bool, dikonfirmasi_at: ?string, nama_wali: ?string}
+     * @return array{sudah: bool, data_terkunci: bool, periode_terbuka: bool, alasan_kunci: ?string, dikonfirmasi_at: ?string, nama_wali: ?string}
      */
     private static function pernyataan(Siswa $siswa): array
     {
@@ -126,7 +126,9 @@ class SiswaPortalPayload
 
         return [
             'sudah' => $sudah,
-            'data_terkunci' => $sudah,
+            'data_terkunci' => SiswaDataLock::aktif($siswa),
+            'periode_terbuka' => SiswaDataLock::periodeTerbuka(),
+            'alasan_kunci' => SiswaDataLock::alasan($siswa),
             'dikonfirmasi_at' => $item?->dikonfirmasi_at?->toIso8601String(),
             'nama_wali' => $item?->nama_wali,
         ];

@@ -88,6 +88,51 @@ class PeriodePendataanTest extends TestCase
         ]);
     }
 
+    public function test_siswa_cannot_edit_when_periode_closed(): void
+    {
+        $this->seed();
+        PeriodePendataan::query()->create([
+            'judul' => 'Ditutup',
+            'pesan' => null,
+            'is_active' => false,
+            'starts_at' => null,
+            'ends_at' => null,
+        ]);
+        $token = $this->siswaToken();
+
+        $this->withToken($token)
+            ->getJson('/api/v1/siswa/me')
+            ->assertOk()
+            ->assertJsonPath('data.pernyataan.data_terkunci', true)
+            ->assertJsonPath('data.pernyataan.periode_terbuka', false)
+            ->assertJsonPath('data.pernyataan.alasan_kunci', 'periode');
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/data-siswa', ['hobi' => 'Olahraga'])
+            ->assertForbidden()
+            ->assertJsonPath('success', false);
+    }
+
+    public function test_siswa_can_edit_when_periode_open(): void
+    {
+        $this->seed();
+        PeriodePendataan::query()->create([
+            'judul' => 'Dibuka',
+            'pesan' => null,
+            'is_active' => true,
+            'starts_at' => now()->subHour(),
+            'ends_at' => now()->addDays(2),
+        ]);
+        $token = $this->siswaToken();
+
+        $this->withToken($token)
+            ->getJson('/api/v1/siswa/me')
+            ->assertOk()
+            ->assertJsonPath('data.pernyataan.data_terkunci', false)
+            ->assertJsonPath('data.pernyataan.periode_terbuka', true)
+            ->assertJsonPath('data.pernyataan.alasan_kunci', null);
+    }
+
     private function siswaToken(): string
     {
         $siswa = Siswa::query()->create([

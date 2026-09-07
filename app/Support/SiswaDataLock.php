@@ -2,10 +2,15 @@
 
 namespace App\Support;
 
+use App\Models\PeriodePendataan;
 use App\Models\Siswa;
 
 class SiswaDataLock
 {
+    public const ALASAN_PERNYATAAN = 'pernyataan';
+
+    public const ALASAN_PERIODE = 'periode';
+
     /** @var list<string> */
     public const BAGIAN_TERKUNCI = [
         'data-siswa',
@@ -25,9 +30,47 @@ class SiswaDataLock
         'foto',
     ];
 
-    public static function aktif(Siswa $siswa): bool
+    public static function periodeTerbuka(): bool
+    {
+        $periode = PeriodePendataan::current();
+
+        if ($periode === null) {
+            return true;
+        }
+
+        return $periode->isCurrentlyOpen();
+    }
+
+    public static function pernyataanMengunci(Siswa $siswa): bool
     {
         return $siswa->pernyataan()->exists();
+    }
+
+    public static function aktif(Siswa $siswa): bool
+    {
+        return self::pernyataanMengunci($siswa) || ! self::periodeTerbuka();
+    }
+
+    public static function alasan(Siswa $siswa): ?string
+    {
+        if (self::pernyataanMengunci($siswa)) {
+            return self::ALASAN_PERNYATAAN;
+        }
+
+        if (! self::periodeTerbuka()) {
+            return self::ALASAN_PERIODE;
+        }
+
+        return null;
+    }
+
+    public static function pesan(Siswa $siswa): string
+    {
+        return match (self::alasan($siswa)) {
+            self::ALASAN_PERNYATAAN => 'Data wajib terkunci setelah pernyataan dikonfirmasi.',
+            self::ALASAN_PERIODE => 'Periode pendataan sedang ditutup. Data siswa tidak dapat diubah.',
+            default => 'Data siswa terkunci.',
+        };
     }
 
     public static function bagianTerkunci(string $bagian): bool

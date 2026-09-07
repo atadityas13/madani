@@ -10,6 +10,7 @@ use App\Services\KartuEPelajarService;
 use App\Services\PernyataanPdfService;
 use App\Services\PortofolioPdfService;
 use App\Services\SiswaBiodataService;
+use App\Services\SiswaPernyataanService;
 use App\Support\KelengkapanSiswa;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -213,6 +214,18 @@ class SiswaController extends Controller
         abort_unless($item, 404);
 
         return $pdf->downloadSaved($item);
+    }
+
+    public function batalkanPernyataan(Siswa $siswa, SiswaPernyataanService $pernyataan): RedirectResponse
+    {
+        $this->authorize('update', $siswa);
+        abort_unless($siswa->pernyataan, 404);
+
+        $pernyataan->batalkan($siswa);
+
+        return redirect()
+            ->route('siswa.show', $siswa)
+            ->with('status', 'Konfirmasi pernyataan dibatalkan. Siswa dapat mengedit data kembali selama periode pendataan terbuka.');
     }
 
     public function cekPortofolio(Siswa $siswa): View

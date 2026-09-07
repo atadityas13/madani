@@ -4,13 +4,17 @@ namespace Tests\Feature;
 
 use App\Models\Dokumen;
 use App\Models\OrangTua;
+use App\Models\PeriodePendataan;
 use App\Models\RekamDidik;
 use App\Models\Siswa;
 use App\Models\SiswaPeriodik;
 use App\Models\TahunAjaran;
+use App\Models\User;
+use App\Support\Peran;
 use App\Support\PernyataanSiswa;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class SiswaPernyataanApiTest extends TestCase
@@ -68,6 +72,74 @@ class SiswaPernyataanApiTest extends TestCase
             ->putJson('/api/v1/siswa/data-siswa', ['hobi' => 'Olahraga'])
             ->assertForbidden()
             ->assertJsonPath('success', false);
+    }
+
+    public function test_admin_can_batalkan_pernyataan_to_reopen_edit(): void
+    {
+        Storage::fake('r2');
+        $this->seed();
+        PeriodePendataan::query()->create([
+            'judul' => 'Dibuka',
+            'is_active' => true,
+            'starts_at' => now()->subHour(),
+            'ends_at' => now()->addDays(2),
+        ]);
+        $siswa = $this->buatSiswaLengkap();
+        $token = $this->tokenSiswa($siswa);
+
+        $this->withToken($token)
+            ->postJson('/api/v1/siswa/pernyataan', $this->payloadPernyataan())
+            ->assertOk();
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/data-siswa', ['hobi' => 'Olahraga'])
+            ->assertForbidden();
+
+        Role::findOrCreate(Peran::SUPERADMIN);
+        $admin = User::factory()->create(['is_aktif' => true]);
+        $admin->syncRoles([Peran::SUPERADMIN]);
+
+        $this->actingAs($admin)
+            ->delete(route('siswa.pernyataan.batalkan', $siswa))
+            ->assertRedirect(route('siswa.show', $siswa));
+
+        $this->assertDatabaseMissing('siswa_pernyataan', ['siswa_id' => $siswa->id]);
+        $this->assertNull($siswa->fresh()->pernyataan);
+
+        $this->app['auth']->forgetGuards();
+
+        $this->withToken($token)
+            ->getJson('/api/v1/siswa/me')
+            ->assertOk()
+            ->assertJsonPath('data.pernyataan.sudah', false)
+            ->assertJsonPath('data.pernyataan.data_terkunci', false);
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/data-siswa', [
+                'nama' => 'Siswa Contoh',
+                'nisn' => '1234567890',
+                'nik' => '3210010101120001',
+                'tempat_lahir' => 'Majalengka',
+                'tanggal_lahir' => '2012-09-02',
+                'jenis_kelamin' => 'L',
+                'jumlah_saudara' => 1,
+                'anak_ke' => 1,
+                'agama' => 'Islam',
+                'cita_cita' => 'Guru',
+                'hobi' => 'Olahraga',
+                'pembiaya' => 'Orang Tua',
+                'tidak_punya_hp' => true,
+                'tidak_punya_email' => true,
+                'tidak_punya_kip' => true,
+                'no_kk' => '3210010101120001',
+                'kepala_keluarga' => 'Ayah Contoh',
+                'kebutuhan_khusus' => 'Tidak Ada',
+                'tidak_punya_kks' => true,
+                'tidak_punya_pkh' => true,
+                'penghasilan_gabungan' => 'dibawah 800.000',
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true);
     }
 
     /**

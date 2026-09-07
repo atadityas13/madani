@@ -65,7 +65,7 @@ class SiswaPortalController extends Controller
         if (SiswaDataLock::aktif($siswa) && SiswaDataLock::bagianTerkunci($bagian)) {
             return redirect()
                 ->route('siswa.portal', ['tab' => $bagian])
-                ->with('status', 'Data wajib terkunci setelah pernyataan dikonfirmasi.');
+                ->with('status', SiswaDataLock::pesan($siswa));
         }
 
         $pesan = $this->biodata->updateBagian($request, $siswa, $bagian, kunciIdentitas: true);
@@ -85,7 +85,7 @@ class SiswaPortalController extends Controller
         if (SiswaDataLock::aktif($siswa)) {
             return redirect()
                 ->route('siswa.portal', ['tab' => 'data-siswa'])
-                ->with('status', 'Data wajib terkunci setelah pernyataan dikonfirmasi.');
+                ->with('status', SiswaDataLock::pesan($siswa));
         }
 
         $pesan = $this->biodata->ajukanPerubahan($request, $siswa);

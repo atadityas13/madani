@@ -137,4 +137,24 @@ class SiswaPernyataanService
 
         Storage::disk('r2')->delete($lama);
     }
+
+    public function batalkan(Siswa $siswa): void
+    {
+        $item = $siswa->pernyataan;
+        if ($item === null) {
+            return;
+        }
+
+        $paths = array_values(array_filter([
+            $item->ttd_siswa_path,
+            $item->ttd_wali_path,
+            filled($item->getAttribute('pdf_path')) ? (string) $item->getAttribute('pdf_path') : null,
+        ]));
+
+        if ($paths !== []) {
+            Storage::disk('r2')->delete($paths);
+        }
+
+        $item->delete();
+    }
 }
