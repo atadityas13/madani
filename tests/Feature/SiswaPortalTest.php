@@ -119,17 +119,17 @@ class SiswaPortalTest extends TestCase
         $admin = User::query()->where('username', 'admin')->first();
 
         $this->actingAs($admin)
-            ->get('/siswa/'.$siswa->id.'?tab=orang-tua')
+            ->get('/siswa/'.$siswa->id.'/edit?tab=orang-tua')
             ->assertOk()
-            ->assertSee('Data orang tua');
+            ->assertSee('Ayah kandung', false);
 
         $this->actingAs($admin)
-            ->get('/siswa/'.$siswa->id.'?tab=prestasi')
+            ->get('/siswa/'.$siswa->id.'/edit?tab=prestasi')
             ->assertOk()
-            ->assertSee('Prestasi');
+            ->assertSee('Prestasi', false);
 
         $this->actingAs($admin)
-            ->get('/siswa/'.$siswa->id)
+            ->get('/siswa/'.$siswa->id.'/edit')
             ->assertOk()
             ->assertSee('tab=orang-tua', false)
             ->assertSee('tab=prestasi', false)
@@ -169,7 +169,7 @@ class SiswaPortalTest extends TestCase
 
         $this->actingAs($admin)
             ->delete(route('siswa.dokumen.destroy', [$siswa, 'kk']))
-            ->assertRedirect(route('siswa.show', ['siswa' => $siswa, 'tab' => 'data-siswa']));
+            ->assertRedirect(route('siswa.edit', ['siswa' => $siswa, 'tab' => 'data-siswa']));
 
         $this->assertDatabaseMissing('dokumens', [
             'siswa_id' => $siswa->id,

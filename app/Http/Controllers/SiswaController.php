@@ -12,6 +12,7 @@ use App\Services\PortofolioPdfService;
 use App\Services\SiswaBiodataService;
 use App\Services\SiswaPernyataanService;
 use App\Support\KelengkapanSiswa;
+use App\Support\R2Url;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -78,7 +79,7 @@ class SiswaController extends Controller
         $siswa = $this->biodata->create($request);
 
         return redirect()
-            ->route('siswa.show', $siswa)
+            ->route('siswa.edit', $siswa)
             ->with('status', 'Siswa berhasil dicatat. Lengkapi tab lain mengikuti EMIS 4.0.');
     }
 
@@ -86,10 +87,41 @@ class SiswaController extends Controller
     {
         $this->authorize('view', $siswa);
 
+        if (request()->filled('tab')) {
+            return redirect()->route('siswa.edit', [
+                'siswa' => $siswa,
+                'tab' => request('tab'),
+            ]);
+        }
+
+        $siswa->load([
+            'periodiks.tahunAjaran',
+            'rombels.tahunAjaran',
+            'dokumens',
+            'pernyataan',
+        ]);
+
+        $periodik = $siswa->periodikAktif();
+        $rombel = $siswa->rombels
+            ->first(fn ($item) => $item->pivot?->status === 'aktif')
+            ?? $siswa->rombels->first();
+
+        return view('siswa.detail', [
+            'siswa' => $siswa,
+            'periodik' => $periodik,
+            'rombel' => $rombel,
+            'fotoUrl' => R2Url::readable($siswa->foto),
+        ]);
+    }
+
+    public function edit(Siswa $siswa): View|RedirectResponse
+    {
+        $this->authorize('update', $siswa);
+
         $this->biodata->ensureRelasi($siswa);
 
         if (request('tab') === 'kebutuhan-khusus') {
-            return redirect()->route('siswa.show', ['siswa' => $siswa, 'tab' => 'data-siswa']);
+            return redirect()->route('siswa.edit', ['siswa' => $siswa, 'tab' => 'data-siswa']);
         }
 
         $siswa->load([
@@ -103,7 +135,7 @@ class SiswaController extends Controller
         $tab = KelengkapanSiswa::tabDikenal($siswa, $diminta);
 
         if ($tab !== $diminta) {
-            return redirect()->route('siswa.show', ['siswa' => $siswa, 'tab' => $tab]);
+            return redirect()->route('siswa.edit', ['siswa' => $siswa, 'tab' => $tab]);
         }
 
         return view('siswa.show', [
@@ -118,13 +150,6 @@ class SiswaController extends Controller
         ]);
     }
 
-    public function edit(Siswa $siswa): RedirectResponse
-    {
-        $this->authorize('view', $siswa);
-
-        return redirect()->route('siswa.show', ['siswa' => $siswa, 'tab' => 'data-siswa']);
-    }
-
     public function update(Request $request, Siswa $siswa): RedirectResponse
     {
         $this->authorize('update', $siswa);
@@ -136,7 +161,7 @@ class SiswaController extends Controller
             : 'data-siswa';
 
         return redirect()
-            ->route('siswa.show', ['siswa' => $siswa, 'tab' => $tab])
+            ->route('siswa.edit', ['siswa' => $siswa, 'tab' => $tab])
             ->with('status', $pesan);
     }
 
@@ -147,7 +172,7 @@ class SiswaController extends Controller
         $pesan = $this->biodata->prosesPengajuan($siswa, $pengajuan, $aksi);
 
         return redirect()
-            ->route('siswa.show', ['siswa' => $siswa, 'tab' => 'data-siswa'])
+            ->route('siswa.edit', ['siswa' => $siswa, 'tab' => 'data-siswa'])
             ->with('status', $pesan);
     }
 
@@ -159,7 +184,7 @@ class SiswaController extends Controller
         $tab = $this->biodata->hapusRelasi($siswa, $jenis, $id);
 
         return redirect()
-            ->route('siswa.show', ['siswa' => $siswa, 'tab' => $tab])
+            ->route('siswa.edit', ['siswa' => $siswa, 'tab' => $tab])
             ->with('status', 'Data dihapus.');
     }
 
@@ -180,7 +205,7 @@ class SiswaController extends Controller
         };
 
         return redirect()
-            ->route('siswa.show', ['siswa' => $siswa, 'tab' => $tab])
+            ->route('siswa.edit', ['siswa' => $siswa, 'tab' => $tab])
             ->with('status', 'Dokumen dihapus dari database dan storage.');
     }
 
@@ -224,7 +249,7 @@ class SiswaController extends Controller
         $pernyataan->batalkan($siswa);
 
         return redirect()
-            ->route('siswa.show', $siswa)
+            ->route('siswa.edit', $siswa)
             ->with('status', 'Konfirmasi pernyataan dibatalkan. Siswa dapat mengedit data kembali selama periode pendataan terbuka.');
     }
 

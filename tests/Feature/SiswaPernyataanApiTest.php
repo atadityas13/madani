@@ -133,7 +133,7 @@ class SiswaPernyataanApiTest extends TestCase
 
         $this->actingAs($admin)
             ->delete(route('siswa.pernyataan.batalkan', $siswa))
-            ->assertRedirect(route('siswa.show', $siswa));
+            ->assertRedirect(route('siswa.edit', $siswa));
 
         $this->assertDatabaseMissing('siswa_pernyataan', ['siswa_id' => $siswa->id]);
         $this->assertNull($siswa->fresh()->pernyataan);

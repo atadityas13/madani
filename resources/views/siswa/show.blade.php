@@ -10,13 +10,13 @@
     $relasiAction = $portal ? route('siswa.portal.relasi.destroy') : route('siswa.relasi.destroy', $siswa);
     $tabUrl = fn (string $id) => $portal
         ? route('siswa.portal', ['tab' => $id])
-        : route('siswa.show', ['siswa' => $siswa, 'tab' => $id]);
+        : route('siswa.edit', ['siswa' => $siswa, 'tab' => $id]);
 @endphp
 
 @extends($portal ? 'layouts.siswa' : 'layouts.app')
 
 @section('title', $portal ? 'Data saya' : $siswa->nama)
-@section('heading', $portal ? 'Data saya' : 'Data siswa')
+@section('heading', $portal ? 'Data saya' : 'Edit siswa')
 @section('subheading', 'MTsN 11 Majalengka')
 
 @section('content')
@@ -34,6 +34,7 @@
     </div>
     @if (! $portal)
         <div class="ms-auto d-flex gap-2 flex-wrap justify-content-end">
+            <a class="btn btn-outline-secondary btn-sm" href="{{ route('siswa.show', $siswa) }}">Detail</a>
             <a class="btn btn-outline-secondary btn-sm" href="{{ route('siswa.portofolio', $siswa) }}">Portofolio</a>
             @if ($siswa->pernyataan)
                 <a class="btn btn-outline-secondary btn-sm" href="{{ route('siswa.pernyataan.download', $siswa) }}">Pernyataan PDF</a>

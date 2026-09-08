@@ -629,6 +629,110 @@ a:hover {
     color: var(--emis-muted);
 }
 
+.siswa-detail {
+    padding: 1.25rem;
+}
+
+.siswa-detail__grid {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: minmax(140px, 180px) 1fr;
+    align-items: start;
+}
+
+.siswa-detail__photo {
+    background: #eef2f6;
+    border-radius: 14px;
+    min-height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.siswa-detail__photo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 220px;
+    object-fit: cover;
+}
+
+.siswa-detail__photo-fallback {
+    width: 100%;
+    min-height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #9aa3af;
+    letter-spacing: 0.04em;
+}
+
+.siswa-detail__name {
+    margin: 0 0 1rem;
+    font-size: clamp(1.25rem, 2.2vw, 1.6rem);
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--emis-ink);
+    letter-spacing: 0.02em;
+}
+
+.siswa-detail__list {
+    margin: 0;
+    display: grid;
+    gap: 0.55rem;
+}
+
+.siswa-detail__row {
+    display: grid;
+    grid-template-columns: minmax(9.5rem, 11.5rem) 1fr;
+    gap: 0.35rem 0.5rem;
+    align-items: baseline;
+}
+
+.siswa-detail__row dt {
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #8a8f98;
+}
+
+.siswa-detail__row dd {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--emis-ink);
+}
+
+.siswa-detail__sep {
+    display: inline-block;
+    width: 1rem;
+    color: #8a8f98;
+    font-weight: 700;
+}
+
+@media (max-width: 767.98px) {
+    .siswa-detail__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .siswa-detail__photo,
+    .siswa-detail__photo img,
+    .siswa-detail__photo-fallback {
+        min-height: 180px;
+        max-width: 200px;
+        margin-inline: auto;
+    }
+
+    .siswa-detail__row {
+        grid-template-columns: minmax(8rem, 9.5rem) 1fr;
+    }
+}
+
 .emis-actions {
     display: flex;
     justify-content: flex-end;
