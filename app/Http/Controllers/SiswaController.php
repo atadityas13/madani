@@ -6,6 +6,7 @@ use App\Models\PengajuanPerubahanSiswa;
 use App\Models\Rombel;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
+use App\Services\KartuEPelajarPdfService;
 use App\Services\KartuEPelajarService;
 use App\Services\PernyataanPdfService;
 use App\Services\PortofolioPdfService;
@@ -411,6 +412,29 @@ class SiswaController extends Controller
         return redirect()
             ->route('siswa.index')
             ->with('status', 'Konfirmasi pernyataan dibatalkan. Siswa dapat mengedit data kembali selama periode pendataan terbuka.');
+    }
+
+    public function kartu(Siswa $siswa): View
+    {
+        $this->authorize('view', $siswa);
+
+        return view('siswa.kartu-e-pelajar-preview', [
+            'siswa' => $siswa,
+        ]);
+    }
+
+    public function kartuStream(Siswa $siswa, KartuEPelajarPdfService $kartuPdf): Response
+    {
+        $this->authorize('view', $siswa);
+
+        return $kartuPdf->stream($siswa);
+    }
+
+    public function kartuDownload(Siswa $siswa, KartuEPelajarPdfService $kartuPdf): Response
+    {
+        $this->authorize('view', $siswa);
+
+        return $kartuPdf->download($siswa);
     }
 
     public function cekPortofolio(Siswa $siswa): View

@@ -125,6 +125,17 @@ class SiswaMonitoringTest extends TestCase
         $this->actingAs($admin)
             ->get(route('siswa.dokumen.download', [$sudah, 'kk']))
             ->assertOk();
+
+        $this->actingAs($admin)
+            ->get(route('siswa.kartu', $sudah))
+            ->assertOk()
+            ->assertSee('Kartu E-Pelajar', false)
+            ->assertSee(route('siswa.kartu.stream', $sudah), false);
+
+        $this->actingAs($admin)
+            ->get(route('siswa.kartu.stream', $sudah))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
     }
 
     public function test_monitoring_export_excel(): void

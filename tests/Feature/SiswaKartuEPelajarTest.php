@@ -9,6 +9,7 @@ use App\Models\Siswa;
 use App\Models\SiswaPeriodik;
 use App\Models\SiswaPernyataan;
 use App\Models\TahunAjaran;
+use App\Models\User;
 use App\Support\PernyataanSiswa;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -91,6 +92,31 @@ class SiswaKartuEPelajarTest extends TestCase
 
         $this->get(route('kartu-e-pelajar.cek', ['siswa' => $siswa->id]))
             ->assertForbidden();
+    }
+
+    public function test_admin_kartu_preview_terpisah_dari_halaman_verifikasi_siswa(): void
+    {
+        Storage::fake('r2');
+        $this->seed();
+        [, $siswa] = $this->siswaWithKartuData(denganPernyataan: true, lengkap: true);
+        $admin = User::query()->where('username', 'admin')->first();
+
+        $this->actingAs($admin)
+            ->get(route('siswa.kartu', $siswa))
+            ->assertOk()
+            ->assertSee('Preview kartu e-pelajar', false)
+            ->assertDontSee('Kartu E-Pelajar Terverifikasi', false);
+
+        $this->actingAs($admin)
+            ->get(route('siswa.kartu.stream', $siswa))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+
+        $url = URL::signedRoute('kartu-e-pelajar.cek', ['siswa' => $siswa->id]);
+        $this->get($url)
+            ->assertOk()
+            ->assertSee('Kartu E-Pelajar Terverifikasi')
+            ->assertDontSee('Preview Kartu E-Pelajar');
     }
 
     /**

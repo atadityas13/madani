@@ -27,6 +27,11 @@
 @endphp
 
 <style>
+    .monitoring-page {
+        min-width: 0;
+        max-width: 100%;
+        overflow-x: clip;
+    }
     .monitoring-flag {
         display: inline-flex;
         align-items: center;
@@ -43,12 +48,23 @@
     .monitoring-flag.is-ok.is-clickable:hover { color: #0a58ca; }
     .monitoring-flag.is-ok:not(.is-clickable) { color: #198754; }
     .monitoring-flag.is-no { color: #dc3545; cursor: default; }
-    .monitoring-scroll {
-        overflow-x: auto;
+    .monitoring-card {
+        min-width: 0;
         max-width: 100%;
+        overflow: hidden;
+    }
+    .monitoring-scroll {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: visible;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
     }
     .monitoring-table {
         margin-bottom: 0;
+        width: max-content;
+        min-width: 100%;
         border-collapse: separate;
         border-spacing: 0;
     }
@@ -60,9 +76,6 @@
         background: #fff;
     }
     .monitoring-table thead th {
-        position: sticky;
-        top: 0;
-        z-index: 3;
         background: #f8f9fa;
     }
     .monitoring-table .sticky-no,
@@ -73,12 +86,14 @@
     }
     .monitoring-table thead .sticky-no,
     .monitoring-table thead .sticky-nama {
-        z-index: 4;
+        z-index: 3;
         background: #f8f9fa;
     }
     .monitoring-table .sticky-no {
         left: 0;
+        width: 3rem;
         min-width: 3rem;
+        max-width: 3rem;
     }
     .monitoring-table .sticky-nama {
         left: 3rem;
@@ -105,6 +120,7 @@
     }
 </style>
 
+<div class="monitoring-page">
 <form class="siswa-index-toolbar mb-3" method="GET" action="{{ route('siswa.monitoring') }}" id="monitoringFilterForm">
     <div class="siswa-index-toolbar__filters flex-wrap gap-2 align-items-center">
         <select class="form-select" name="tingkat" aria-label="Filter tingkat" onchange="this.form.rombel_id.value=''; this.form.submit()">
@@ -172,7 +188,7 @@
     </div>
 </form>
 
-<div class="madani-card">
+<div class="madani-card monitoring-card">
     <div class="monitoring-scroll">
         <table class="table table-hover align-middle monitoring-table">
             <thead>
@@ -337,4 +353,5 @@ window.madaniMonitoringToggleVariabel = function (value) {
     });
 })();
 </script>
+</div>
 @endsection

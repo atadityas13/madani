@@ -343,8 +343,8 @@ class SiswaMonitoringService
             'is_pdf' => true,
         ] : null;
         $previews['kartu'] = [
-            'preview_url' => route('kartu-e-pelajar.cek', $siswa),
-            'download_url' => route('kartu-e-pelajar.cek', $siswa),
+            'preview_url' => route('siswa.kartu', $siswa),
+            'download_url' => route('siswa.kartu', $siswa),
             'is_pdf' => false,
             'external' => true,
         ];
