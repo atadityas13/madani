@@ -45,7 +45,7 @@
 
 @if ($tab === 'data-siswa')
     @if (! $portal && $siswa->pengajuanPerubahans->where('status', 'pending')->isNotEmpty())
-        <div class="madani-card p-4 mb-3">
+        <div class="madani-card p-4 mb-3" id="pengajuan-perubahan">
             <div class="stat-label mb-3">Pengajuan perubahan identitas</div>
             @foreach ($siswa->pengajuanPerubahans->where('status', 'pending') as $pengajuan)
                 <div class="border rounded p-3 mb-2">

@@ -8,8 +8,6 @@
 @php
     $variabelLabels = [
         'login' => 'Login',
-        'fcm' => 'FCM',
-        'password' => 'Password diganti',
         'data-siswa' => 'Identitas',
         'orang-tua' => 'Orang tua',
         'alamat' => 'Alamat',
@@ -22,10 +20,10 @@
         'pkh' => 'PKH',
         'ijazah_sd' => 'Ijazah SD',
         'pernyataan' => 'Pernyataan',
-        'kartu' => 'Kartu e-pelajar',
         'pengajuan_pending' => 'Ada pengajuan pending',
         'nis' => 'NIS terisi',
     ];
+    $belumCount = count($belum);
 @endphp
 
 <style>
@@ -39,20 +37,53 @@
         background: transparent;
         padding: 0;
         line-height: 1;
+        color: #0d6efd;
     }
-    .monitoring-flag.is-ok { color: #198754; }
     .monitoring-flag.is-ok.is-clickable { cursor: pointer; }
-    .monitoring-flag.is-ok.is-clickable:hover { color: #146c43; }
+    .monitoring-flag.is-ok.is-clickable:hover { color: #0a58ca; }
+    .monitoring-flag.is-ok:not(.is-clickable) { color: #198754; }
     .monitoring-flag.is-no { color: #dc3545; cursor: default; }
+    .monitoring-scroll {
+        overflow-x: auto;
+        max-width: 100%;
+    }
+    .monitoring-table {
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
     .monitoring-table th,
     .monitoring-table td {
         white-space: nowrap;
         font-size: 0.85rem;
         vertical-align: middle;
+        background: #fff;
     }
-    .monitoring-table th.group {
-        text-align: center;
-        background: rgba(0, 0, 0, 0.03);
+    .monitoring-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        background: #f8f9fa;
+    }
+    .monitoring-table .sticky-no,
+    .monitoring-table .sticky-nama {
+        position: sticky;
+        z-index: 2;
+        background: #fff;
+    }
+    .monitoring-table thead .sticky-no,
+    .monitoring-table thead .sticky-nama {
+        z-index: 4;
+        background: #f8f9fa;
+    }
+    .monitoring-table .sticky-no {
+        left: 0;
+        min-width: 3rem;
+    }
+    .monitoring-table .sticky-nama {
+        left: 3rem;
+        min-width: 12rem;
+        box-shadow: 4px 0 6px -4px rgba(0, 0, 0, 0.18);
     }
     .monitoring-preview-frame {
         width: 100%;
@@ -67,15 +98,15 @@
         display: block;
         margin: 0 auto;
     }
-    .monitoring-belum-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
-        gap: 0.35rem 0.75rem;
+    .monitoring-variabel-menu {
+        min-width: 16rem;
+        max-height: 18rem;
+        overflow-y: auto;
     }
 </style>
 
 <form class="siswa-index-toolbar mb-3" method="GET" action="{{ route('siswa.monitoring') }}" id="monitoringFilterForm">
-    <div class="siswa-index-toolbar__filters flex-wrap gap-2">
+    <div class="siswa-index-toolbar__filters flex-wrap gap-2 align-items-center">
         <select class="form-select" name="tingkat" aria-label="Filter tingkat" onchange="this.form.rombel_id.value=''; this.form.submit()">
             <option value="">Semua tingkat</option>
             @foreach ($tingkat_options as $option)
@@ -88,12 +119,50 @@
                 <option value="{{ $rombel->id }}" @selected((string) $rombel_id === (string) $rombel->id)>{{ $rombel->label() }}</option>
             @endforeach
         </select>
-        <select class="form-select" name="status_lengkap" aria-label="Status kelengkapan" onchange="this.form.submit()">
-            <option value="">Semua status lengkap</option>
-            <option value="sudah_lengkap" @selected($status_lengkap === 'sudah_lengkap')>Sudah lengkap</option>
-            <option value="belum_lengkap" @selected($status_lengkap === 'belum_lengkap')>Belum lengkap (ada yang kurang)</option>
-            <option value="belum_lengkap_semua" @selected($status_lengkap === 'belum_lengkap_semua')>Belum lengkap semua variabel</option>
+        <select
+            class="form-select"
+            name="status_lengkap"
+            id="monitoringStatusLengkap"
+            aria-label="Kelengkapan"
+            onchange="window.madaniMonitoringToggleVariabel(this.value)"
+        >
+            <option value="">Semua kelengkapan</option>
+            <option value="sudah_lengkap" @selected($status_lengkap === 'sudah_lengkap')>Lengkap</option>
+            <option value="belum_lengkap" @selected($status_lengkap === 'belum_lengkap')>Belum Lengkap</option>
+            <option value="belum_variabel" @selected($status_lengkap === 'belum_variabel')>Belum lengkap / variabel</option>
         </select>
+        <div
+            class="dropdown"
+            id="monitoringVariabelWrap"
+            style="{{ $status_lengkap === 'belum_variabel' ? '' : 'display:none' }}"
+        >
+            <button
+                class="btn btn-outline-secondary dropdown-toggle"
+                type="button"
+                data-bs-toggle="dropdown"
+                data-bs-auto-close="outside"
+                aria-expanded="false"
+            >
+                Variabel{{ $belumCount > 0 ? ' ('.$belumCount.')' : '' }}
+            </button>
+            <div class="dropdown-menu p-2 monitoring-variabel-menu">
+                @foreach ($variabelLabels as $key => $label)
+                    <label class="form-check dropdown-item-text mb-1">
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            name="belum[]"
+                            value="{{ $key }}"
+                            @checked(in_array($key, $belum, true))
+                        >
+                        <span class="form-check-label">{{ $label }}</span>
+                    </label>
+                @endforeach
+                <div class="pt-2 border-top mt-1">
+                    <button class="btn btn-sm btn-madani w-100" type="submit">Terapkan</button>
+                </div>
+            </div>
+        </div>
     </div>
     <div class="siswa-index-toolbar__search">
         <input class="form-control" type="search" name="q" value="{{ $q }}" placeholder="Cari nama, NISN, NIS">
@@ -103,48 +172,16 @@
     </div>
 </form>
 
-<div class="madani-card mb-3 p-3">
-    <div class="fw-semibold mb-2">Belum lengkap per variabel</div>
-    <div class="monitoring-belum-grid">
-        @foreach ($variabelLabels as $key => $label)
-            <label class="form-check">
-                <input
-                    class="form-check-input"
-                    type="checkbox"
-                    name="belum[]"
-                    value="{{ $key }}"
-                    form="monitoringFilterForm"
-                    @checked(in_array($key, $belum, true))
-                    onchange="document.getElementById('monitoringFilterForm').submit()"
-                >
-                <span class="form-check-label">{{ $label }}</span>
-            </label>
-        @endforeach
-    </div>
-</div>
-
 <div class="madani-card">
-    <div class="table-responsive">
-        <table class="table table-hover mb-0 align-middle monitoring-table">
+    <div class="monitoring-scroll">
+        <table class="table table-hover align-middle monitoring-table">
             <thead>
                 <tr>
-                    <th rowspan="2">No</th>
-                    <th rowspan="2">Nama</th>
-                    <th rowspan="2">NISN</th>
-                    <th rowspan="2">Angkatan</th>
-                    <th rowspan="2">Rombel</th>
-                    <th rowspan="2">Status</th>
-                    <th class="group" colspan="3">Akun</th>
-                    <th class="group" colspan="4">Data wajib</th>
-                    <th class="group" colspan="7">Dokumen</th>
-                    <th class="group" colspan="3">Artefak</th>
-                    <th rowspan="2" title="Pengajuan pending">Ajuan</th>
-                </tr>
-                <tr>
+                    <th class="sticky-no">No</th>
+                    <th class="sticky-nama">Nama</th>
+                    <th>NISN</th>
+                    <th>Rombel</th>
                     <th title="Login Ta'lim">Login</th>
-                    <th>FCM</th>
-                    <th title="Password sudah diganti">Pwd</th>
-                    <th>Id</th>
                     <th>Ortu</th>
                     <th>Almt</th>
                     <th>Rekam</th>
@@ -158,6 +195,7 @@
                     <th title="Pernyataan biodata">Bio</th>
                     <th title="Pernyataan peserta didik">PD</th>
                     <th>Kartu</th>
+                    <th title="Pengajuan pending — klik untuk verifikasi">Ajuan</th>
                 </tr>
             </thead>
             <tbody>
@@ -170,37 +208,32 @@
                             : 'Belum pernah login';
                     @endphp
                     <tr>
-                        <td>{{ $rows->firstItem() + $loop->index }}</td>
-                        <td>
+                        <td class="sticky-no">{{ $rows->firstItem() + $loop->index }}</td>
+                        <td class="sticky-nama">
                             <a href="{{ $row['show_url'] }}">{{ $row['nama'] }}</a>
                             @if (! $f['nis'])
                                 <span class="text-danger" title="NIS kosong">!</span>
                             @endif
                         </td>
                         <td>{{ $row['nisn'] ?: '—' }}</td>
-                        <td>{{ $row['angkatan'] ?: '—' }}</td>
                         <td>{{ $row['rombel_label'] }}</td>
-                        <td>{{ $row['status_keaktifan'] }}</td>
                         <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['login'], 'title' => $loginTitle])</td>
-                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['fcm']])</td>
-                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['password']])</td>
-                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['data-siswa']])</td>
                         <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['orang-tua']])</td>
                         <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['alamat']])</td>
                         <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['rekam-didik']])</td>
-                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['foto'], 'preview' => $p['foto'] ?? null, 'label' => 'Foto — '.$row['nama']])</td>
-                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['kk'], 'preview' => $p['kk'] ?? null, 'label' => 'KK — '.$row['nama']])</td>
-                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['akta_lahir'], 'preview' => $p['akta_lahir'] ?? null, 'label' => 'Akta — '.$row['nama']])</td>
-                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['kip'], 'preview' => $p['kip'] ?? null, 'label' => 'KIP — '.$row['nama']])</td>
-                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['kks'], 'preview' => $p['kks'] ?? null, 'label' => 'KKS — '.$row['nama']])</td>
-                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['pkh'], 'preview' => $p['pkh'] ?? null, 'label' => 'PKH — '.$row['nama']])</td>
-                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['ijazah_sd'], 'preview' => $p['ijazah_sd'] ?? null, 'label' => 'Ijazah SD — '.$row['nama']])</td>
-                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['pernyataan'], 'preview' => $p['pernyataan_biodata'] ?? null, 'label' => 'Pernyataan biodata — '.$row['nama']])</td>
-                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['pernyataan'], 'preview' => $p['pernyataan_peserta_didik'] ?? null, 'label' => 'Pernyataan peserta didik — '.$row['nama']])</td>
-                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['kartu'], 'preview' => $p['kartu'] ?? null, 'label' => 'Kartu e-pelajar — '.$row['nama']])</td>
+                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['foto'], 'preview' => $p['foto'] ?? null, 'label' => 'Foto — '.$row['nama'], 'icon' => 'image'])</td>
+                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['kk'], 'preview' => $p['kk'] ?? null, 'label' => 'KK — '.$row['nama'], 'icon' => 'image'])</td>
+                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['akta_lahir'], 'preview' => $p['akta_lahir'] ?? null, 'label' => 'Akta — '.$row['nama'], 'icon' => 'image'])</td>
+                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['kip'], 'preview' => $p['kip'] ?? null, 'label' => 'KIP — '.$row['nama'], 'icon' => 'image'])</td>
+                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['kks'], 'preview' => $p['kks'] ?? null, 'label' => 'KKS — '.$row['nama'], 'icon' => 'image'])</td>
+                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['pkh'], 'preview' => $p['pkh'] ?? null, 'label' => 'PKH — '.$row['nama'], 'icon' => 'image'])</td>
+                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['ijazah_sd'], 'preview' => $p['ijazah_sd'] ?? null, 'label' => 'Ijazah SD — '.$row['nama'], 'icon' => 'image'])</td>
+                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['pernyataan'], 'preview' => $p['pernyataan_biodata'] ?? null, 'label' => 'Pernyataan biodata — '.$row['nama'], 'icon' => 'doc'])</td>
+                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['pernyataan'], 'preview' => $p['pernyataan_peserta_didik'] ?? null, 'label' => 'Pernyataan peserta didik — '.$row['nama'], 'icon' => 'doc'])</td>
+                        <td>@include('siswa.partials.monitoring-flag', ['ok' => true, 'preview' => $p['kartu'] ?? null, 'label' => 'Kartu e-pelajar — '.$row['nama'], 'icon' => 'card', 'title' => 'Buka kartu e-pelajar'])</td>
                         <td>
                             @if ($row['pengajuan_pending'] > 0)
-                                <a href="{{ $row['show_url'] }}" class="text-warning fw-semibold" title="Ada pengajuan pending">{{ $row['pengajuan_pending'] }}</a>
+                                <a href="{{ $row['ajuan_url'] }}" class="text-warning fw-semibold" title="Proses verifikasi pengajuan">{{ $row['pengajuan_pending'] }}</a>
                             @else
                                 <span class="text-secondary">0</span>
                             @endif
@@ -208,7 +241,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="24" class="text-center text-secondary py-4">Tidak ada data sesuai filter.</td>
+                        <td colspan="19" class="text-center text-secondary py-4">Tidak ada data sesuai filter.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -243,6 +276,23 @@
 </div>
 
 <script>
+window.madaniMonitoringToggleVariabel = function (value) {
+    const wrap = document.getElementById('monitoringVariabelWrap');
+    const form = document.getElementById('monitoringFilterForm');
+    if (!wrap || !form) return;
+
+    if (value === 'belum_variabel') {
+        wrap.style.display = '';
+        return;
+    }
+
+    wrap.style.display = 'none';
+    wrap.querySelectorAll('input[name="belum[]"]').forEach((input) => {
+        input.checked = false;
+    });
+    form.submit();
+};
+
 (() => {
     const modalEl = document.getElementById('monitoringPreviewModal');
     if (!modalEl) return;

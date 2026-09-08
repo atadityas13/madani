@@ -8,7 +8,6 @@ use App\Models\TahunAjaran;
 use App\Models\User;
 use App\Support\KelengkapanSiswa;
 use App\Support\R2Url;
-use App\Support\SiswaDataLock;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator as Paginator;
@@ -23,8 +22,6 @@ class SiswaMonitoringService
     /** @var list<string> */
     public const FILTER_VARIABEL = [
         'login',
-        'fcm',
-        'password',
         'data-siswa',
         'orang-tua',
         'alamat',
@@ -37,7 +34,6 @@ class SiswaMonitoringService
         'pkh',
         'ijazah_sd',
         'pernyataan',
-        'kartu',
         'pengajuan_pending',
         'nis',
     ];
@@ -96,11 +92,10 @@ class SiswaMonitoringService
         $sheet->setTitle('monitoring');
 
         $headers = [
-            'No', 'Nama', 'NISN', 'NIS', 'Angkatan', 'Rombel', 'Status',
-            'Login', 'FCM', 'Password diganti',
-            'Identitas', 'Orang tua', 'Alamat', 'Rekam didik',
+            'No', 'Nama', 'NISN', 'NIS', 'Rombel',
+            'Login', 'Orang tua', 'Alamat', 'Rekam didik',
             'Foto', 'KK', 'Akta', 'KIP', 'KKS', 'PKH', 'Ijazah SD',
-            'Pernyataan', 'Kartu siap', 'Pengajuan pending',
+            'Pernyataan biodata', 'Pernyataan peserta didik', 'Pengajuan pending',
         ];
         $sheet->fromArray([$headers], null, 'A1');
 
@@ -111,13 +106,8 @@ class SiswaMonitoringService
                 $row['nama'],
                 $row['nisn'] ?: '',
                 $row['nis'] ?: '',
-                $row['angkatan'] ?: '',
                 $row['rombel_label'],
-                $row['status_keaktifan'],
                 $this->yaTidak($row['flags']['login']),
-                $this->yaTidak($row['flags']['fcm']),
-                $this->yaTidak($row['flags']['password']),
-                $this->yaTidak($row['flags']['data-siswa']),
                 $this->yaTidak($row['flags']['orang-tua']),
                 $this->yaTidak($row['flags']['alamat']),
                 $this->yaTidak($row['flags']['rekam-didik']),
@@ -129,7 +119,7 @@ class SiswaMonitoringService
                 $this->yaTidak($row['flags']['pkh']),
                 $this->yaTidak($row['flags']['ijazah_sd']),
                 $this->yaTidak($row['flags']['pernyataan']),
-                $this->yaTidak($row['flags']['kartu']),
+                $this->yaTidak($row['flags']['pernyataan']),
                 $row['pengajuan_pending'],
             ];
         }
@@ -137,7 +127,7 @@ class SiswaMonitoringService
             $sheet->fromArray($data, null, 'A2');
         }
 
-        foreach (range('A', 'X') as $col) {
+        foreach (range('A', 'S') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
@@ -170,7 +160,7 @@ class SiswaMonitoringService
         $perPageRaw = (string) $request->query('per_page', '10');
         $perPage = in_array($perPageRaw, ['10', '25', '50', '100'], true) ? (int) $perPageRaw : 10;
         $statusLengkap = trim((string) $request->query('status_lengkap', ''));
-        if (! in_array($statusLengkap, ['sudah_lengkap', 'belum_lengkap', 'belum_lengkap_semua'], true)) {
+        if (! in_array($statusLengkap, ['sudah_lengkap', 'belum_lengkap', 'belum_variabel'], true)) {
             $statusLengkap = '';
         }
 
@@ -178,10 +168,12 @@ class SiswaMonitoringService
         if (! is_array($belumRaw)) {
             $belumRaw = filled($belumRaw) ? [(string) $belumRaw] : [];
         }
-        $belum = array_values(array_filter(
-            array_map('strval', $belumRaw),
-            fn (string $key) => in_array($key, self::FILTER_VARIABEL, true),
-        ));
+        $belum = $statusLengkap === 'belum_variabel'
+            ? array_values(array_filter(
+                array_map('strval', $belumRaw),
+                fn (string $key) => in_array($key, self::FILTER_VARIABEL, true),
+            ))
+            : [];
 
         $tahun = TahunAjaran::aktif();
         $rombels = Rombel::query()
@@ -244,7 +236,6 @@ class SiswaMonitoringService
                     $rombelQuery->wherePivot('status', 'aktif')
                         ->when($tahun, fn ($inner) => $inner->where('tahun_ajaran_id', $tahun->id));
                 },
-                'deviceTokens',
             ])
             ->withCount([
                 'pengajuanPerubahans as pengajuan_pending_count' => fn ($q) => $q->where('status', 'pending'),
@@ -311,15 +302,12 @@ class SiswaMonitoringService
 
         $flags = [
             'login' => $siswa->first_login_at !== null,
-            'fcm' => $siswa->deviceTokens->isNotEmpty(),
-            'password' => ! $siswa->must_change_password,
             'data-siswa' => (bool) ($tabs->get('data-siswa')['selesai'] ?? false),
             'orang-tua' => (bool) ($tabs->get('orang-tua')['selesai'] ?? false),
             'alamat' => (bool) ($tabs->get('alamat')['selesai'] ?? false),
             'rekam-didik' => (bool) ($tabs->get('rekam-didik')['selesai'] ?? false),
             'foto' => filled($siswa->foto),
             'pernyataan' => $siswa->pernyataan !== null,
-            'kartu' => SiswaDataLock::bolehAksesKartuDanPortofolio($siswa),
             'pengajuan_pending' => ((int) $siswa->pengajuan_pending_count) > 0,
             'nis' => filled($siswa->nis),
         ];
@@ -354,16 +342,16 @@ class SiswaMonitoringService
             'download_url' => route('siswa.pernyataan.download', [$siswa, 'peserta-didik']),
             'is_pdf' => true,
         ] : null;
-        $previews['kartu'] = $flags['kartu'] ? [
+        $previews['kartu'] = [
             'preview_url' => route('kartu-e-pelajar.cek', $siswa),
             'download_url' => route('kartu-e-pelajar.cek', $siswa),
             'is_pdf' => false,
             'external' => true,
-        ] : null;
+        ];
 
         $globalKeys = [
             'login', 'data-siswa', 'orang-tua', 'alamat', 'rekam-didik', 'foto',
-            'kk', 'akta_lahir', 'kip', 'kks', 'pkh', 'ijazah_sd', 'pernyataan', 'kartu',
+            'kk', 'akta_lahir', 'kip', 'kks', 'pkh', 'ijazah_sd', 'pernyataan',
         ];
         $globalOk = collect($globalKeys)->every(fn (string $key) => $flags[$key] === true);
 
@@ -378,6 +366,7 @@ class SiswaMonitoringService
             'last_login_at' => $siswa->last_login_at,
             'pengajuan_pending' => (int) $siswa->pengajuan_pending_count,
             'show_url' => route('siswa.show', $siswa),
+            'ajuan_url' => route('siswa.edit', ['siswa' => $siswa, 'tab' => 'data-siswa']).'#pengajuan-perubahan',
             'flags' => $flags,
             'previews' => $previews,
             'lengkap_global' => $globalOk,
@@ -405,17 +394,7 @@ class SiswaMonitoringService
         return $rows
             ->when($statusLengkap === 'sudah_lengkap', fn (Collection $c) => $c->filter(fn (array $row) => $row['lengkap_global']))
             ->when($statusLengkap === 'belum_lengkap', fn (Collection $c) => $c->filter(fn (array $row) => ! $row['lengkap_global']))
-            ->when($statusLengkap === 'belum_lengkap_semua', function (Collection $c) {
-                $keys = [
-                    'login', 'data-siswa', 'orang-tua', 'alamat', 'rekam-didik', 'foto',
-                    'kk', 'akta_lahir', 'kip', 'kks', 'pkh', 'ijazah_sd', 'pernyataan', 'kartu',
-                ];
-
-                return $c->filter(fn (array $row) => collect($keys)->every(
-                    fn (string $key) => ($row['flags'][$key] ?? false) === false
-                ));
-            })
-            ->when($belum !== [], function (Collection $c) use ($belum) {
+            ->when($statusLengkap === 'belum_variabel' && $belum !== [], function (Collection $c) use ($belum) {
                 return $c->filter(function (array $row) use ($belum) {
                     foreach ($belum as $key) {
                         if (($row['flags'][$key] ?? false) === true) {

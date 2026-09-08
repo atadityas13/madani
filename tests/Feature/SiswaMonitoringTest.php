@@ -104,10 +104,16 @@ class SiswaMonitoringTest extends TestCase
             ->assertSee('Monitoring siswa', false)
             ->assertSee('Sudah Login', false)
             ->assertSee('Belum Login', false)
-            ->assertSee('data-monitoring-preview', false);
+            ->assertSee('bi-person-vcard', false)
+            ->assertSee('data-monitoring-preview', false)
+            ->assertDontSee('>Angkatan<', false)
+            ->assertDontSee('Belum lengkap semua variabel', false);
 
         $this->actingAs($admin)
-            ->get(route('siswa.monitoring', ['belum' => ['login']]))
+            ->get(route('siswa.monitoring', [
+                'status_lengkap' => 'belum_variabel',
+                'belum' => ['login'],
+            ]))
             ->assertOk()
             ->assertSee('Belum Login', false)
             ->assertDontSee('Sudah Login', false);

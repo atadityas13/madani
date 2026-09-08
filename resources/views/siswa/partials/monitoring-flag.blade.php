@@ -3,7 +3,17 @@
     'title' => null,
     'preview' => null,
     'label' => null,
+    'icon' => 'check',
 ])
+
+@php
+    $iconClass = match ($icon) {
+        'image' => 'bi-image',
+        'doc' => 'bi-file-earmark-text',
+        'card' => 'bi-person-vcard',
+        default => 'bi-check-lg',
+    };
+@endphp
 
 @if ($ok && is_array($preview) && filled($preview['preview_url'] ?? null))
     <button
@@ -17,7 +27,7 @@
         data-is-pdf="{{ ! empty($preview['is_pdf']) ? '1' : '0' }}"
         data-external="{{ ! empty($preview['external']) ? '1' : '0' }}"
     >
-        <i class="bi bi-check-lg" aria-hidden="true"></i>
+        <i class="bi {{ $iconClass }}" aria-hidden="true"></i>
         <span class="visually-hidden">Ya</span>
     </button>
 @elseif ($ok)
