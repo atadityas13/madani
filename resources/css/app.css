@@ -1552,6 +1552,7 @@ a.biodata-path-item:hover {
 .emis-aksi-btn {
     width: 32px;
     height: 32px;
+    border: 0;
     border-radius: 8px;
     display: inline-flex;
     align-items: center;
@@ -1559,11 +1560,130 @@ a.biodata-path-item:hover {
     color: var(--emis-blue);
     background: var(--emis-blue-soft);
     text-decoration: none;
+    cursor: pointer;
 }
 
 .emis-aksi-btn:hover {
     background: var(--emis-blue);
     color: #fff;
+}
+
+.siswa-index-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+}
+
+.siswa-index-toolbar__filters,
+.siswa-index-toolbar__search {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.siswa-index-toolbar__filters .form-select {
+    min-width: 9rem;
+    max-width: 12rem;
+}
+
+.siswa-index-toolbar__search {
+    margin-left: auto;
+}
+
+.siswa-index-toolbar__search .form-control {
+    min-width: 14rem;
+    max-width: 22rem;
+}
+
+.siswa-index-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    padding: 0.9rem 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.siswa-index-pagination__summary {
+    font-size: 0.9rem;
+    color: #64748b;
+}
+
+.siswa-index-pagination__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.siswa-index-pagination__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.siswa-index-pagination__label .form-select,
+.siswa-index-pagination__page-input {
+    width: auto;
+    min-width: 4.5rem;
+}
+
+.siswa-index-pagination__page-input {
+    width: 4.5rem;
+}
+
+.siswa-index-pagination__pages {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.siswa-index-page {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    padding: 0 0.55rem;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: var(--emis-blue-dark);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.siswa-index-page:hover {
+    background: var(--emis-blue-soft);
+    color: var(--emis-blue-dark);
+}
+
+.siswa-index-page.is-current {
+    background: var(--emis-blue);
+    border-color: var(--emis-blue);
+    color: #fff;
+}
+
+.siswa-index-page.is-disabled,
+.siswa-index-page.is-ellipsis {
+    border-color: transparent;
+    background: transparent;
+    color: #94a3b8;
+    cursor: default;
+}
+
+.siswa-index-page.is-ellipsis {
+    min-width: auto;
+    padding: 0 0.2rem;
 }
 
 .ajukan-identitas-icon {

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PengajuanPerubahanSiswa;
-use App\Models\PeriodePendataan;
+use App\Models\Rombel;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Services\KartuEPelajarService;
@@ -29,40 +29,102 @@ class SiswaController extends Controller
         $this->authorize('viewAny', Siswa::class);
 
         $q = trim((string) $request->query('q', ''));
+        $tingkat = trim((string) $request->query('tingkat', ''));
+        $rombelId = trim((string) $request->query('rombel_id', ''));
+        $perPageRaw = (string) $request->query('per_page', '10');
         $user = auth()->user();
+        $tahun = TahunAjaran::aktif();
 
-        $siswas = Siswa::query()
-            ->with(['rombels' => function ($query) {
-                $query->wherePivot('status', 'aktif')
-                    ->when(TahunAjaran::aktif(), fn ($rombel) => $rombel->where('tahun_ajaran_id', TahunAjaran::aktif()->id));
-            }])
+        $rombels = Rombel::query()
+            ->when($tahun, fn ($query) => $query->where('tahun_ajaran_id', $tahun->id))
             ->when($user?->adalahWali(), function ($query) use ($user) {
                 $ids = $user->rombelIdsAktif();
+                $query->whereIn('id', $ids === [] ? [0] : $ids);
+            })
+            ->orderBy('tingkat')
+            ->orderBy('nama')
+            ->get();
+
+        $tingkatOptions = $rombels
+            ->pluck('tingkat')
+            ->filter(fn ($item) => filled($item))
+            ->unique()
+            ->sortBy(fn ($item) => Rombel::tingkatOrder($item))
+            ->values();
+
+        if ($tingkat !== '' && ! $tingkatOptions->contains($tingkat)) {
+            $tingkat = '';
+        }
+
+        $rombelsForSelect = $tingkat !== ''
+            ? $rombels->where('tingkat', $tingkat)->values()
+            : $rombels->values();
+
+        if ($rombelId !== '' && ! $rombelsForSelect->contains(fn (Rombel $rombel) => (string) $rombel->id === $rombelId)) {
+            $rombelId = '';
+        }
+
+        $query = Siswa::query()
+            ->with([
+                'pernyataan',
+                'rombels' => function ($rombelQuery) use ($tahun) {
+                    $rombelQuery->wherePivot('status', 'aktif')
+                        ->when($tahun, fn ($inner) => $inner->where('tahun_ajaran_id', $tahun->id));
+                },
+            ])
+            ->when($user?->adalahWali(), function ($siswaQuery) use ($user) {
+                $ids = $user->rombelIdsAktif();
                 if ($ids === []) {
-                    $query->whereRaw('0 = 1');
+                    $siswaQuery->whereRaw('0 = 1');
 
                     return;
                 }
 
-                $query->whereHas('rombels', fn ($inner) => $inner
+                $siswaQuery->whereHas('rombels', fn ($inner) => $inner
                     ->whereIn('rombels.id', $ids)
                     ->where('rombel_siswas.status', 'aktif'));
             })
-            ->when($q !== '', function ($query) use ($q) {
-                $query->where(function ($inner) use ($q) {
+            ->when($q !== '', function ($siswaQuery) use ($q) {
+                $siswaQuery->where(function ($inner) use ($q) {
                     $inner->where('nama', 'like', "%{$q}%")
                         ->orWhere('nisn', 'like', "%{$q}%")
                         ->orWhere('nik', 'like', "%{$q}%")
                         ->orWhere('nis', 'like', "%{$q}%");
                 });
             })
-            ->latest()
-            ->paginate(15)
-            ->withQueryString();
+            ->when($tingkat !== '', function ($siswaQuery) use ($tingkat, $tahun) {
+                $siswaQuery->whereHas('rombels', fn ($inner) => $inner
+                    ->where('tingkat', $tingkat)
+                    ->where('rombel_siswas.status', 'aktif')
+                    ->when($tahun, fn ($rombel) => $rombel->where('tahun_ajaran_id', $tahun->id)));
+            })
+            ->when($rombelId !== '', function ($siswaQuery) use ($rombelId) {
+                $siswaQuery->whereHas('rombels', fn ($inner) => $inner
+                    ->where('rombels.id', $rombelId)
+                    ->where('rombel_siswas.status', 'aktif'));
+            })
+            ->latest();
 
-        $periodePendataan = PeriodePendataan::current();
+        $allowedPerPage = [10, 20, 50, 100];
+        if ($perPageRaw === 'all') {
+            $perPage = max((clone $query)->count(), 1);
+            $perPageLabel = 'all';
+        } else {
+            $perPage = in_array((int) $perPageRaw, $allowedPerPage, true) ? (int) $perPageRaw : 10;
+            $perPageLabel = (string) $perPage;
+        }
 
-        return view('siswa.index', compact('siswas', 'q', 'periodePendataan'));
+        $siswas = $query->paginate($perPage)->withQueryString();
+
+        return view('siswa.index', [
+            'siswas' => $siswas,
+            'q' => $q,
+            'tingkat' => $tingkat,
+            'rombelId' => $rombelId,
+            'perPage' => $perPageLabel,
+            'tingkatOptions' => $tingkatOptions,
+            'rombels' => $rombelsForSelect,
+        ]);
     }
 
     public function create(): View
@@ -283,7 +345,7 @@ class SiswaController extends Controller
         $pernyataan->batalkan($siswa);
 
         return redirect()
-            ->route('siswa.edit', $siswa)
+            ->route('siswa.index')
             ->with('status', 'Konfirmasi pernyataan dibatalkan. Siswa dapat mengedit data kembali selama periode pendataan terbuka.');
     }
 
