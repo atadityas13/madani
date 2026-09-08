@@ -70,19 +70,50 @@ class KartuEPelajarPdfService
      */
     public function viewData(Siswa $siswa): array
     {
-        $payload = $this->kartu->payload($siswa);
-        $madrasah = Madrasah::saatIni();
+        $previous = ini_get('memory_limit');
+        if ($this->memoryLimitBytes($previous) < 512 * 1024 * 1024) {
+            ini_set('memory_limit', '512M');
+        }
 
-        return [
-            'siswa' => $siswa,
-            'kartu' => $payload,
-            'logoDataUri' => $this->r2DataUri($madrasah->logo_path, 96)
-                ?? $this->assetDataUri(public_path('images/logo-madani.png'), 96),
-            'logoKemenagDataUri' => $this->assetDataUri(public_path('img/logo-kemenag.png'), 96),
-            'fotoDataUri' => $this->r2DataUri($siswa->foto, 180),
-            'qrDataUri' => $this->qrDataUri($payload['verify_url']),
-            'generatedAt' => now(),
-        ];
+        try {
+            $payload = $this->kartu->payload($siswa);
+            $madrasah = Madrasah::saatIni();
+            $logoMadani = $this->r2DataUri($madrasah->logo_path, 96)
+                ?? $this->rawAssetDataUri(public_path('img/logo-madani-kartu-sm.png'))
+                ?? $this->assetDataUri(public_path('images/logo-madani.png'), 96);
+
+            return [
+                'siswa' => $siswa,
+                'kartu' => $payload,
+                'logoDataUri' => $logoMadani,
+                'logoKemenagDataUri' => $this->rawAssetDataUri(public_path('img/logo-kemenag-kartu.png'))
+                    ?? $this->assetDataUri(public_path('img/logo-kemenag.png'), 96),
+                'logoMadaniDataUri' => $logoMadani,
+                'bgBelakangDataUri' => $this->rawAssetDataUri(public_path('img/bg-kartu-belakang-kartu.jpg'), 'image/jpeg')
+                    ?? $this->assetJpegDataUri(public_path('img/bg-kartu-belakang.jpg'), 420),
+                'fotoDataUri' => $this->r2DataUri($siswa->foto, 140),
+                'qrDataUri' => $this->qrDataUri($payload['verify_url']),
+                'generatedAt' => now(),
+            ];
+        } finally {
+            if (is_string($previous) && $previous !== '') {
+                ini_set('memory_limit', $previous);
+            }
+        }
+    }
+
+    private function rawAssetDataUri(string $absolutePath, string $mime = 'image/png'): ?string
+    {
+        if (! is_file($absolutePath)) {
+            return null;
+        }
+
+        $bytes = file_get_contents($absolutePath);
+        if ($bytes === false || $bytes === '') {
+            return null;
+        }
+
+        return 'data:'.$mime.';base64,'.base64_encode($bytes);
     }
 
     private function qrDataUri(string $content): string
@@ -120,6 +151,20 @@ class KartuEPelajarPdfService
         return $this->resizedPngDataUri($bytes, $maxWidth);
     }
 
+    private function assetJpegDataUri(string $absolutePath, int $maxWidth): ?string
+    {
+        if (! is_file($absolutePath)) {
+            return null;
+        }
+
+        $bytes = file_get_contents($absolutePath);
+        if ($bytes === false || $bytes === '') {
+            return null;
+        }
+
+        return $this->resizedJpegDataUri($bytes, $maxWidth);
+    }
+
     private function resizedPngDataUri(string $bytes, int $maxWidth): ?string
     {
         $image = @imagecreatefromstring($bytes);
@@ -127,25 +172,9 @@ class KartuEPelajarPdfService
             return null;
         }
 
-        $width = imagesx($image);
-        $height = imagesy($image);
-        if ($width < 1 || $height < 1) {
-            imagedestroy($image);
-
+        $image = $this->scaleImage($image, $maxWidth);
+        if ($image === null) {
             return null;
-        }
-
-        if ($width > $maxWidth) {
-            $newWidth = $maxWidth;
-            $newHeight = (int) max(1, round($height * ($maxWidth / $width)));
-            $resized = imagecreatetruecolor($newWidth, $newHeight);
-            imagealphablending($resized, false);
-            imagesavealpha($resized, true);
-            $transparent = imagecolorallocatealpha($resized, 0, 0, 0, 127);
-            imagefilledrectangle($resized, 0, 0, $newWidth, $newHeight, $transparent);
-            imagecopyresampled($resized, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-            imagedestroy($image);
-            $image = $resized;
         }
 
         ob_start();
@@ -158,5 +187,56 @@ class KartuEPelajarPdfService
         }
 
         return 'data:image/png;base64,'.base64_encode($png);
+    }
+
+    private function resizedJpegDataUri(string $bytes, int $maxWidth): ?string
+    {
+        $image = @imagecreatefromstring($bytes);
+        if ($image === false) {
+            return null;
+        }
+
+        $image = $this->scaleImage($image, $maxWidth);
+        if ($image === null) {
+            return null;
+        }
+
+        ob_start();
+        imagejpeg($image, null, 72);
+        $jpeg = ob_get_clean();
+        imagedestroy($image);
+
+        if ($jpeg === false || $jpeg === '') {
+            return null;
+        }
+
+        return 'data:image/jpeg;base64,'.base64_encode($jpeg);
+    }
+
+    private function scaleImage(\GdImage $image, int $maxWidth): ?\GdImage
+    {
+        $width = imagesx($image);
+        $height = imagesy($image);
+        if ($width < 1 || $height < 1) {
+            imagedestroy($image);
+
+            return null;
+        }
+
+        if ($width <= $maxWidth) {
+            return $image;
+        }
+
+        $newWidth = $maxWidth;
+        $newHeight = (int) max(1, round($height * ($maxWidth / $width)));
+        $resized = imagecreatetruecolor($newWidth, $newHeight);
+        imagealphablending($resized, false);
+        imagesavealpha($resized, true);
+        $transparent = imagecolorallocatealpha($resized, 0, 0, 0, 127);
+        imagefilledrectangle($resized, 0, 0, $newWidth, $newHeight, $transparent);
+        imagecopyresampled($resized, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+        imagedestroy($image);
+
+        return $resized;
     }
 }

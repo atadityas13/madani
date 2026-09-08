@@ -10,6 +10,7 @@ use App\Models\SiswaPeriodik;
 use App\Models\SiswaPernyataan;
 use App\Models\TahunAjaran;
 use App\Models\User;
+use App\Services\KartuEPelajarPdfService;
 use App\Support\PernyataanSiswa;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -111,6 +112,16 @@ class SiswaKartuEPelajarTest extends TestCase
             ->get(route('siswa.kartu.stream', $siswa))
             ->assertOk()
             ->assertHeader('content-type', 'application/pdf');
+
+        $html = view('siswa.kartu-e-pelajar-pdf', app(KartuEPelajarPdfService::class)->viewData($siswa))->render();
+        $this->assertStringContainsString('KARTU PELAJAR', $html);
+        $this->assertStringContainsString('IKRAR PELAJAR INDONESIA', $html);
+        $this->assertStringContainsString('Berlaku selama menjadi siswa', $html);
+        $this->assertStringContainsString('Kami Pelajar Indonesia, berikrar untuk:', $html);
+        $this->assertStringNotContainsString('Preview Kartu E-Pelajar', $html);
+        $this->assertStringNotContainsString('Preview admin MADANI', $html);
+        $this->assertStringNotContainsString('Depan ·', $html);
+        $this->assertStringNotContainsString('Belakang ·', $html);
 
         $url = URL::signedRoute('kartu-e-pelajar.cek', ['siswa' => $siswa->id]);
         $this->get($url)
