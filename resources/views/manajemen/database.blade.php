@@ -19,10 +19,39 @@
     </div>
 @endif
 
-<p class="text-secondary mb-3">
-    Kosongkan data per modul untuk mengembalikan aplikasi mendekati kondisi awal.
-    Akun web MADANI (Super Admin) tidak dihapus. Impor Excel siswa sudah tersedia; modul lain menyusul.
-</p>
+@if ($imporSuksesJumlah !== null)
+    <div
+        class="modal fade"
+        id="imporSiswaSuksesModal"
+        tabindex="-1"
+        aria-labelledby="imporSiswaSuksesModalLabel"
+        aria-hidden="true"
+        data-modal-open
+    >
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" id="imporSiswaSuksesModalLabel">Impor berhasil</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <p class="mb-0 fs-5">Berhasil Import {{ number_format((int) $imporSuksesJumlah) }} siswa</p>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-madani" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const modalEl = document.getElementById('imporSiswaSuksesModal');
+            if (modalEl && window.bootstrap) {
+                bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            }
+        });
+    </script>
+@endif
 
 <div class="row g-3">
     @foreach ($kartu as $item)

@@ -44,7 +44,11 @@ class SiswaExcelImportTest extends TestCase
         $this->post(route('manajemen.database.siswa.impor'), [
             'file' => $file,
         ])->assertRedirect(route('manajemen.database'))
-            ->assertSessionHas('status');
+            ->assertSessionHas('impor_siswa_sukses_jumlah', 1);
+
+        $this->get(route('manajemen.database'))
+            ->assertOk()
+            ->assertSee('Berhasil Import 1 siswa', false);
 
         $siswa = Siswa::query()->where('nisn', '1234567890')->first();
         $this->assertNotNull($siswa);
@@ -186,10 +190,14 @@ class SiswaExcelImportTest extends TestCase
             'token' => $token,
             'skip_duplikat' => '1',
         ])->assertRedirect(route('manajemen.database'))
-            ->assertSessionHas('status');
+            ->assertSessionHas('impor_siswa_sukses_jumlah', 1);
 
         $this->assertNull(Siswa::query()->where('nisn', '5555555555')->first());
         $this->assertNotNull(Siswa::query()->where('nisn', '5555555556')->first());
+
+        $this->get(route('manajemen.database'))
+            ->assertOk()
+            ->assertSee('Berhasil Import 1 siswa', false);
     }
 
     public function test_pesan_duplikat_nisn_dan_nik(): void

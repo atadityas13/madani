@@ -39,6 +39,7 @@ class DatabaseController extends Controller
         return view('manajemen.database', [
             'kartu' => $this->reset->kartu(),
             'imporDuplikat' => $duplikat,
+            'imporSuksesJumlah' => session('impor_siswa_sukses_jumlah'),
         ]);
     }
 
@@ -75,7 +76,7 @@ class DatabaseController extends Controller
 
             return redirect()
                 ->route('manajemen.database')
-                ->with('status', $hasil['pesan']);
+                ->with('impor_siswa_sukses_jumlah', $hasil['imported']);
         }
 
         $request->validate([
@@ -95,7 +96,7 @@ class DatabaseController extends Controller
 
         return redirect()
             ->route('manajemen.database')
-            ->with('status', $hasil['pesan']);
+            ->with('impor_siswa_sukses_jumlah', $hasil['imported']);
     }
 
     public function eksporDuplikatSiswa(Request $request): StreamedResponse
