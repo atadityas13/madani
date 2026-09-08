@@ -39,7 +39,19 @@
                     <th style="width: 4rem;">No</th>
                     <th>Nama</th>
                     <th>NISN</th>
-                    <th>NIS</th>
+                    <th>
+                        NIS
+                        @if (($bisaGenerateNis ?? false) && ($jumlahTanpaNis ?? 0) > 0)
+                            <button
+                                type="button"
+                                class="nis-alert-badge"
+                                title="Terdapat {{ number_format($jumlahTanpaNis) }} siswa yang belum memiliki NIS"
+                                data-bs-toggle="modal"
+                                data-bs-target="#generateNisModal"
+                                aria-label="Generate NIS"
+                            >!</button>
+                        @endif
+                    </th>
                     <th>JK (L/P)</th>
                     <th>Tingkat/Rombel</th>
                     <th class="text-end">Aksi</th>
@@ -125,4 +137,37 @@
         'perPage' => $perPage,
     ])
 </div>
+
+@if ($bisaGenerateNis ?? false)
+    <div class="modal fade" id="generateNisModal" tabindex="-1" aria-labelledby="generateNisModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form method="POST" action="{{ route('siswa.generate-nis') }}" data-loading-text="Menggenerate…">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="generateNisModalLabel">Generate NIS</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="small text-secondary mb-3">
+                            Format: NSM + 2 digit tahun masuk (dari TA aktif) + 4 digit urutan.
+                            Hanya siswa pada angkatan terpilih yang belum punya NIS.
+                        </p>
+                        <label class="form-label" for="generateNisAngkatan">Angkatan</label>
+                        <select class="form-select" id="generateNisAngkatan" name="angkatan" required>
+                            <option value="">Pilih angkatan</option>
+                            @foreach (config('emis.tingkat_rombel') as $kode => $label)
+                                <option value="{{ $kode }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-madani">Generate NIS</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endif
 @endsection

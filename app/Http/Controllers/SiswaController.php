@@ -10,6 +10,7 @@ use App\Services\KartuEPelajarService;
 use App\Services\PernyataanPdfService;
 use App\Services\PortofolioPdfService;
 use App\Services\SiswaBiodataService;
+use App\Services\SiswaNisGeneratorService;
 use App\Services\SiswaPernyataanService;
 use App\Support\KelengkapanSiswa;
 use App\Support\R2Url;
@@ -23,7 +24,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SiswaController extends Controller
 {
-    public function __construct(private SiswaBiodataService $biodata) {}
+    public function __construct(
+        private SiswaBiodataService $biodata,
+        private SiswaNisGeneratorService $nisGenerator,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -137,7 +141,27 @@ class SiswaController extends Controller
             'perPage' => $perPageLabel,
             'tingkatOptions' => $tingkatOptions,
             'rombels' => $rombelsForSelect,
+            'jumlahTanpaNis' => $this->nisGenerator->jumlahTanpaNis(),
+            'bisaGenerateNis' => auth()->user()?->can('create', Siswa::class) ?? false,
         ]);
+    }
+
+    public function generateNis(Request $request): RedirectResponse
+    {
+        $this->authorize('create', Siswa::class);
+
+        $data = $request->validate([
+            'angkatan' => ['required', 'string', 'in:VII,VIII,IX'],
+        ], [
+            'angkatan.required' => 'Angkatan wajib dipilih.',
+            'angkatan.in' => 'Angkatan tidak valid.',
+        ]);
+
+        $hasil = $this->nisGenerator->generateUntukAngkatan($data['angkatan']);
+
+        return redirect()
+            ->route('siswa.index')
+            ->with('status', $hasil['pesan']);
     }
 
     public function create(): View

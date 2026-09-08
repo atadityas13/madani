@@ -101,6 +101,7 @@ Route::middleware('auth')->group(function () {
         Route::post('pengaturan/menus/{appMenu}/move-down', [AppMenuController::class, 'moveDown'])->name('app-menus.move-down');
         Route::get('siswa/create', [SiswaController::class, 'create'])->name('siswa.create');
         Route::post('siswa', [SiswaController::class, 'store'])->name('siswa.store');
+        Route::post('siswa/generate-nis', [SiswaController::class, 'generateNis'])->name('siswa.generate-nis');
         Route::put('siswa/periode-pendataan', [PeriodePendataanController::class, 'update'])->name('siswa.periode-pendataan.update');
         Route::post('rombel/{rombel}/anggota', [RombelController::class, 'storeAnggota'])->name('rombel.anggota.store');
         Route::post('rombel/{rombel}/anggota/kosongkan', [RombelController::class, 'kosongkanAnggota'])->name('rombel.anggota.kosongkan');
