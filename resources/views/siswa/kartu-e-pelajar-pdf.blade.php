@@ -98,33 +98,28 @@
             display: block;
         }
 
-        table.ribbon { border-collapse: collapse; }
+        /* Badge + garis emas sebagai baris tabel (hindari border DomPDF) */
+        table.ribbon { border-collapse: collapse; width: auto; }
         td.ribbon-main {
             background: #065F46;
             color: #ffffff;
             font-size: 4.9pt;
             font-weight: bold;
-            letter-spacing: 0.8pt;
-            padding: 1.6pt 3pt 1.6pt 4.5pt !important;
+            letter-spacing: 0.85pt;
+            padding: 1.7pt 6pt !important;
             white-space: nowrap;
             vertical-align: middle !important;
+            border: none !important;
         }
-        td.ribbon-cut {
-            width: 0;
-            height: 0;
-            padding: 0 !important;
-            border-style: solid;
-            border-width: 7pt 0 0 10pt;
-            border-color: #065F46 transparent transparent transparent;
+        td.ribbon-gold-row {
+            background: #F59E0B;
+            height: 1.6pt;
             font-size: 1pt;
             line-height: 1pt;
+            padding: 0 !important;
+            border: none !important;
         }
-        .ribbon-gold {
-            width: 46pt;
-            height: 2pt;
-            background: #F59E0B;
-            margin: 1.1pt 0 1.8pt 0;
-        }
+        .ribbon-gap { height: 1.8pt; font-size: 1pt; line-height: 1pt; }
 
         table.main { width: 100%; border-collapse: collapse; }
         table.main > tbody > tr > td { vertical-align: top; padding: 0; }
@@ -140,30 +135,24 @@
 
         table.data { width: 100%; border-collapse: collapse; }
         table.data td {
-            padding: 0.3pt 0;
-            font-size: 4.55pt;
+            padding: 0.28pt 0;
+            font-size: 4.5pt;
             line-height: 1.28;
             letter-spacing: 0.1pt;
             vertical-align: top;
             font-weight: bold;
             color: #020617;
-            white-space: nowrap;
         }
+        table.data tr:not(:last-child) td { white-space: nowrap; }
         td.lbl { width: 21pt; text-transform: uppercase; }
         td.col { width: 4pt; }
-
-        table.alamat-wrap { width: 100%; border-collapse: collapse; margin-top: 0.5pt; }
-        table.alamat-wrap td {
-            padding: 0.25pt 0;
-            font-size: 4.2pt;
+        td.val-alamat {
+            font-size: 4.15pt;
             line-height: 1.28;
             letter-spacing: 0.1pt;
-            font-weight: bold;
-            color: #020617;
-            vertical-align: top;
+            white-space: normal;
         }
 
-        /* Caption menempel footer */
         td.cap-row {
             background: #ffffff;
             height: 10pt;
@@ -176,15 +165,23 @@
         td.cap-logo { width: 50pt; text-align: right; padding-right: 3.5pt !important; }
         td.cap-logo img { height: 9pt; width: auto; display: block; margin-left: auto; }
 
+        /* Footer depan: baseline DomPDF → top + padding terukur */
         td.ftr {
             background: #022C22;
-            color: #ffffff !important;
             height: 14.8pt;
-            padding: 3.5pt 2pt !important;
-            vertical-align: middle !important;
+            padding: 0 !important;
+            vertical-align: top !important;
+        }
+        table.ftr-tbl { width: 100%; border-collapse: collapse; }
+        td.ftr-cell {
+            background: #022C22;
+            height: 14.8pt;
+            padding: 4.0pt 2pt 0 2pt !important;
+            vertical-align: top !important;
             text-align: center;
-            font-size: 2.2pt;
-            line-height: 1.15;
+            color: #ffffff;
+            font-size: 2.35pt;
+            line-height: 2.35pt;
             white-space: nowrap;
             letter-spacing: -0.02pt;
         }
@@ -224,15 +221,23 @@
         }
         td.bf {
             background: #022C22;
-            color: #ffffff !important;
             height: 20pt;
-            padding: 0 5pt !important;
-            vertical-align: middle !important;
+            padding: 0 !important;
+            vertical-align: top !important;
+        }
+        table.bf-tbl { width: 100%; border-collapse: collapse; }
+        td.bf-cell {
+            background: #022C22;
+            height: 20pt;
+            padding: 3.8pt 4pt 0 4pt !important;
+            vertical-align: top !important;
             text-align: center;
-            font-size: 7.8pt;
+            color: #ffffff;
+            font-size: 5.6pt;
             font-weight: bold;
-            letter-spacing: 1.15pt;
+            letter-spacing: 0.35pt;
             white-space: nowrap;
+            line-height: 5.6pt;
         }
     </style>
 </head>
@@ -293,10 +298,12 @@
                                         <table class="ribbon">
                                             <tr>
                                                 <td class="ribbon-main">KARTU PELAJAR</td>
-                                                <td class="ribbon-cut">&nbsp;</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="ribbon-gold-row">&nbsp;</td>
                                             </tr>
                                         </table>
-                                        <div class="ribbon-gold"></div>
+                                        <div class="ribbon-gap">&nbsp;</div>
                                         <table class="main">
                                             <tr>
                                                 <td class="foto-col">
@@ -315,6 +322,7 @@
                                                         <tr><td class="lbl">NIS</td><td class="col">:</td><td>{{ $dash($kartu['nis']) }}</td></tr>
                                                         <tr><td class="lbl">TTL</td><td class="col">:</td><td>{{ $dash($kartu['ttl']) }}</td></tr>
                                                         <tr><td class="lbl">JK</td><td class="col">:</td><td>{{ $dash($kartu['jenis_kelamin_label']) }}</td></tr>
+                                                        <tr><td class="lbl">ALAMAT</td><td class="col">:</td><td class="val-alamat">{{ $dash($kartu['alamat']) }}</td></tr>
                                                     </table>
                                                 </td>
                                             </tr>
@@ -325,13 +333,6 @@
                                             <img src="{{ $qrDataUri }}" width="32" height="32" alt="QR">
                                         @endif
                                     </td>
-                                </tr>
-                            </table>
-                            <table class="alamat-wrap">
-                                <tr>
-                                    <td class="lbl">ALAMAT</td>
-                                    <td class="col">:</td>
-                                    <td class="val-alamat">{{ $dash($kartu['alamat']) }}</td>
                                 </tr>
                             </table>
                         </td>
@@ -351,7 +352,11 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="ftr">Kartu Pelajar ini dihasilkan oleh sistem resmi {{ $namaSingkat }} dan merupakan dokumen yang sah serta dapat dipergunakan untuk keperluan administrasi akademik maupun nonakademik.</td>
+                        <td class="ftr">
+                            <table class="ftr-tbl"><tr>
+                                <td class="ftr-cell">Kartu Pelajar ini dihasilkan oleh sistem resmi {{ $namaSingkat }} dan merupakan dokumen yang sah serta dapat dipergunakan untuk keperluan administrasi akademik maupun nonakademik.</td>
+                            </tr></table>
+                        </td>
                     </tr>
                 </table>
             </div>
@@ -371,7 +376,11 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="bf">{{ mb_strtoupper((string) $namaSingkat) }}</td>
+                        <td class="bf">
+                            <table class="bf-tbl"><tr>
+                                <td class="bf-cell">Madrasah Maju, Bermutu, Mendunia.</td>
+                            </tr></table>
+                        </td>
                     </tr>
                 </table>
             </div>
