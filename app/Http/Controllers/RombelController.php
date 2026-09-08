@@ -9,6 +9,7 @@ use App\Services\Simpatisans\RombelSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use RuntimeException;
 
@@ -83,7 +84,17 @@ class RombelController extends Controller
             ->orderBy('nama')
             ->get();
 
-        return view('rombel.show', compact('rombel', 'kandidat'));
+        $rombelsTujuan = Rombel::query()
+            ->with('waliKelas')
+            ->withCount(['siswas as anggota_count' => fn ($query) => $query->where('rombel_siswas.status', 'aktif')])
+            ->where('tahun_ajaran_id', $rombel->tahun_ajaran_id)
+            ->where('id', '!=', $rombel->id)
+            ->orderByRaw("CASE tingkat WHEN 'VII' THEN 1 WHEN 'VIII' THEN 2 WHEN 'IX' THEN 3 ELSE 9 END")
+            ->orderByRaw('CAST(nama AS UNSIGNED)')
+            ->orderBy('nama')
+            ->get();
+
+        return view('rombel.show', compact('rombel', 'kandidat', 'rombelsTujuan'));
     }
 
     public function storeAnggota(Request $request, Rombel $rombel): RedirectResponse
@@ -117,6 +128,62 @@ class RombelController extends Controller
         return redirect()
             ->route('rombel.show', $rombel)
             ->with('status', 'Siswa ditambahkan ke rombel.');
+    }
+
+    public function pindahAnggota(Request $request, Rombel $rombel, Siswa $siswa): RedirectResponse
+    {
+        $this->authorize('update', $rombel);
+
+        $data = $request->validate([
+            'rombel_tujuan_id' => [
+                'required',
+                'integer',
+                Rule::exists('rombels', 'id')
+                    ->where('tahun_ajaran_id', $rombel->tahun_ajaran_id)
+                    ->whereNot('id', $rombel->id),
+            ],
+        ]);
+
+        $tujuan = Rombel::query()->findOrFail($data['rombel_tujuan_id']);
+
+        if ((int) $tujuan->tahun_ajaran_id !== (int) $rombel->tahun_ajaran_id) {
+            return redirect()
+                ->route('rombel.show', $rombel)
+                ->with('error', 'Rombel tujuan harus pada tahun ajaran yang sama.');
+        }
+
+        $aktifDiSumber = $rombel->siswas()
+            ->wherePivot('status', 'aktif')
+            ->where('siswas.id', $siswa->id)
+            ->exists();
+
+        if (! $aktifDiSumber) {
+            return redirect()
+                ->route('rombel.show', $rombel)
+                ->with('error', 'Siswa tidak aktif di rombel ini.');
+        }
+
+        $this->authorize('update', $tujuan);
+
+        DB::transaction(function () use ($rombel, $tujuan, $siswa) {
+            DB::table('rombel_siswas')
+                ->where('siswa_id', $siswa->id)
+                ->where('status', 'aktif')
+                ->whereIn('rombel_id', Rombel::query()->where('tahun_ajaran_id', $rombel->tahun_ajaran_id)->select('id'))
+                ->update(['status' => 'nonaktif']);
+
+            $tujuan->siswas()->syncWithoutDetaching([
+                $siswa->id => ['status' => 'aktif'],
+            ]);
+
+            if ($siswa->status_keaktifan === 'aktif_tanpa_rombel') {
+                $siswa->update(['status_keaktifan' => 'aktif']);
+            }
+        });
+
+        return redirect()
+            ->route('rombel.show', $rombel)
+            ->with('status', $siswa->nama.' dipindahkan ke rombel '.$tujuan->label().'.');
     }
 
     public function destroyAnggota(Rombel $rombel, Siswa $siswa): RedirectResponse

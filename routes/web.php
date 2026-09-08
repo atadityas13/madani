@@ -104,6 +104,7 @@ Route::middleware('auth')->group(function () {
         Route::put('siswa/periode-pendataan', [PeriodePendataanController::class, 'update'])->name('siswa.periode-pendataan.update');
         Route::post('rombel/{rombel}/anggota', [RombelController::class, 'storeAnggota'])->name('rombel.anggota.store');
         Route::post('rombel/{rombel}/anggota/kosongkan', [RombelController::class, 'kosongkanAnggota'])->name('rombel.anggota.kosongkan');
+        Route::post('rombel/{rombel}/anggota/{siswa}/pindah', [RombelController::class, 'pindahAnggota'])->name('rombel.anggota.pindah');
         Route::delete('rombel/{rombel}/anggota/{siswa}', [RombelController::class, 'destroyAnggota'])->name('rombel.anggota.destroy');
         Route::post('rombel/sync-simpatisans', [RombelController::class, 'syncFromSimpatisans'])->name('rombel.sync-simpatisans');
         Route::view('/ppdb', 'pages.soon', [

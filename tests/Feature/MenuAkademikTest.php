@@ -71,6 +71,37 @@ class MenuAkademikTest extends TestCase
         $this->assertSame('aktif_tanpa_rombel', $siswa->fresh()->status_keaktifan);
     }
 
+    public function test_operator_can_pindah_siswa_antar_rombel(): void
+    {
+        $this->actingAsOperator();
+        $tahun = TahunAjaran::aktif();
+
+        $sumber = Rombel::query()->create([
+            'tahun_ajaran_id' => $tahun->id,
+            'tingkat' => 'VII',
+            'nama' => '1',
+        ]);
+        $tujuan = Rombel::query()->create([
+            'tahun_ajaran_id' => $tahun->id,
+            'tingkat' => 'VII',
+            'nama' => '2',
+        ]);
+
+        $siswa = Siswa::query()->create([
+            'nama' => 'Siswa Pindah',
+            'status_keaktifan' => 'aktif',
+        ]);
+        $sumber->siswas()->attach($siswa->id, ['status' => 'aktif']);
+
+        $this->post(route('rombel.anggota.pindah', [$sumber, $siswa]), [
+            'rombel_tujuan_id' => $tujuan->id,
+        ])->assertRedirect(route('rombel.show', $sumber));
+
+        $this->assertFalse($sumber->fresh()->siswas()->wherePivot('status', 'aktif')->where('siswas.id', $siswa->id)->exists());
+        $this->assertTrue($tujuan->fresh()->siswas()->wherePivot('status', 'aktif')->where('siswas.id', $siswa->id)->exists());
+        $this->assertSame('aktif', $siswa->fresh()->status_keaktifan);
+    }
+
     public function test_rombel_index_urut_tingkat_lalu_nama_numerik(): void
     {
         $this->actingAsOperator();

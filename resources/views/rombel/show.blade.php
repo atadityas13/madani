@@ -60,11 +60,22 @@
                         <td>{{ $siswa->jenis_kelamin ?: '—' }}</td>
                         <td class="text-end">
                             @can('update', $rombel)
-                                <form method="POST" action="{{ route('rombel.anggota.destroy', [$rombel, $siswa]) }}" data-confirm="Keluarkan siswa dari rombel?" data-confirm-title="Keluarkan siswa" data-loading-text="Memproses…">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" type="submit">Keluarkan</button>
-                                </form>
+                                <div class="d-inline-flex gap-2 justify-content-end">
+                                    <button
+                                        class="btn btn-sm btn-outline-secondary"
+                                        type="button"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#rombelPindahModal"
+                                        data-siswa-nama="{{ $siswa->nama }}"
+                                        data-action="{{ route('rombel.anggota.pindah', [$rombel, $siswa]) }}"
+                                        @disabled($rombelsTujuan->isEmpty())
+                                    >Pindahkan</button>
+                                    <form method="POST" action="{{ route('rombel.anggota.destroy', [$rombel, $siswa]) }}" data-confirm="Keluarkan siswa dari rombel?" data-confirm-title="Keluarkan siswa" data-loading-text="Memproses…">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Keluarkan</button>
+                                    </form>
+                                </div>
                             @endcan
                         </td>
                     </tr>
@@ -107,5 +118,109 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="rombelPindahModal" tabindex="-1" aria-labelledby="rombelPindahModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form
+                method="POST"
+                id="rombelPindahForm"
+                action="#"
+                data-confirm-title="Pindahkan siswa"
+                data-confirm-ok="Pindahkan"
+                data-loading-text="Memindahkan…"
+            >
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title stat-label mb-0" id="rombelPindahModalLabel">Pindahkan siswa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">Siswa: <strong id="rombelPindahSiswaNama">—</strong></p>
+                    <label class="form-label" for="rombelPindahSelect">Rombel tujuan</label>
+                    <select class="form-select" name="rombel_tujuan_id" id="rombelPindahSelect" required>
+                        <option value="">Pilih rombel tujuan</option>
+                        @foreach ($rombelsTujuan as $tujuan)
+                            <option
+                                value="{{ $tujuan->id }}"
+                                data-label="{{ $tujuan->label() }}"
+                                data-tingkat="{{ $tujuan->tingkat }}"
+                                data-nama="{{ $tujuan->nama }}"
+                                data-wali="{{ $tujuan->waliKelas?->nama_lengkap ?: '—' }}"
+                                data-anggota="{{ $tujuan->anggota_count }}"
+                            >{{ $tujuan->label() }} · {{ $tujuan->waliKelas?->nama_lengkap ?: 'tanpa wali' }}</option>
+                        @endforeach
+                    </select>
+                    <div id="rombelPindahDetail" class="madani-card p-3 mt-3 d-none">
+                        <div class="stat-label mb-2">Detail rombel tujuan</div>
+                        <div class="row g-2 small">
+                            <div class="col-6">Tingkat: <strong id="rombelPindahDetailTingkat">—</strong></div>
+                            <div class="col-6">Nama: <strong id="rombelPindahDetailNama">—</strong></div>
+                            <div class="col-12">Wali: <strong id="rombelPindahDetailWali">—</strong></div>
+                            <div class="col-12">Jumlah siswa: <strong id="rombelPindahDetailAnggota">—</strong></div>
+                        </div>
+                    </div>
+                    @if ($rombelsTujuan->isEmpty())
+                        <p class="text-secondary mt-3 mb-0">Belum ada rombel lain pada tahun ajaran ini.</p>
+                    @endif
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Batal</button>
+                    <button class="btn btn-madani" type="submit" id="rombelPindahConfirm" disabled>Konfirmasi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+(() => {
+    const modal = document.getElementById('rombelPindahModal');
+    const form = document.getElementById('rombelPindahForm');
+    const select = document.getElementById('rombelPindahSelect');
+    const confirmBtn = document.getElementById('rombelPindahConfirm');
+    const detail = document.getElementById('rombelPindahDetail');
+    const siswaNamaEl = document.getElementById('rombelPindahSiswaNama');
+    if (!modal || !form || !select || !confirmBtn) return;
+
+    const resetDetail = () => {
+        select.value = '';
+        confirmBtn.disabled = true;
+        detail.classList.add('d-none');
+        form.removeAttribute('data-confirm');
+    };
+
+    modal.addEventListener('show.bs.modal', (event) => {
+        const button = event.relatedTarget;
+        if (!(button instanceof HTMLElement)) return;
+        form.action = button.dataset.action || '#';
+        siswaNamaEl.textContent = button.dataset.siswaNama || '—';
+        resetDetail();
+    });
+
+    select.addEventListener('change', () => {
+        const option = select.selectedOptions[0];
+        if (!option || !option.value) {
+            resetDetail();
+            return;
+        }
+
+        document.getElementById('rombelPindahDetailTingkat').textContent = option.dataset.tingkat || '—';
+        document.getElementById('rombelPindahDetailNama').textContent = option.dataset.nama || '—';
+        document.getElementById('rombelPindahDetailWali').textContent = option.dataset.wali || '—';
+        document.getElementById('rombelPindahDetailAnggota').textContent = option.dataset.anggota || '0';
+        detail.classList.remove('d-none');
+        confirmBtn.disabled = false;
+
+        const siswa = siswaNamaEl.textContent;
+        const tingkat = option.dataset.tingkat || '';
+        const nama = option.dataset.nama || '';
+        form.setAttribute(
+            'data-confirm',
+            `Yakin memindahkan ${siswa} ke Kelas ${tingkat}.${nama}?`
+        );
+    });
+})();
+</script>
 @endcan
 @endsection
