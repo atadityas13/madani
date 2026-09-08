@@ -132,6 +132,10 @@ Route::middleware('auth')->group(function () {
         Route::post('gtk/{gtk}/akun', [GtkController::class, 'buatAkun'])->name('gtk.akun.store');
         Route::post('gtk/{gtk}/akun/reset-password', [GtkController::class, 'resetPassword'])->name('gtk.akun.reset');
         Route::get('manajemen/database', [DatabaseController::class, 'index'])->name('manajemen.database');
+        Route::get('manajemen/database/siswa/template', [DatabaseController::class, 'templateSiswa'])
+            ->name('manajemen.database.siswa.template');
+        Route::post('manajemen/database/siswa/impor', [DatabaseController::class, 'imporSiswa'])
+            ->name('manajemen.database.siswa.impor');
         Route::post('manajemen/database/{modul}/kosongkan', [DatabaseController::class, 'kosongkan'])
             ->name('manajemen.database.kosongkan')
             ->where('modul', 'siswa|gtk|rombel|tahun-ajaran|periode-pendataan|jurnal|notifikasi|identitas|app-settings');

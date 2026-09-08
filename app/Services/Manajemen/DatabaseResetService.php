@@ -75,7 +75,7 @@ class DatabaseResetService
     }
 
     /**
-     * @return list<array{id: string, label: string, ringkasan: string, excel: bool, confirm: string}>
+     * @return list<array{id: string, label: string, ringkasan: string, excel: bool, excel_ready: bool, confirm: string}>
      */
     public function kartu(): array
     {
@@ -85,6 +85,7 @@ class DatabaseResetService
                 'label' => 'Data siswa',
                 'ringkasan' => number_format(Siswa::withTrashed()->count()).' siswa (termasuk soft-delete)',
                 'excel' => true,
+                'excel_ready' => true,
                 'confirm' => 'Kosongkan seluruh data siswa termasuk akun login Ta\'lim, biodata, dokumen, dan file terkait? Tindakan ini tidak bisa dibatalkan.',
             ],
             [
@@ -92,6 +93,7 @@ class DatabaseResetService
                 'label' => 'GTK',
                 'ringkasan' => number_format(Gtk::query()->count()).' GTK',
                 'excel' => true,
+                'excel_ready' => false,
                 'confirm' => 'Kosongkan seluruh data GTK dan akun Ta\'lim/wali yang terikat GTK (Super Admin tidak dihapus)? Tindakan ini tidak bisa dibatalkan.',
             ],
             [
@@ -99,6 +101,7 @@ class DatabaseResetService
                 'label' => 'Rombel & anggota',
                 'ringkasan' => number_format(Rombel::query()->count()).' rombel',
                 'excel' => true,
+                'excel_ready' => false,
                 'confirm' => 'Hapus seluruh rombel dan keanggotaan siswa? Data siswa tidak ikut dihapus. Tindakan ini tidak bisa dibatalkan.',
             ],
             [
@@ -106,6 +109,7 @@ class DatabaseResetService
                 'label' => 'Tahun ajaran',
                 'ringkasan' => number_format(TahunAjaran::query()->count()).' tahun ajaran',
                 'excel' => true,
+                'excel_ready' => false,
                 'confirm' => 'Hapus seluruh tahun ajaran beserta semua rombel, anggota, dan data periodik siswa per tahun ajaran? Identitas siswa tetap ada. Tindakan ini tidak bisa dibatalkan.',
             ],
             [
@@ -113,6 +117,7 @@ class DatabaseResetService
                 'label' => 'Periode pendataan',
                 'ringkasan' => number_format(PeriodePendataan::query()->count()).' periode',
                 'excel' => false,
+                'excel_ready' => false,
                 'confirm' => 'Hapus seluruh periode pendataan? Tindakan ini tidak bisa dibatalkan.',
             ],
             [
@@ -120,6 +125,7 @@ class DatabaseResetService
                 'label' => 'Jurnal pembelajaran',
                 'ringkasan' => number_format(JurnalPembelajaran::query()->count()).' jurnal',
                 'excel' => true,
+                'excel_ready' => false,
                 'confirm' => 'Hapus seluruh jurnal pembelajaran? Tindakan ini tidak bisa dibatalkan.',
             ],
             [
@@ -127,6 +133,7 @@ class DatabaseResetService
                 'label' => 'Notifikasi & media',
                 'ringkasan' => number_format(Notifikasi::query()->count()).' notifikasi · '.number_format(NotifMedia::query()->count()).' media',
                 'excel' => false,
+                'excel_ready' => false,
                 'confirm' => 'Hapus seluruh notifikasi, riwayat baca, media, dan device token? Tindakan ini tidak bisa dibatalkan.',
             ],
             [
@@ -136,6 +143,7 @@ class DatabaseResetService
                     ? (string) Madrasah::query()->value('nama')
                     : 'Belum diisi',
                 'excel' => false,
+                'excel_ready' => false,
                 'confirm' => 'Reset identitas madrasah ke kosong (logo ikut dihapus)? Tindakan ini tidak bisa dibatalkan.',
             ],
             [
@@ -145,6 +153,7 @@ class DatabaseResetService
                     .number_format(AppUpdate::query()->count()).' update · '
                     .number_format(AppMaintenance::query()->count()).' maintenance',
                 'excel' => false,
+                'excel_ready' => false,
                 'confirm' => 'Hapus menu Ta\'lim, update, dan maintenance lalu seed ulang menu bawaan? Tindakan ini tidak bisa dibatalkan.',
             ],
         ];
