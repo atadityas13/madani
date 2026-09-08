@@ -3,10 +3,7 @@
 @section('title', 'Masuk')
 
 @section('body')
-    <x-auth-login-layout
-        title="Masuk admin"
-        subtitle="Hanya Super Admin dan Admin. Guru serta siswa masuk lewat aplikasi Ta'lim."
-    >
+    <x-auth-login-layout title="Masuk Admin">
         <form method="POST" action="{{ route('login') }}" data-auth-form data-loading-text="Memverifikasi…">
             @csrf
             <div class="mb-3">

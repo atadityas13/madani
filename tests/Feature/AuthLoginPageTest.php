@@ -10,13 +10,21 @@ class AuthLoginPageTest extends TestCase
     {
         $this->get(route('login'))
             ->assertOk()
-            ->assertSee('Masuk admin', false)
-            ->assertSee('MADANI', false)
+            ->assertSee('Masuk Admin', false)
+            ->assertSee('Administrasi tertata, Layanan cepat, Data aman', false)
+            ->assertSee('Satu Data Terpadu untuk Layanan Terintegrasi', false)
             ->assertSee('data-auth-form', false)
             ->assertSee('Memverifikasi…', false)
             ->assertSee('data-password-toggle', false)
+            ->assertDontSee('Hanya Super Admin', false)
             ->assertDontSee('Saya siswa', false)
             ->assertDontSee(route('siswa.masuk'), false);
+
+        $html = $this->get(route('login'))->getContent();
+
+        $this->assertSame(1, substr_count($html, 'madani-login__title'));
+        $this->assertStringNotContainsString('madani-login__headline', $html);
+        $this->assertStringNotContainsString('madani-login__eyebrow', $html);
     }
 
     public function test_siswa_masuk_redirects_to_admin_login(): void

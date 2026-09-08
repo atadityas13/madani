@@ -11,7 +11,7 @@ class ExampleTest extends TestCase
 
     public function test_root_shows_login(): void
     {
-        $this->get('/')->assertOk()->assertSee('Masuk admin');
+        $this->get('/')->assertOk()->assertSee('Masuk Admin');
     }
 
     public function test_legacy_login_path_redirects_home(): void

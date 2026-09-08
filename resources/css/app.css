@@ -1031,14 +1031,14 @@ a.biodata-path-item:hover {
 
 .madani-login__logo {
     display: block;
-    width: min(220px, 70%);
+    width: min(280px, 82%);
     height: auto;
     margin-bottom: 1.25rem;
     filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.25));
 }
 
 .madani-login__school {
-    margin: 0 0 0.35rem;
+    margin: 0 0 0.85rem;
     font-size: 0.78rem;
     letter-spacing: 0.14em;
     text-transform: uppercase;
@@ -1046,16 +1046,8 @@ a.biodata-path-item:hover {
     color: var(--login-gold-soft);
 }
 
-.madani-login__headline {
-    margin: 0 0 0.75rem;
-    font-size: clamp(2rem, 4vw, 2.75rem);
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    line-height: 1.1;
-}
-
 .madani-login__tagline {
-    margin: 0 0 1.5rem;
+    margin: 0 0 1.25rem;
     min-height: 3.2em;
     font-size: 1.05rem;
     line-height: 1.45;
@@ -1070,28 +1062,27 @@ a.biodata-path-item:hover {
 }
 
 .madani-login__pillars {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    list-style: none;
     margin: 0;
     padding: 0;
 }
 
-.madani-login__pillars li {
+.madani-login__pillars span {
     display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.4rem 0.7rem;
-    border-radius: 999px;
+    align-items: flex-start;
+    gap: 0.45rem;
+    max-width: 22rem;
+    padding: 0.55rem 0.85rem;
+    border-radius: 14px;
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    font-size: 0.78rem;
+    font-size: 0.86rem;
     font-weight: 600;
+    line-height: 1.4;
     color: rgba(255, 255, 255, 0.92);
 }
 
 .madani-login__pillars i {
+    margin-top: 0.1rem;
     color: var(--login-gold-soft);
 }
 
@@ -1154,14 +1145,14 @@ a.biodata-path-item:hover {
 }
 
 .madani-login__title {
-    margin: 0 0 0.35rem;
+    margin: 0 0 1.15rem;
     font-size: 1.45rem;
     font-weight: 800;
     color: var(--emis-ink);
 }
 
 .madani-login__subtitle {
-    margin: 0 0 1.25rem;
+    margin: -0.55rem 0 1.25rem;
     color: var(--emis-muted);
     font-size: 0.9rem;
     line-height: 1.45;
@@ -1268,12 +1259,8 @@ a.biodata-path-item:hover {
     }
 
     .madani-login__logo {
-        width: min(180px, 55%);
+        width: min(220px, 70%);
         margin-bottom: 0.85rem;
-    }
-
-    .madani-login__headline {
-        font-size: 1.75rem;
     }
 
     .madani-login__tagline {

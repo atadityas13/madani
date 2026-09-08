@@ -2,13 +2,14 @@
     'title',
     'subtitle' => '',
     'eyebrow' => 'MTsN 11 Majalengka',
+    'showFormEyebrow' => false,
 ])
 
 @php
     $taglines = [
         'Management Academic Data Native Integration.',
         'Satu pusat data akademik madrasah yang terintegrasi.',
-        'Administrasi rapi, layanan cepat, data terpercaya.',
+        'Administrasi tertata, Layanan cepat, Data aman',
     ];
 @endphp
 
@@ -26,25 +27,24 @@
                     alt="MADANI — Management Academic Data Native Integration"
                 >
                 <p class="madani-login__school">{{ $eyebrow }}</p>
-                <h1 class="madani-login__headline">MADANI</h1>
                 <p
                     class="madani-login__tagline"
                     data-madani-taglines='@json($taglines)'
                     data-madani-tagline
                 >{{ $taglines[0] }}</p>
-                <ul class="madani-login__pillars" aria-label="Nilai MADANI">
-                    <li><i class="bi bi-database-check"></i> Data terpadu</li>
-                    <li><i class="bi bi-people"></i> Guru &amp; siswa</li>
-                    <li><i class="bi bi-shield-check"></i> Aman &amp; resmi</li>
-                </ul>
+                <p class="madani-login__pillars" aria-label="Nilai MADANI">
+                    <span><i class="bi bi-database-check" aria-hidden="true"></i> Satu Data Terpadu untuk Layanan Terintegrasi</span>
+                </p>
             </div>
         </aside>
 
         <section class="madani-login__panel">
             <div class="madani-login__card madani-login__card--enter">
                 <div class="madani-login__card-accent" aria-hidden="true"></div>
-                <p class="madani-login__eyebrow">{{ $eyebrow }}</p>
-                <h2 class="madani-login__title">{{ $title }}</h2>
+                @if ($showFormEyebrow && $eyebrow !== '')
+                    <p class="madani-login__eyebrow">{{ $eyebrow }}</p>
+                @endif
+                <h1 class="madani-login__title">{{ $title }}</h1>
                 @if ($subtitle !== '')
                     <p class="madani-login__subtitle">{{ $subtitle }}</p>
                 @endif
