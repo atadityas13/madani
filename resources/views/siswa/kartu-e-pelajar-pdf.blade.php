@@ -197,7 +197,7 @@
             background: #022C22;
             height: 14.98pt;
             width: 100%;
-            padding: 4.7pt 2.5pt 0 2.5pt !important;
+            padding: 2.5pt 2.5pt 0 2.5pt !important;
             vertical-align: top !important;
             text-align: center;
             color: #ffffff;
