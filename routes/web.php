@@ -103,6 +103,7 @@ Route::middleware('auth')->group(function () {
         Route::post('siswa', [SiswaController::class, 'store'])->name('siswa.store');
         Route::put('siswa/periode-pendataan', [PeriodePendataanController::class, 'update'])->name('siswa.periode-pendataan.update');
         Route::post('rombel/{rombel}/anggota', [RombelController::class, 'storeAnggota'])->name('rombel.anggota.store');
+        Route::post('rombel/{rombel}/anggota/kosongkan', [RombelController::class, 'kosongkanAnggota'])->name('rombel.anggota.kosongkan');
         Route::delete('rombel/{rombel}/anggota/{siswa}', [RombelController::class, 'destroyAnggota'])->name('rombel.anggota.destroy');
         Route::post('rombel/sync-simpatisans', [RombelController::class, 'syncFromSimpatisans'])->name('rombel.sync-simpatisans');
         Route::view('/ppdb', 'pages.soon', [

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\TextUnescape;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
@@ -79,6 +80,30 @@ class Gtk extends Model
             self::JENIS_GURU => 'Guru',
             self::JENIS_TENDIK => 'Tenaga kependidikan',
         ];
+    }
+
+    protected function nama(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value): ?string => TextUnescape::clean($value),
+            set: fn (?string $value): ?string => TextUnescape::clean($value),
+        );
+    }
+
+    protected function gelarDepan(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value): ?string => TextUnescape::clean($value),
+            set: fn (?string $value): ?string => TextUnescape::clean($value),
+        );
+    }
+
+    protected function gelarBelakang(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value): ?string => TextUnescape::clean($value),
+            set: fn (?string $value): ?string => TextUnescape::clean($value),
+        );
     }
 
     protected function namaLengkap(): Attribute

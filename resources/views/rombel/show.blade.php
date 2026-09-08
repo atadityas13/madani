@@ -7,15 +7,10 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3 gap-3 flex-wrap">
     <a class="btn btn-outline-secondary" href="{{ route('rombel.index') }}">Kembali</a>
-    <div class="d-flex gap-2">
-        @can('update', $rombel)
-            <button class="btn btn-madani" type="button" data-bs-toggle="modal" data-bs-target="#rombelSiswaModal">Tambah siswa</button>
-        @endcan
-    </div>
 </div>
 
 <div class="madani-card p-4 mb-3">
-    <div class="stat-label mb-3">Identitas rombel</div>
+    <div class="stat-label mb-3">Detail Rombel</div>
     <div class="row g-3">
         <div class="col-md-4">
             <label class="form-label">Tingkat</label>
@@ -27,9 +22,18 @@
         </div>
         <div class="col-md-4">
             <label class="form-label">Wali kelas</label>
-            <input class="form-control bg-light" value="{{ $rombel->waliKelas?->nama ?: '—' }}" readonly>
+            <input class="form-control bg-light" value="{{ $rombel->waliKelas?->nama_lengkap ?: '—' }}" readonly>
         </div>
     </div>
+    @can('update', $rombel)
+        <div class="d-flex gap-2 mt-4">
+            <form method="POST" action="{{ route('rombel.anggota.kosongkan', $rombel) }}" data-confirm="Keluarkan semua siswa dari rombel ini?" data-confirm-title="Kosongkan rombel" data-loading-text="Mengosongkan…">
+                @csrf
+                <button class="btn btn-outline-danger" type="submit" @disabled($rombel->anggotaAktif->isEmpty())>Kosongkan</button>
+            </form>
+            <button class="btn btn-madani" type="button" data-bs-toggle="modal" data-bs-target="#rombelSiswaModal">Tambah</button>
+        </div>
+    @endcan
 </div>
 
 <div class="madani-card p-0">

@@ -63,6 +63,67 @@ class MenuAkademikTest extends TestCase
 
         $this->assertTrue($siswa->fresh()->rombels()->wherePivot('status', 'aktif')->exists());
         $this->assertSame('aktif', $siswa->fresh()->status_keaktifan);
+
+        $this->post(route('rombel.anggota.kosongkan', $rombel))
+            ->assertRedirect(route('rombel.show', $rombel));
+
+        $this->assertFalse($siswa->fresh()->rombels()->wherePivot('status', 'aktif')->exists());
+        $this->assertSame('aktif_tanpa_rombel', $siswa->fresh()->status_keaktifan);
+    }
+
+    public function test_rombel_index_urut_tingkat_lalu_nama_numerik(): void
+    {
+        $this->actingAsOperator();
+        $tahun = TahunAjaran::aktif();
+
+        Rombel::query()->create(['tahun_ajaran_id' => $tahun->id, 'tingkat' => 'IX', 'nama' => '2']);
+        Rombel::query()->create(['tahun_ajaran_id' => $tahun->id, 'tingkat' => 'VII', 'nama' => '6']);
+        Rombel::query()->create(['tahun_ajaran_id' => $tahun->id, 'tingkat' => 'VII', 'nama' => '1']);
+        Rombel::query()->create(['tahun_ajaran_id' => $tahun->id, 'tingkat' => 'VIII', 'nama' => '3']);
+
+        $response = $this->get(route('rombel.index'))->assertOk();
+        $content = $response->getContent();
+
+        $posVii1 = strpos($content, '>VII</td>');
+        $posViii = strpos($content, '>VIII</td>');
+        $posIx = strpos($content, '>IX</td>');
+
+        $this->assertNotFalse($posVii1);
+        $this->assertNotFalse($posViii);
+        $this->assertNotFalse($posIx);
+        $this->assertTrue($posVii1 < $posViii && $posViii < $posIx);
+
+        $firstNama = strpos($content, '>1</td>');
+        $sixthNama = strpos($content, '>6</td>');
+        $this->assertNotFalse($firstNama);
+        $this->assertNotFalse($sixthNama);
+        $this->assertTrue($firstNama < $sixthNama);
+    }
+
+    public function test_nama_gtk_dan_pengguna_tanpa_backslash(): void
+    {
+        $this->actingAsOperator();
+
+        $gtk = Gtk::query()->create([
+            'nama' => "Endang Ma\\'sum",
+            'status' => 'aktif',
+            'jenis' => 'guru',
+            'jenis_kelamin' => 'L',
+        ]);
+
+        $user = User::factory()->create([
+            'name' => "Endang Ma\\'sum",
+            'is_aktif' => true,
+            'gtk_id' => $gtk->id,
+        ]);
+
+        $this->assertSame("Endang Ma'sum", $gtk->fresh()->nama);
+        $this->assertSame("Endang Ma'sum", $user->fresh()->name);
+
+        $this->get(route('gtk.index'))
+            ->assertOk()
+            ->assertSee("Endang Ma'sum")
+            ->assertDontSee("Ma\\'sum", false);
     }
 
     private function actingAsOperator(): static

@@ -5,7 +5,7 @@
 @section('subheading', $tahunAktif?->label() ?? 'Belum ada tahun ajaran aktif')
 
 @section('content')
-<div class="d-flex align-items-center mb-3 gap-3 flex-wrap">
+<div class="d-flex align-items-center justify-content-between mb-3 gap-3 flex-wrap">
     <div class="stat-label mb-0">Daftar rombel</div>
     @can('create', \App\Models\Rombel::class)
         @if ($tahunAktif)
@@ -38,7 +38,7 @@
                     <tr>
                         <td>{{ $rombel->tingkat }}</td>
                         <td>{{ $rombel->nama }}</td>
-                        <td>{{ $rombel->waliKelas?->nama ?: '—' }}</td>
+                        <td>{{ $rombel->waliKelas?->nama_lengkap ?: '—' }}</td>
                         <td>{{ $rombel->anggota_count }}</td>
                         <td class="text-end">
                             <div class="emis-aksi">

@@ -26,7 +26,8 @@ class RombelController extends Controller
             ->withCount(['siswas as anggota_count' => fn ($query) => $query->where('rombel_siswas.status', 'aktif')])
             ->when($tahunAktif, fn ($query) => $query->where('tahun_ajaran_id', $tahunAktif->id))
             ->when($user?->adalahWali(), fn ($query) => $query->where('gtk_id', $user->gtk_id ?: 0))
-            ->orderBy('tingkat')
+            ->orderByRaw("CASE tingkat WHEN 'VII' THEN 1 WHEN 'VIII' THEN 2 WHEN 'IX' THEN 3 ELSE 9 END")
+            ->orderByRaw('CAST(nama AS UNSIGNED)')
             ->orderBy('nama')
             ->get();
 
@@ -134,5 +135,40 @@ class RombelController extends Controller
         return redirect()
             ->route('rombel.show', $rombel)
             ->with('status', 'Siswa dikeluarkan dari rombel.');
+    }
+
+    public function kosongkanAnggota(Rombel $rombel): RedirectResponse
+    {
+        $this->authorize('update', $rombel);
+
+        DB::transaction(function () use ($rombel) {
+            $siswaIds = $rombel->siswas()
+                ->wherePivot('status', 'aktif')
+                ->pluck('siswas.id');
+
+            DB::table('rombel_siswas')
+                ->where('rombel_id', $rombel->id)
+                ->where('status', 'aktif')
+                ->update(['status' => 'nonaktif']);
+
+            foreach ($siswaIds as $siswaId) {
+                $siswa = Siswa::query()->find($siswaId);
+                if (! $siswa) {
+                    continue;
+                }
+
+                $masihAda = $siswa->rombels()
+                    ->wherePivot('status', 'aktif')
+                    ->exists();
+
+                if (! $masihAda && $siswa->status_keaktifan === 'aktif') {
+                    $siswa->update(['status_keaktifan' => 'aktif_tanpa_rombel']);
+                }
+            }
+        });
+
+        return redirect()
+            ->route('rombel.show', $rombel)
+            ->with('status', 'Semua siswa dikeluarkan dari rombel.');
     }
 }

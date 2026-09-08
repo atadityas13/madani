@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Gtk;
 use App\Models\User;
 use App\Support\Peran;
+use App\Support\TextUnescape;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
@@ -257,12 +258,7 @@ class SyncGuruFromSimpatisansCommand extends Command
 
     private function clean(?string $value): ?string
     {
-        if ($value === null) {
-            return null;
-        }
-        $value = trim(stripcslashes($value));
-
-        return $value === '' ? null : $value;
+        return TextUnescape::clean($value);
     }
 
     /**
@@ -362,7 +358,6 @@ class SyncGuruFromSimpatisansCommand extends Command
                     $buf .= $ch;
                     $esc = false;
                 } elseif ($ch === '\\') {
-                    $buf .= $ch;
                     $esc = true;
                 } elseif ($ch === "'") {
                     if ($i + 1 < $len && $tuple[$i + 1] === "'") {

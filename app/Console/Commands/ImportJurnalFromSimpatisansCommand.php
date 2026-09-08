@@ -387,7 +387,6 @@ class ImportJurnalFromSimpatisansCommand extends Command
                     $buf .= $ch;
                     $esc = false;
                 } elseif ($ch === '\\') {
-                    $buf .= $ch;
                     $esc = true;
                 } elseif ($ch === "'") {
                     if ($i + 1 < $len && $tuple[$i + 1] === "'") {
