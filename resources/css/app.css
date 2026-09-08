@@ -928,6 +928,8 @@ a.biodata-path-item:hover {
     --login-brand-deep: #b7dbff;
     --login-accent: #2c94fd;
     --login-accent-deep: #1b7fe6;
+    --login-green: #0b4a3c;
+    --login-green-soft: #128066;
     --login-ink: #1f2937;
     --login-muted: #4b5563;
     position: relative;
@@ -1041,12 +1043,12 @@ a.biodata-path-item:hover {
 }
 
 .madani-login__school {
-    margin: 0 0 0.85rem;
-    font-size: 0.78rem;
-    letter-spacing: 0.14em;
+    margin: 0 0 0.95rem;
+    font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    font-weight: 700;
-    color: var(--login-accent-deep);
+    font-weight: 800;
+    color: var(--login-green);
 }
 
 .madani-login__tagline {
@@ -1209,26 +1211,35 @@ a.biodata-path-item:hover {
     background: rgba(11, 74, 60, 0.06);
 }
 
-.madani-login__submit {
+.madani-login__submit,
+.madani-login__submit.btn {
     border: 0;
     border-radius: 16px;
     padding: 0.8rem 1rem;
     font-weight: 800;
     letter-spacing: 0.04em;
-    background: linear-gradient(135deg, var(--login-accent), var(--login-accent-deep));
+    background: var(--login-accent);
+    background-image: none;
+    color: #fff;
+    box-shadow: 0 12px 24px rgba(44, 148, 253, 0.32);
+}
+
+.madani-login__submit:hover,
+.madani-login__submit:focus,
+.madani-login__submit.btn:hover,
+.madani-login__submit.btn:focus {
+    background: var(--login-green);
+    background-image: none;
     color: #fff;
     box-shadow: 0 12px 24px rgba(11, 74, 60, 0.28);
 }
 
-.madani-login__submit:hover,
-.madani-login__submit:focus {
-    background: linear-gradient(135deg, #128066, #0b4a3c);
-    color: #fff;
-}
-
-.madani-login__submit:disabled {
+.madani-login__submit:disabled,
+.madani-login__submit.btn:disabled {
     opacity: 0.7;
     box-shadow: none;
+    background: var(--login-accent);
+    color: #fff;
 }
 
 .madani-login__footer {
