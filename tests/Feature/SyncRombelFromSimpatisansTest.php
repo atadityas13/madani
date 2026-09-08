@@ -22,31 +22,56 @@ class SyncRombelFromSimpatisansTest extends TestCase
         $this->configureSimpatisans();
 
         Http::fake([
-            '*/madani/rombels' => Http::response([
-                'meta' => ['total' => 2, 'dengan_wali' => 1, 'tanpa_wali' => 1],
-                'data' => [
-                    [
-                        'kelas_id' => 12,
-                        'nama_kelas' => 'Kelas VII.1',
-                        'tingkat' => 'VII',
-                        'nama' => '1',
-                        'wali' => ['nip' => '198001012005011001', 'nama' => 'Budi'],
-                    ],
-                    [
-                        'kelas_id' => 13,
-                        'nama_kelas' => 'Kelas VII.2',
-                        'tingkat' => 'VII',
-                        'nama' => '2',
-                        'wali' => null,
-                    ],
+            '*/madani/rombels' => Http::response($this->payload([
+                [
+                    'kelas_id' => 12,
+                    'nama_kelas' => 'Kelas VII.1',
+                    'tingkat' => 'VII',
+                    'nama' => '1',
+                    'wali' => ['nip' => '198001012005011001', 'nama' => 'Budi'],
                 ],
-            ]),
+                [
+                    'kelas_id' => 13,
+                    'nama_kelas' => 'Kelas VII.2',
+                    'tingkat' => 'VII',
+                    'nama' => '2',
+                    'wali' => null,
+                ],
+            ], tanpaWali: 1)),
         ]);
 
         $this->post(route('rombel.sync-simpatisans'))
             ->assertRedirect(route('rombel.index'))
             ->assertSessionHas('error', RombelSyncService::MESSAGE_TANPA_WALI);
 
+        $this->assertSame(0, Rombel::query()->count());
+    }
+
+    public function test_sync_gagal_jika_tahun_ajaran_tidak_cocok(): void
+    {
+        $this->actingAsOperator();
+        $this->configureSimpatisans();
+
+        Http::fake([
+            '*/madani/rombels' => Http::response($this->payload([
+                [
+                    'kelas_id' => 12,
+                    'nama_kelas' => 'Kelas VII.1',
+                    'tingkat' => 'VII',
+                    'nama' => '1',
+                    'wali' => ['nip' => '198001012005011001', 'nama' => 'Budi'],
+                ],
+            ], tahun: '2025/2026')),
+        ]);
+
+        $this->post(route('rombel.sync-simpatisans'))
+            ->assertRedirect(route('rombel.index'))
+            ->assertSessionHas('error');
+
+        $this->assertStringContainsString(
+            'Tahun ajaran tidak cocok',
+            (string) session('error')
+        );
         $this->assertSame(0, Rombel::query()->count());
     }
 
@@ -67,18 +92,15 @@ class SyncRombelFromSimpatisansTest extends TestCase
         $this->assertNotNull($tahun);
 
         Http::fake([
-            '*/madani/rombels' => Http::response([
-                'meta' => ['total' => 1, 'dengan_wali' => 1, 'tanpa_wali' => 0],
-                'data' => [
-                    [
-                        'kelas_id' => 12,
-                        'nama_kelas' => 'Kelas VII.1',
-                        'tingkat' => 'VII',
-                        'nama' => '1',
-                        'wali' => ['nip' => '198001012005011001', 'nama' => 'Budi Santoso'],
-                    ],
+            '*/madani/rombels' => Http::response($this->payload([
+                [
+                    'kelas_id' => 12,
+                    'nama_kelas' => 'Kelas VII.1',
+                    'tingkat' => 'VII',
+                    'nama' => '1',
+                    'wali' => ['nip' => '198001012005011001', 'nama' => 'Budi Santoso'],
                 ],
-            ]),
+            ])),
         ]);
 
         $this->post(route('rombel.sync-simpatisans'))
@@ -100,18 +122,15 @@ class SyncRombelFromSimpatisansTest extends TestCase
         $this->configureSimpatisans();
 
         Http::fake([
-            '*/madani/rombels' => Http::response([
-                'meta' => ['total' => 1, 'dengan_wali' => 1, 'tanpa_wali' => 0],
-                'data' => [
-                    [
-                        'kelas_id' => 12,
-                        'nama_kelas' => 'Kelas VII.1',
-                        'tingkat' => 'VII',
-                        'nama' => '1',
-                        'wali' => ['nip' => '199999999999999999', 'nama' => 'Tidak Ada'],
-                    ],
+            '*/madani/rombels' => Http::response($this->payload([
+                [
+                    'kelas_id' => 12,
+                    'nama_kelas' => 'Kelas VII.1',
+                    'tingkat' => 'VII',
+                    'nama' => '1',
+                    'wali' => ['nip' => '199999999999999999', 'nama' => 'Tidak Ada'],
                 ],
-            ]),
+            ])),
         ]);
 
         $this->post(route('rombel.sync-simpatisans'))
@@ -141,6 +160,49 @@ class SyncRombelFromSimpatisansTest extends TestCase
         $this->actingAs($user)
             ->post(route('rombel.sync-simpatisans'))
             ->assertForbidden();
+    }
+
+    public function test_index_hanya_ikon_kelola_siswa(): void
+    {
+        $this->actingAsOperator();
+
+        $tahun = TahunAjaran::aktif();
+        Rombel::query()->create([
+            'tahun_ajaran_id' => $tahun->id,
+            'tingkat' => 'VII',
+            'nama' => '1',
+        ]);
+
+        $this->get(route('rombel.index'))
+            ->assertOk()
+            ->assertSee('bi-people', false)
+            ->assertDontSee('bi-pencil', false)
+            ->assertDontSee('Ubah rombel', false);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $data
+     * @return array<string, mixed>
+     */
+    private function payload(array $data, string $tahun = '2026/2027', int $tanpaWali = 0): array
+    {
+        $total = count($data);
+
+        return [
+            'tahun_ajaran' => ['nama' => $tahun],
+            'semester' => [
+                'id' => 1,
+                'nama' => $tahun.' - Ganjil',
+                'tahun' => $tahun,
+                'tipe' => 'Ganjil',
+            ],
+            'meta' => [
+                'total' => $total,
+                'dengan_wali' => $total - $tanpaWali,
+                'tanpa_wali' => $tanpaWali,
+            ],
+            'data' => $data,
+        ];
     }
 
     private function configureSimpatisans(): void

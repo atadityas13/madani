@@ -105,7 +105,6 @@ Route::middleware('auth')->group(function () {
         Route::post('rombel/{rombel}/anggota', [RombelController::class, 'storeAnggota'])->name('rombel.anggota.store');
         Route::delete('rombel/{rombel}/anggota/{siswa}', [RombelController::class, 'destroyAnggota'])->name('rombel.anggota.destroy');
         Route::post('rombel/sync-simpatisans', [RombelController::class, 'syncFromSimpatisans'])->name('rombel.sync-simpatisans');
-        Route::resource('rombel', RombelController::class)->except(['index', 'show']);
         Route::view('/ppdb', 'pages.soon', [
             'heading' => 'PPDB',
             'subheading' => 'Penerimaan peserta didik baru',

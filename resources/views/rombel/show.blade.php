@@ -10,12 +10,6 @@
     <div class="d-flex gap-2">
         @can('update', $rombel)
             <button class="btn btn-madani" type="button" data-bs-toggle="modal" data-bs-target="#rombelSiswaModal">Tambah siswa</button>
-            <a class="btn btn-outline-secondary" href="{{ route('rombel.edit', $rombel) }}">Ubah rombel</a>
-            <form method="POST" action="{{ route('rombel.destroy', $rombel) }}" data-confirm="Hapus rombel ini?" data-confirm-title="Hapus" data-loading-text="Menghapus…">
-                @csrf
-                @method('DELETE')
-                <button class="btn btn-outline-danger" type="submit">Hapus</button>
-            </form>
         @endcan
     </div>
 </div>

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Gtk;
 use App\Models\Rombel;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
@@ -10,7 +9,6 @@ use App\Services\Simpatisans\RombelSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use RuntimeException;
 
@@ -64,41 +62,6 @@ class RombelController extends Controller
             ));
     }
 
-    public function create(): View|RedirectResponse
-    {
-        $this->authorize('create', Rombel::class);
-        if (! TahunAjaran::aktif()) {
-            return redirect()
-                ->route('tahun-ajaran.index')
-                ->with('status', 'Aktifkan tahun ajaran terlebih dahulu sebelum membuat rombel.');
-        }
-
-        return view('rombel.form', [
-            'rombel' => new Rombel,
-            'gtks' => Gtk::query()->where('status', 'aktif')->orderBy('nama')->get(),
-            'tahunAktif' => TahunAjaran::aktif(),
-        ]);
-    }
-
-    public function store(Request $request): RedirectResponse
-    {
-        $this->authorize('create', Rombel::class);
-        $tahun = TahunAjaran::aktif();
-
-        if (! $tahun) {
-            return redirect()->route('tahun-ajaran.index')->with('status', 'Belum ada tahun ajaran aktif.');
-        }
-
-        $rombel = Rombel::query()->create([
-            ...$this->validated($request, $tahun->id),
-            'tahun_ajaran_id' => $tahun->id,
-        ]);
-
-        return redirect()
-            ->route('rombel.show', $rombel)
-            ->with('status', 'Rombel ditambahkan. Lanjutkan dengan menambahkan siswa.');
-    }
-
     public function show(Rombel $rombel): View
     {
         $this->authorize('view', $rombel);
@@ -120,35 +83,6 @@ class RombelController extends Controller
             ->get();
 
         return view('rombel.show', compact('rombel', 'kandidat'));
-    }
-
-    public function edit(Rombel $rombel): View
-    {
-        $this->authorize('update', $rombel);
-
-        return view('rombel.form', [
-            'rombel' => $rombel,
-            'gtks' => Gtk::query()->where('status', 'aktif')->orderBy('nama')->get(),
-            'tahunAktif' => $rombel->tahunAjaran,
-        ]);
-    }
-
-    public function update(Request $request, Rombel $rombel): RedirectResponse
-    {
-        $this->authorize('update', $rombel);
-        $rombel->update($this->validated($request, $rombel->tahun_ajaran_id, $rombel));
-
-        return redirect()
-            ->route('rombel.show', $rombel)
-            ->with('status', 'Rombel diperbarui.');
-    }
-
-    public function destroy(Rombel $rombel): RedirectResponse
-    {
-        $this->authorize('delete', $rombel);
-        $rombel->delete();
-
-        return redirect()->route('rombel.index')->with('status', 'Rombel dihapus.');
     }
 
     public function storeAnggota(Request $request, Rombel $rombel): RedirectResponse
@@ -200,23 +134,5 @@ class RombelController extends Controller
         return redirect()
             ->route('rombel.show', $rombel)
             ->with('status', 'Siswa dikeluarkan dari rombel.');
-    }
-
-    private function validated(Request $request, int $tahunAjaranId, ?Rombel $rombel = null): array
-    {
-        return $request->validate([
-            'tingkat' => ['required', 'string', Rule::in(array_keys(config('emis.tingkat_rombel')))],
-            'nama' => [
-                'required',
-                'string',
-                'max:30',
-                Rule::unique('rombels', 'nama')
-                    ->where('tahun_ajaran_id', $tahunAjaranId)
-                    ->where('tingkat', $request->input('tingkat'))
-                    ->ignore($rombel?->id),
-            ],
-            'gtk_id' => ['nullable', 'exists:gtks,id'],
-            'program' => ['nullable', 'string', 'max:50'],
-        ]);
     }
 }

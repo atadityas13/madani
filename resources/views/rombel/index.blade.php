@@ -42,14 +42,9 @@
                         <td>{{ $rombel->anggota_count }}</td>
                         <td class="text-end">
                             <div class="emis-aksi">
-                                <a class="emis-aksi-btn" href="{{ route('rombel.show', $rombel) }}" title="Detail">
-                                    <i class="bi bi-eye"></i>
+                                <a class="emis-aksi-btn" href="{{ route('rombel.show', $rombel) }}" title="Kelola siswa">
+                                    <i class="bi bi-people"></i>
                                 </a>
-                                @can('update', $rombel)
-                                    <a class="emis-aksi-btn" href="{{ route('rombel.edit', $rombel) }}" title="Ubah">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                @endcan
                             </div>
                         </td>
                     </tr>

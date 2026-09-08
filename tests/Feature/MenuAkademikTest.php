@@ -27,7 +27,7 @@ class MenuAkademikTest extends TestCase
             ->assertSee('Database');
     }
 
-    public function test_operator_can_create_tahun_ajaran_and_rombel(): void
+    public function test_operator_can_manage_rombel_anggota(): void
     {
         $this->actingAsOperator();
 
@@ -45,15 +45,12 @@ class MenuAkademikTest extends TestCase
         $this->assertSame('2026/2027', $tahun->nama);
         $this->assertSame('Aktif', $tahun->labelStatus());
 
-        $this->post('/rombel', [
+        $rombel = Rombel::query()->create([
+            'tahun_ajaran_id' => $tahun->id,
             'tingkat' => 'VII',
             'nama' => 'A',
             'gtk_id' => $gtk->id,
-        ])->assertRedirect();
-
-        $rombel = Rombel::query()->first();
-        $this->assertSame('A', $rombel->nama);
-        $this->assertSame($tahun->id, $rombel->tahun_ajaran_id);
+        ]);
 
         $siswa = Siswa::query()->create([
             'nama' => 'Siswa Rombel',

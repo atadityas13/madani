@@ -21,6 +21,8 @@ class RombelSyncService
     public function sync(TahunAjaran $tahunAjaran): array
     {
         $payload = $this->fetchPayload();
+        $this->assertTahunAjaranCocok($tahunAjaran, $payload);
+
         $items = $payload['data'] ?? null;
 
         if (! is_array($items) || $items === []) {
@@ -56,6 +58,7 @@ class RombelSyncService
                 }
 
                 $rombel = Rombel::query()
+                    ->where('tahun_ajaran_id', $tahunAjaran->id)
                     ->where('source_simpatisans_kelas_id', $kelasId)
                     ->first();
 
@@ -90,6 +93,37 @@ class RombelSyncService
                 'total' => count($items),
             ];
         });
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function assertTahunAjaranCocok(TahunAjaran $tahunAjaran, array $payload): void
+    {
+        $remote = trim((string) (
+            $payload['tahun_ajaran']['nama']
+            ?? $payload['semester']['tahun']
+            ?? ''
+        ));
+        $local = trim((string) $tahunAjaran->nama);
+
+        if ($remote === '') {
+            throw new RuntimeException('Respons SimpatiSans tidak menyertakan tahun ajaran aktif.');
+        }
+
+        if ($this->normalizeTahunAjaran($local) !== $this->normalizeTahunAjaran($remote)) {
+            throw new RuntimeException(
+                'Tahun ajaran tidak cocok. Madani aktif: '.$local.', SimpatiSans aktif: '.$remote.'. Samakan tahun ajaran aktif sebelum sync.'
+            );
+        }
+    }
+
+    private function normalizeTahunAjaran(string $value): string
+    {
+        $value = strtoupper(trim($value));
+        $value = str_replace(['–', '—', ' '], ['/', '/', ''], $value);
+
+        return $value;
     }
 
     /**
