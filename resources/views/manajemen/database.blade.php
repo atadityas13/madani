@@ -69,4 +69,111 @@
         </div>
     @endforeach
 </div>
+
+@if (! empty($imporDuplikat))
+    <div
+        class="modal fade"
+        id="imporSiswaDuplikatModal"
+        tabindex="-1"
+        aria-labelledby="imporSiswaDuplikatModalLabel"
+        aria-hidden="true"
+        data-modal-open
+    >
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imporSiswaDuplikatModalLabel">Impor gagal — data ganda</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">{{ $imporDuplikat['pesan'] }}</p>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-2" id="imporDuplikatTable">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Nama</th>
+                                    <th>NISN</th>
+                                    <th>NIK</th>
+                                    <th>Keterangan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($imporDuplikat['conflicts'] as $index => $item)
+                                    <tr class="impor-duplikat-row" data-page-index="{{ (int) floor($index / 10) }}">
+                                        <td>{{ $index + 1 }}</td>
+                                        <td>{{ $item['nama'] }}</td>
+                                        <td>{{ $item['nisn'] }}</td>
+                                        <td>{{ $item['nik'] }}</td>
+                                        <td>{{ implode(', ', $item['bentrok']) }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                        <div class="small text-secondary" id="imporDuplikatPageInfo"></div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="imporDuplikatPrev" disabled>Sebelumnya</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="imporDuplikatNext">Berikutnya</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer flex-wrap gap-2">
+                    <a
+                        class="btn btn-outline-secondary"
+                        href="{{ route('manajemen.database.siswa.ekspor-duplikat', ['token' => $imporDuplikat['token']]) }}"
+                    >Ekspor data gagal</a>
+                    <form method="POST" action="{{ route('manajemen.database.siswa.impor') }}" data-loading-text="Mengimpor…">
+                        @csrf
+                        <input type="hidden" name="token" value="{{ $imporDuplikat['token'] }}">
+                        <input type="hidden" name="skip_duplikat" value="1">
+                        <button class="btn btn-madani" type="submit">Skip data yang ganda</button>
+                    </form>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const modalEl = document.getElementById('imporSiswaDuplikatModal');
+            if (modalEl && window.bootstrap) {
+                bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            }
+
+            const rows = Array.from(document.querySelectorAll('.impor-duplikat-row'));
+            const pageSize = 10;
+            const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+            let page = 0;
+
+            const prevBtn = document.getElementById('imporDuplikatPrev');
+            const nextBtn = document.getElementById('imporDuplikatNext');
+            const info = document.getElementById('imporDuplikatPageInfo');
+
+            const render = () => {
+                rows.forEach((row) => {
+                    row.classList.toggle('d-none', Number(row.dataset.pageIndex) !== page);
+                });
+                if (info) {
+                    info.textContent = `Halaman ${page + 1} dari ${totalPages} · ${rows.length} data`;
+                }
+                if (prevBtn) prevBtn.disabled = page <= 0;
+                if (nextBtn) nextBtn.disabled = page >= totalPages - 1;
+            };
+
+            prevBtn?.addEventListener('click', () => {
+                page = Math.max(0, page - 1);
+                render();
+            });
+            nextBtn?.addEventListener('click', () => {
+                page = Math.min(totalPages - 1, page + 1);
+                render();
+            });
+
+            render();
+        });
+    </script>
+@endif
 @endsection

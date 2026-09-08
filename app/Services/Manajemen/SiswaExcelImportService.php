@@ -5,9 +5,13 @@ namespace App\Services\Manajemen;
 use App\Models\Rombel;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
+use App\Support\SiswaPassword;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
@@ -31,6 +35,8 @@ class SiswaExcelImportService
         'Nama Ayah kandung',
         'Nama Ibu kandung',
     ];
+
+    private const CACHE_TTL_MINUTES = 30;
 
     public function unduhTemplate(): StreamedResponse
     {
@@ -57,10 +63,147 @@ class SiswaExcelImportService
     }
 
     /**
-     * @return array{imported: int, pesan: string}
+     * @return array{
+     *     status: 'ok'|'duplikat',
+     *     imported?: int,
+     *     skipped?: int,
+     *     pesan?: string,
+     *     token?: string,
+     *     pesan_duplikat?: string,
+     *     conflicts?: list<array<string, mixed>>,
+     *     jumlah?: int
+     * }
      */
     public function impor(UploadedFile $file): array
     {
+        $this->perpanjangWaktuEksekusi();
+
+        $analisis = $this->analisisFile($file);
+
+        if ($analisis['conflicts'] !== []) {
+            $token = (string) Str::uuid();
+            Cache::put($this->cacheKey($token), [
+                'ok_rows' => $analisis['ok_rows'],
+                'conflicts' => $analisis['conflicts'],
+                'pesan_duplikat' => $analisis['pesan_duplikat'],
+            ], now()->addMinutes(self::CACHE_TTL_MINUTES));
+
+            return [
+                'status' => 'duplikat',
+                'token' => $token,
+                'pesan_duplikat' => $analisis['pesan_duplikat'],
+                'conflicts' => $analisis['conflicts'],
+                'jumlah' => count($analisis['conflicts']),
+            ];
+        }
+
+        $imported = $this->simpanBaris($analisis['ok_rows']);
+
+        return [
+            'status' => 'ok',
+            'imported' => $imported,
+            'skipped' => 0,
+            'pesan' => "Impor siswa berhasil: {$imported} baris.",
+        ];
+    }
+
+    /**
+     * @return array{imported: int, skipped: int, pesan: string}
+     */
+    public function imporLewatiDuplikat(string $token): array
+    {
+        $this->perpanjangWaktuEksekusi();
+
+        $payload = Cache::pull($this->cacheKey($token));
+        if (! is_array($payload) || ! isset($payload['ok_rows'], $payload['conflicts'])) {
+            throw ValidationException::withMessages([
+                'file' => 'Sesi impor sudah berakhir. Unggah ulang file Excel.',
+            ]);
+        }
+
+        /** @var list<array<string, mixed>> $okRows */
+        $okRows = $payload['ok_rows'];
+        $skipped = count($payload['conflicts']);
+
+        if ($okRows === []) {
+            return [
+                'imported' => 0,
+                'skipped' => $skipped,
+                'pesan' => "Tidak ada baris yang diimpor. {$skipped} baris duplikat dilewati.",
+            ];
+        }
+
+        $imported = $this->simpanBaris($okRows);
+
+        return [
+            'imported' => $imported,
+            'skipped' => $skipped,
+            'pesan' => "Impor siswa berhasil: {$imported} baris (dilewati {$skipped} duplikat).",
+        ];
+    }
+
+    public function unduhDuplikat(string $token): StreamedResponse
+    {
+        $payload = Cache::get($this->cacheKey($token));
+        if (! is_array($payload) || ! isset($payload['conflicts'])) {
+            throw ValidationException::withMessages([
+                'file' => 'Sesi impor sudah berakhir. Unggah ulang file Excel.',
+            ]);
+        }
+
+        /** @var list<array<string, mixed>> $conflicts */
+        $conflicts = $payload['conflicts'];
+
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('gagal');
+        $headers = array_merge(self::HEADERS, ['Keterangan']);
+        $sheet->fromArray([$headers], null, 'A1');
+
+        $rows = [];
+        foreach ($conflicts as $index => $conflict) {
+            $rows[] = [
+                $index + 1,
+                $conflict['nama'],
+                $conflict['nis'] ?? '',
+                $conflict['nisn'],
+                $conflict['nik'],
+                $conflict['tempat_lahir'],
+                $conflict['tanggal_lahir'],
+                $conflict['jenis_kelamin'] === 'L' ? 'Laki-laki' : 'Perempuan',
+                $conflict['angkatan'],
+                $conflict['rombel_nama'] ?? '',
+                $conflict['ayah_nama'] ?? '',
+                $conflict['ibu_nama'],
+                implode(', ', $conflict['bentrok']),
+            ];
+        }
+        $sheet->fromArray($rows, null, 'A2');
+
+        foreach (range('A', 'M') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $writer = new Xlsx($spreadsheet);
+
+        return response()->streamDownload(function () use ($writer): void {
+            $writer->save('php://output');
+        }, 'impor-siswa-gagal.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
+    /**
+     * @return array{
+     *     ok_rows: list<array<string, mixed>>,
+     *     conflicts: list<array<string, mixed>>,
+     *     pesan_duplikat: string
+     * }
+     */
+    private function analisisFile(UploadedFile $file): array
+    {
+        $this->perpanjangWaktuEksekusi();
+
         $spreadsheet = IOFactory::load($file->getRealPath());
         $sheet = $spreadsheet->getActiveSheet();
         $rows = $sheet->toArray(null, true, true, false);
@@ -139,17 +282,33 @@ class SiswaExcelImportService
                 ->groupBy(fn (Rombel $rombel) => strtoupper((string) $rombel->tingkat).'|'.trim((string) $rombel->nama));
         }
 
+        $okRows = [];
+        $conflicts = [];
+
+        $nisList = collect($parsed)->pluck('nis')->filter()->unique()->values()->all();
+        $nisnList = collect($parsed)->pluck('nisn')->unique()->values()->all();
+        $nikList = collect($parsed)->pluck('nik')->unique()->values()->all();
+
+        $existingNis = $nisList === []
+            ? []
+            : Siswa::query()->whereIn('nis', $nisList)->pluck('nis')->all();
+        $existingNisn = Siswa::query()->whereIn('nisn', $nisnList)->pluck('nisn')->all();
+        $existingNik = Siswa::query()->whereIn('nik', $nikList)->pluck('nik')->all();
+        $existingNisLookup = array_fill_keys($existingNis, true);
+        $existingNisnLookup = array_fill_keys($existingNisn, true);
+        $existingNikLookup = array_fill_keys($existingNik, true);
+
         foreach ($parsed as $row) {
-            if ($row['nis'] !== null && Siswa::query()->where('nis', $row['nis'])->exists()) {
-                $errors[] = "Baris {$row['excel_row']}: NIS {$row['nis']} sudah ada di database.";
-            }
+            $bentrok = [];
 
-            if (Siswa::query()->where('nisn', $row['nisn'])->exists()) {
-                $errors[] = "Baris {$row['excel_row']}: NISN {$row['nisn']} sudah ada di database.";
+            if ($row['nis'] !== null && isset($existingNisLookup[$row['nis']])) {
+                $bentrok[] = 'NIS';
             }
-
-            if (Siswa::query()->where('nik', $row['nik'])->exists()) {
-                $errors[] = "Baris {$row['excel_row']}: NIK {$row['nik']} sudah ada di database.";
+            if (isset($existingNisnLookup[$row['nisn']])) {
+                $bentrok[] = 'NISN';
+            }
+            if (isset($existingNikLookup[$row['nik']])) {
+                $bentrok[] = 'NIK';
             }
 
             if ($row['rombel_nama'] !== null) {
@@ -162,8 +321,18 @@ class SiswaExcelImportService
                 $key = $row['angkatan'].'|'.$row['rombel_nama'];
                 if (! isset($rombels[$key])) {
                     $errors[] = "Baris {$row['excel_row']}: Rombel {$row['angkatan']}-{$row['rombel_nama']} tidak ditemukan pada tahun ajaran aktif.";
+
+                    continue;
                 }
             }
+
+            if ($bentrok !== []) {
+                $conflicts[] = array_merge($row, ['bentrok' => $bentrok]);
+
+                continue;
+            }
+
+            $okRows[] = $row;
         }
 
         if ($errors !== []) {
@@ -172,53 +341,132 @@ class SiswaExcelImportService
             ]);
         }
 
+        return [
+            'ok_rows' => $okRows,
+            'conflicts' => $conflicts,
+            'pesan_duplikat' => $this->pesanDuplikat($conflicts),
+        ];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     */
+    private function simpanBaris(array $rows): int
+    {
+        $this->perpanjangWaktuEksekusi();
+
+        $tahun = TahunAjaran::aktif();
+        $rombels = [];
+
+        if ($tahun) {
+            $rombels = Rombel::query()
+                ->where('tahun_ajaran_id', $tahun->id)
+                ->get()
+                ->groupBy(fn (Rombel $rombel) => strtoupper((string) $rombel->tingkat).'|'.trim((string) $rombel->nama));
+        }
+
         $imported = 0;
 
-        DB::transaction(function () use ($parsed, $rombels, &$imported): void {
-            foreach ($parsed as $row) {
-                $punyaRombel = $row['rombel_nama'] !== null;
-                $rombel = $punyaRombel
-                    ? $rombels[$row['angkatan'].'|'.$row['rombel_nama']]->first()
-                    : null;
+        // Password awal (ddmmyyyy) di-hash ringan saat impor massal; siswa wajib ganti saat login.
+        $hashRounds = 4;
 
-                $siswa = Siswa::query()->create([
-                    'nama' => $row['nama'],
-                    'nis' => $row['nis'],
-                    'nisn' => $row['nisn'],
-                    'punya_nisn' => true,
-                    'nik' => $row['nik'],
-                    'punya_nik' => true,
-                    'tempat_lahir' => $row['tempat_lahir'],
-                    'tanggal_lahir' => $row['tanggal_lahir'],
-                    'jenis_kelamin' => $row['jenis_kelamin'],
-                    'angkatan' => $row['angkatan'],
-                    'agama' => 'Islam',
-                    'status_keaktifan' => $rombel ? 'aktif' : 'aktif_tanpa_rombel',
-                    'tidak_punya_hp' => true,
-                    'tidak_punya_email' => true,
-                ]);
+        foreach (array_chunk($rows, 50) as $chunk) {
+            $this->perpanjangWaktuEksekusi();
 
-                $siswa->ensurePasswordAwal();
-                $siswa->save();
+            DB::transaction(function () use ($chunk, $rombels, $hashRounds, &$imported): void {
+                foreach ($chunk as $row) {
+                    $punyaRombel = ($row['rombel_nama'] ?? null) !== null;
+                    $rombel = $punyaRombel
+                        ? $rombels[$row['angkatan'].'|'.$row['rombel_nama']]->first()
+                        : null;
 
-                $siswa->orangTuas()->create(['peran' => 'ayah', 'nama' => $row['ayah_nama']]);
-                $siswa->orangTuas()->create(['peran' => 'ibu', 'nama' => $row['ibu_nama']]);
-                $siswa->orangTuas()->create(['peran' => 'wali']);
+                    $siswa = Siswa::withoutEvents(function () use ($row, $rombel, $hashRounds) {
+                        $siswa = new Siswa([
+                            'nama' => $row['nama'],
+                            'nis' => $row['nis'],
+                            'nisn' => $row['nisn'],
+                            'punya_nisn' => true,
+                            'nik' => $row['nik'],
+                            'punya_nik' => true,
+                            'tempat_lahir' => $row['tempat_lahir'],
+                            'tanggal_lahir' => $row['tanggal_lahir'],
+                            'jenis_kelamin' => $row['jenis_kelamin'],
+                            'angkatan' => $row['angkatan'],
+                            'agama' => 'Islam',
+                            'status_keaktifan' => $rombel ? 'aktif' : 'aktif_tanpa_rombel',
+                            'tidak_punya_hp' => true,
+                            'tidak_punya_email' => true,
+                        ]);
 
-                if ($rombel) {
-                    $rombel->siswas()->syncWithoutDetaching([
-                        $siswa->id => ['status' => 'aktif'],
-                    ]);
+                        $plain = SiswaPassword::dariTanggalLahir($row['tanggal_lahir']);
+                        if ($plain !== null) {
+                            $siswa->forceFill([
+                                'password' => Hash::make($plain, ['rounds' => $hashRounds]),
+                                'must_change_password' => true,
+                            ]);
+                        }
+
+                        $siswa->save();
+
+                        return $siswa;
+                    });
+
+                    $siswa->orangTuas()->create(['peran' => 'ayah', 'nama' => $row['ayah_nama']]);
+                    $siswa->orangTuas()->create(['peran' => 'ibu', 'nama' => $row['ibu_nama']]);
+                    $siswa->orangTuas()->create(['peran' => 'wali']);
+
+                    if ($rombel) {
+                        $rombel->siswas()->syncWithoutDetaching([
+                            $siswa->id => ['status' => 'aktif'],
+                        ]);
+                    }
+
+                    $imported++;
                 }
+            });
+        }
 
-                $imported++;
+        return $imported;
+    }
+
+    private function perpanjangWaktuEksekusi(): void
+    {
+        if (function_exists('set_time_limit')) {
+            set_time_limit(300);
+        }
+    }
+
+    /**
+     * @param  list<array{bentrok: list<string>}>  $conflicts
+     */
+    public function pesanDuplikat(array $conflicts): string
+    {
+        if ($conflicts === []) {
+            return '';
+        }
+
+        $jenis = [];
+        foreach ($conflicts as $conflict) {
+            foreach ($conflict['bentrok'] as $field) {
+                $jenis[$field] = true;
             }
-        });
+        }
 
-        return [
-            'imported' => $imported,
-            'pesan' => "Impor siswa berhasil: {$imported} baris.",
-        ];
+        $ordered = array_values(array_intersect(['NISN', 'NIK', 'NIS'], array_keys($jenis)));
+        $jumlah = count($conflicts);
+
+        $label = match (count($ordered)) {
+            1 => $ordered[0],
+            2 => $ordered[0].' dan '.$ordered[1],
+            default => implode(', ', array_slice($ordered, 0, -1)).', dan '.$ordered[array_key_last($ordered)],
+        };
+
+        return "Terdapat {$jumlah} {$label} sudah ada di aplikasi silahkan periksa kembali.";
+    }
+
+    private function cacheKey(string $token): string
+    {
+        return 'impor_siswa_duplikat_'.$token;
     }
 
     /**

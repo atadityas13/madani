@@ -134,6 +134,8 @@ Route::middleware('auth')->group(function () {
         Route::get('manajemen/database', [DatabaseController::class, 'index'])->name('manajemen.database');
         Route::get('manajemen/database/siswa/template', [DatabaseController::class, 'templateSiswa'])
             ->name('manajemen.database.siswa.template');
+        Route::get('manajemen/database/siswa/ekspor-duplikat', [DatabaseController::class, 'eksporDuplikatSiswa'])
+            ->name('manajemen.database.siswa.ekspor-duplikat');
         Route::post('manajemen/database/siswa/impor', [DatabaseController::class, 'imporSiswa'])
             ->name('manajemen.database.siswa.impor');
         Route::post('manajemen/database/{modul}/kosongkan', [DatabaseController::class, 'kosongkan'])

@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\Manajemen\SiswaExcelImportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Hash;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Tests\TestCase;
@@ -48,6 +49,8 @@ class SiswaExcelImportTest extends TestCase
         $siswa = Siswa::query()->where('nisn', '1234567890')->first();
         $this->assertNotNull($siswa);
         $this->assertSame('3210230911120003', $siswa->nik);
+        $this->assertTrue(Hash::check('09112012', $siswa->password));
+        $this->assertTrue($siswa->must_change_password);
         $this->assertSame('L', $siswa->jenis_kelamin);
         $this->assertSame('VII', $siswa->angkatan);
         $this->assertSame('Islam', $siswa->agama);
@@ -143,7 +146,7 @@ class SiswaExcelImportTest extends TestCase
         );
     }
 
-    public function test_impor_gagal_jika_nis_sudah_ada(): void
+    public function test_impor_duplikat_menampilkan_modal_dan_bisa_skip(): void
     {
         $this->actingAsSuperadmin();
 
@@ -157,14 +160,52 @@ class SiswaExcelImportTest extends TestCase
         ]);
 
         $file = $this->buatExcel([
-            [1, 'Siswa Baru', '2026001', '5555555555', '3210230911120055', 'Majalengka', '2012-01-01', 'Laki-laki', 'VII', '', '', 'Ibu Baru'],
+            [1, 'Siswa Duplikat', '2026001', '5555555555', '3210230911120055', 'Majalengka', '2012-01-01', 'Laki-laki', 'VII', '', '', 'Ibu Dup'],
+            [2, 'Siswa Baru', '2026002', '5555555556', '3210230911120056', 'Majalengka', '2012-02-02', 'Perempuan', 'VII', '', '', 'Ibu Baru'],
         ]);
 
         $this->post(route('manajemen.database.siswa.impor'), [
             'file' => $file,
-        ])->assertSessionHasErrors('file');
+        ])->assertRedirect(route('manajemen.database'))
+            ->assertSessionHas('impor_siswa_duplikat_token');
+
+        $token = session('impor_siswa_duplikat_token');
+
+        $this->get(route('manajemen.database'))
+            ->assertOk()
+            ->assertSee('Terdapat 1 NIS sudah ada di aplikasi silahkan periksa kembali.', false)
+            ->assertSee('Siswa Duplikat', false)
+            ->assertSee('Skip data yang ganda', false)
+            ->assertSee('Ekspor data gagal', false);
+
+        $this->get(route('manajemen.database.siswa.ekspor-duplikat', ['token' => $token]))
+            ->assertOk()
+            ->assertHeader('content-disposition');
+
+        $this->post(route('manajemen.database.siswa.impor'), [
+            'token' => $token,
+            'skip_duplikat' => '1',
+        ])->assertRedirect(route('manajemen.database'))
+            ->assertSessionHas('status');
 
         $this->assertNull(Siswa::query()->where('nisn', '5555555555')->first());
+        $this->assertNotNull(Siswa::query()->where('nisn', '5555555556')->first());
+    }
+
+    public function test_pesan_duplikat_nisn_dan_nik(): void
+    {
+        $service = app(SiswaExcelImportService::class);
+
+        $pesan = $service->pesanDuplikat([
+            ['bentrok' => ['NISN']],
+            ['bentrok' => ['NIK']],
+            ['bentrok' => ['NISN', 'NIK']],
+        ]);
+
+        $this->assertSame(
+            'Terdapat 3 NISN dan NIK sudah ada di aplikasi silahkan periksa kembali.',
+            $pesan
+        );
     }
 
     public function test_normalisasi_nik_membuang_apostrof(): void
