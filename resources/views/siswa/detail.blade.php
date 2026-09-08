@@ -40,11 +40,11 @@
         default => '—',
     };
 
+    $rombelLabel = $rombel ? $rombel->label() : '—';
+
     $identitas = [
         'NIK' => $fmt($siswa->nik),
-        'PUNYA NIK' => $fmt($siswa->punya_nik),
         'NISN' => $fmt($siswa->nisn),
-        'PUNYA NISN' => $fmt($siswa->punya_nisn),
         'NIS' => $fmt($siswa->nis),
         'NISM' => $fmt($siswa->nism),
         'TEMPAT LAHIR' => $fmt($siswa->tempat_lahir),
@@ -60,10 +60,7 @@
 
     $kontakStatus = [
         'EMAIL' => $siswa->tidak_punya_email ? '—' : $fmt($siswa->email),
-        'TIDAK PUNYA EMAIL' => $fmt($siswa->tidak_punya_email),
         'NO HP' => $siswa->tidak_punya_hp ? '—' : $fmt($siswa->no_hp),
-        'TIDAK PUNYA HP' => $fmt($siswa->tidak_punya_hp),
-        'ROMBEL' => $rombel ? $rombel->label() : '—',
         'STATUS KEAKTIFAN' => $fmt(str_replace('_', ' ', (string) $siswa->status_keaktifan)),
         'TANGGAL NONAKTIF' => $fmt($siswa->tanggal_nonaktif),
         'ALASAN NONAKTIF' => $fmt($siswa->alasan_nonaktif),
@@ -83,7 +80,6 @@
         'KOTA/KABUPATEN' => $fmt($periodik?->kota),
         'PROVINSI' => $fmt($periodik?->provinsi),
         'KODE POS' => $fmt($periodik?->kode_pos),
-        'KODE WILAYAH' => $fmt($periodik?->kode_wilayah),
         'KOORDINAT' => $fmt($periodik?->koordinat),
         'TRANSPORTASI' => $fmt($periodik?->transportasi),
         'JARAK' => $fmt($periodik?->jarak),
@@ -97,9 +93,7 @@
         'PERNAH PAUD' => $fmt($periodik?->pernah_paud),
         'IMUNISASI' => $fmt($periodik?->imunisasi),
         'KEBUTUHAN KHUSUS' => $fmt($periodik?->kebutuhanKhususLabel()),
-        'KEBUTUHAN KHUSUS LAINNYA' => $fmt($periodik?->kebutuhan_khusus_lainnya),
         'DISABILITAS' => $fmt($periodik?->disabilitasLabel()),
-        'DISABILITAS LAINNYA' => $fmt($periodik?->disabilitas_lainnya),
         'TANGGAL MASUK' => $fmt($periodik?->tanggal_masuk),
         'ALASAN MASUK' => $fmt($periodik?->alasan_masuk),
         'NPSN ASAL' => $fmt($periodik?->npsn_asal),
@@ -108,11 +102,8 @@
 
     $bantuan = [
         'NO KIP' => $periodik?->tidak_punya_kip ? '—' : $fmt($periodik?->no_kip),
-        'TIDAK PUNYA KIP' => $fmt($periodik?->tidak_punya_kip),
         'NO KKS' => $periodik?->tidak_punya_kks ? '—' : $fmt($periodik?->no_kks),
-        'TIDAK PUNYA KKS' => $fmt($periodik?->tidak_punya_kks),
         'NO PKH' => $periodik?->tidak_punya_pkh ? '—' : $fmt($periodik?->no_pkh),
-        'TIDAK PUNYA PKH' => $fmt($periodik?->tidak_punya_pkh),
     ];
 
     $ortuSections = [
@@ -121,14 +112,37 @@
         'Wali' => $siswa->wali,
     ];
 
-    $dokumenJenis = [
-        'kk' => 'Kartu Keluarga',
-        'akta_lahir' => 'Akta lahir',
-        'kip' => 'KIP',
-        'kks' => 'KKS',
-        'pkh' => 'PKH',
-        'ijazah_sd' => 'Ijazah SD',
-    ];
+    $barisOrtu = function (?\App\Models\OrangTua $ortu, string $judul) use ($fmt): array {
+        $rows = [
+            'NAMA' => $fmt($ortu?->nama),
+            'NIK' => $fmt($ortu?->nik),
+            'STATUS' => $fmt($ortu?->status),
+            'STATUS HIDUP' => $fmt($ortu?->status_hidup),
+            'TEMPAT LAHIR' => $fmt($ortu?->tempat_lahir),
+            'TANGGAL LAHIR' => $fmt($ortu?->tanggal_lahir),
+            'PENDIDIKAN' => $fmt($ortu?->pendidikan),
+            'PEKERJAAN' => $fmt($ortu?->pekerjaan),
+            'PENGHASILAN' => $fmt($ortu?->penghasilan),
+            'NO HP' => $ortu?->tidak_punya_hp ? '—' : $fmt($ortu?->no_hp),
+        ];
+
+        if ($judul === 'Wali') {
+            $rows['HUBUNGAN'] = $fmt($ortu?->hubungan);
+        }
+
+        return array_merge($rows, [
+            'STATUS TEMPAT TINGGAL' => $fmt($ortu?->status_tempat_tinggal),
+            'ALAMAT' => $fmt($ortu?->alamat),
+            'BLOK' => $fmt($ortu?->blok),
+            'RT' => $fmt($ortu?->rt),
+            'RW' => $fmt($ortu?->rw),
+            'DESA' => $fmt($ortu?->desa),
+            'KECAMATAN' => $fmt($ortu?->kecamatan),
+            'KOTA/KABUPATEN' => $fmt($ortu?->kota),
+            'PROVINSI' => $fmt($ortu?->provinsi),
+            'KODE POS' => $fmt($ortu?->kode_pos),
+        ]);
+    };
 @endphp
 
 <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
@@ -160,7 +174,15 @@
                 title="Klik untuk menyalin"
             >{{ $siswa->nama }}</h2>
 
-            <p class="siswa-detail__hint mb-3">Klik nilai field untuk menyalin ke clipboard.</p>
+            <p
+                class="siswa-detail__rombel{{ $rombelLabel !== '—' ? ' is-copyable' : '' }}"
+                @if ($rombelLabel !== '—')
+                    role="button"
+                    tabindex="0"
+                    data-copy="{{ $rombelLabel }}"
+                    title="Klik untuk menyalin"
+                @endif
+            >{{ $rombelLabel }}</p>
 
             <h3 class="siswa-detail__section">Identitas</h3>
             @include('siswa.partials.detail-rows', ['rows' => $identitas])
@@ -182,43 +204,13 @@
 @foreach ($ortuSections as $judul => $ortu)
     <div class="madani-card siswa-detail mb-3" data-siswa-detail>
         <h3 class="siswa-detail__section mt-0">{{ $judul }}</h3>
-        @include('siswa.partials.detail-rows', ['rows' => [
-            'NAMA' => $fmt($ortu?->nama),
-            'NIK' => $fmt($ortu?->nik),
-            'STATUS' => $fmt($ortu?->status),
-            'STATUS HIDUP' => $fmt($ortu?->status_hidup),
-            'TEMPAT LAHIR' => $fmt($ortu?->tempat_lahir),
-            'TANGGAL LAHIR' => $fmt($ortu?->tanggal_lahir),
-            'PENDIDIKAN' => $fmt($ortu?->pendidikan),
-            'PEKERJAAN' => $fmt($ortu?->pekerjaan),
-            'PENGHASILAN' => $fmt($ortu?->penghasilan),
-            'NO HP' => $ortu?->tidak_punya_hp ? '—' : $fmt($ortu?->no_hp),
-            'TIDAK PUNYA HP' => $fmt($ortu?->tidak_punya_hp),
-            'HUBUNGAN' => $fmt($ortu?->hubungan),
-            'STATUS TEMPAT TINGGAL' => $fmt($ortu?->status_tempat_tinggal),
-            'ALAMAT' => $fmt($ortu?->alamat),
-            'BLOK' => $fmt($ortu?->blok),
-            'RT' => $fmt($ortu?->rt),
-            'RW' => $fmt($ortu?->rw),
-            'DESA' => $fmt($ortu?->desa),
-            'KECAMATAN' => $fmt($ortu?->kecamatan),
-            'KOTA/KABUPATEN' => $fmt($ortu?->kota),
-            'PROVINSI' => $fmt($ortu?->provinsi),
-            'KODE POS' => $fmt($ortu?->kode_pos),
-        ]])
+        @include('siswa.partials.detail-rows', ['rows' => $barisOrtu($ortu, $judul)])
     </div>
 @endforeach
 
 <div class="madani-card siswa-detail mb-3" data-siswa-detail>
     <h3 class="siswa-detail__section mt-0">Rekam didik</h3>
     @include('siswa.partials.detail-rows', ['rows' => [
-        'NIK KK' => $fmt($siswa->rekamDidik?->nik_kk),
-        'NAMA KK' => $fmt($siswa->rekamDidik?->nama_kk),
-        'TEMPAT LAHIR KK' => $fmt($siswa->rekamDidik?->tempat_lahir_kk),
-        'TANGGAL LAHIR KK' => $fmt($siswa->rekamDidik?->tanggal_lahir_kk),
-        'JENIS KELAMIN KK' => $fmt($siswa->rekamDidik?->jenis_kelamin_kk),
-        'NAMA IBU KK' => $fmt($siswa->rekamDidik?->nama_ibu_kk),
-        'NAMA AYAH KK' => $fmt($siswa->rekamDidik?->nama_ayah_kk),
         'NAMA IJAZAH' => $fmt($siswa->rekamDidik?->nama_ijazah),
         'TEMPAT LAHIR IJAZAH' => $fmt($siswa->rekamDidik?->tempat_lahir_ijazah),
         'TANGGAL LAHIR IJAZAH' => $fmt($siswa->rekamDidik?->tanggal_lahir_ijazah),
@@ -234,15 +226,6 @@
         'STATUS VERVAL' => $fmt($siswa->rekamDidik?->status_verval),
         'IJAZAH SESUAI' => $fmt($siswa->rekamDidik?->ijazah_sesuai),
     ]])
-</div>
-
-<div class="madani-card siswa-detail mb-3" data-siswa-detail>
-    <h3 class="siswa-detail__section mt-0">Dokumen</h3>
-    @include('siswa.partials.detail-rows', ['rows' => collect($dokumenJenis)->mapWithKeys(function ($label, $jenis) use ($siswa, $fmt) {
-        $dok = $siswa->dokumenJenis($jenis);
-
-        return [$label => $dok ? $fmt($dok->nama_asli ?: 'Ada') : '—'];
-    })->all()])
 </div>
 
 <div class="madani-card siswa-detail mb-3" data-siswa-detail>

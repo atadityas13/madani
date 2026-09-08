@@ -44,6 +44,10 @@ class SiswaDetailPageTest extends TestCase
             ->assertSee('data-copy', false)
             ->assertSee('Tempat tinggal', false)
             ->assertSee('Rekam didik', false)
+            ->assertDontSee('PUNYA NIK', false)
+            ->assertDontSee('TIDAK PUNYA EMAIL', false)
+            ->assertDontSee('Dokumen', false)
+            ->assertDontSee('Klik nilai field', false)
             ->assertDontSee('09 November 2012', false)
             ->assertDontSee('name="bagian"', false)
             ->assertDontSee('Lengkapi tab lain', false);

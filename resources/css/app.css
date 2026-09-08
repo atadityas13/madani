@@ -671,7 +671,7 @@ a:hover {
 }
 
 .siswa-detail__name {
-    margin: 0 0 0.35rem;
+    margin: 0 0 0.2rem;
     font-size: clamp(1.25rem, 2.2vw, 1.6rem);
     font-weight: 800;
     text-transform: uppercase;
@@ -679,10 +679,24 @@ a:hover {
     letter-spacing: 0.02em;
 }
 
-.siswa-detail__hint {
-    margin: 0;
-    font-size: 0.82rem;
-    color: var(--emis-muted);
+.siswa-detail__rombel {
+    margin: 0 0 1rem;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--emis-blue-dark);
+    display: inline-block;
+    border-radius: 10px;
+    padding: 0.15rem 0.35rem;
+}
+
+.siswa-detail__rombel.is-copyable {
+    cursor: pointer;
+}
+
+.siswa-detail__rombel.is-copyable:hover,
+.siswa-detail__rombel.is-copyable:focus-visible {
+    background: var(--emis-blue-soft);
+    outline: none;
 }
 
 .siswa-detail__section {
