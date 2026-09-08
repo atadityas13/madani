@@ -25,20 +25,20 @@
             <input class="form-control bg-light" value="{{ $rombel->waliKelas?->nama_lengkap ?: '—' }}" readonly>
         </div>
     </div>
-    @can('update', $rombel)
-        <div class="d-flex gap-2 mt-4">
-            <form method="POST" action="{{ route('rombel.anggota.kosongkan', $rombel) }}" data-confirm="Keluarkan semua siswa dari rombel ini?" data-confirm-title="Kosongkan rombel" data-loading-text="Mengosongkan…">
-                @csrf
-                <button class="btn btn-outline-danger" type="submit" @disabled($rombel->anggotaAktif->isEmpty())>Kosongkan</button>
-            </form>
-            <button class="btn btn-madani" type="button" data-bs-toggle="modal" data-bs-target="#rombelSiswaModal">Tambah</button>
-        </div>
-    @endcan
 </div>
 
 <div class="madani-card p-0">
-    <div class="p-4 pb-0">
-        <div class="stat-label mb-3">Anggota rombel</div>
+    <div class="p-4 pb-3 d-flex align-items-center justify-content-between gap-3 flex-wrap">
+        <div class="stat-label mb-0">Anggota rombel</div>
+        @can('update', $rombel)
+            <div class="d-flex gap-2">
+                <form method="POST" action="{{ route('rombel.anggota.kosongkan', $rombel) }}" data-confirm="Keluarkan semua siswa dari rombel ini?" data-confirm-title="Kosongkan rombel" data-loading-text="Mengosongkan…">
+                    @csrf
+                    <button class="btn btn-outline-danger" type="submit" @disabled($rombel->anggotaAktif->isEmpty())>Kosongkan</button>
+                </form>
+                <button class="btn btn-madani" type="button" data-bs-toggle="modal" data-bs-target="#rombelSiswaModal">Tambah</button>
+            </div>
+        @endcan
     </div>
     <div class="table-responsive">
         <table class="table mb-0 align-middle">
