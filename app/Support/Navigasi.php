@@ -23,11 +23,10 @@ class Navigasi
             [
                 'label' => 'Kelembagaan',
                 'icon' => 'bi-bank',
-                'match' => ['kelembagaan.*', 'tahun-ajaran.*'],
+                'match' => 'kelembagaan.*',
                 'roles' => [Peran::SUPERADMIN, Peran::ADMIN],
                 'children' => [
                     ['label' => 'Identitas madrasah', 'route' => 'kelembagaan.identitas', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN]],
-                    ['label' => 'Tahun ajaran', 'route' => 'tahun-ajaran.index', 'match' => 'tahun-ajaran.*', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN]],
                 ],
             ],
             [
@@ -59,11 +58,15 @@ class Navigasi
                 'roles' => [Peran::SUPERADMIN, Peran::ADMIN, Peran::WALI_KELAS],
             ],
             [
-                'label' => 'Pengguna',
-                'icon' => 'bi-shield-lock',
-                'route' => 'pengguna.index',
-                'match' => 'pengguna.*',
+                'label' => 'Manajemen',
+                'icon' => 'bi-sliders',
+                'match' => ['tahun-ajaran.*', 'pengguna.*', 'manajemen.database*'],
                 'roles' => [Peran::SUPERADMIN],
+                'children' => [
+                    ['label' => 'Tahun ajaran', 'route' => 'tahun-ajaran.index', 'match' => 'tahun-ajaran.*', 'roles' => [Peran::SUPERADMIN]],
+                    ['label' => 'Pengguna', 'route' => 'pengguna.index', 'match' => 'pengguna.*', 'roles' => [Peran::SUPERADMIN]],
+                    ['label' => 'Database', 'route' => 'manajemen.database', 'match' => 'manajemen.database*', 'roles' => [Peran::SUPERADMIN]],
+                ],
             ],
             [
                 'label' => 'Aplikasi',

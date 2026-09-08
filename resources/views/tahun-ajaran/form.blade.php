@@ -6,7 +6,7 @@
 
 @section('title', $baru ? 'Tambah tahun ajaran' : 'Ubah tahun ajaran')
 @section('heading', $baru ? 'Tambah tahun ajaran' : 'Ubah tahun ajaran')
-@section('subheading', 'Kelembagaan')
+@section('subheading', 'Manajemen')
 
 @section('content')
 <div class="madani-card p-4" style="max-width: 640px;">

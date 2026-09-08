@@ -2,7 +2,7 @@
 
 @section('title', 'Tahun ajaran')
 @section('heading', 'Tahun ajaran')
-@section('subheading', 'Kelembagaan')
+@section('subheading', 'Manajemen')
 
 @section('content')
 <div class="d-flex align-items-center mb-3 gap-3 flex-wrap">

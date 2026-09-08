@@ -8,6 +8,7 @@ use App\Http\Controllers\CalendarEventController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GtkController;
 use App\Http\Controllers\KelembagaanController;
+use App\Http\Controllers\Manajemen\DatabaseController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\NotifikasiPembacaController;
 use App\Http\Controllers\NotifMediaController;
@@ -128,6 +129,10 @@ Route::middleware('auth')->group(function () {
             ->except(['show']);
         Route::post('gtk/{gtk}/akun', [GtkController::class, 'buatAkun'])->name('gtk.akun.store');
         Route::post('gtk/{gtk}/akun/reset-password', [GtkController::class, 'resetPassword'])->name('gtk.akun.reset');
+        Route::get('manajemen/database', [DatabaseController::class, 'index'])->name('manajemen.database');
+        Route::post('manajemen/database/{modul}/kosongkan', [DatabaseController::class, 'kosongkan'])
+            ->name('manajemen.database.kosongkan')
+            ->where('modul', 'siswa|gtk|rombel|tahun-ajaran|periode-pendataan|jurnal|notifikasi|identitas|app-settings');
     });
 
     Route::get('siswa', [SiswaController::class, 'index'])->name('siswa.index');

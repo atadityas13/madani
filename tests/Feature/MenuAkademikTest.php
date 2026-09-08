@@ -20,9 +20,11 @@ class MenuAkademikTest extends TestCase
             ->get('/dashboard')
             ->assertOk()
             ->assertSee('Kelembagaan')
+            ->assertSee('Manajemen')
             ->assertSee('Guru dan Tendik')
             ->assertSee('Rombongan Belajar')
-            ->assertSee('Tahun ajaran');
+            ->assertSee('Tahun ajaran')
+            ->assertSee('Database');
     }
 
     public function test_operator_can_create_tahun_ajaran_and_rombel(): void
@@ -32,6 +34,7 @@ class MenuAkademikTest extends TestCase
         $this->post('/gtk', [
             'nama' => 'Ahmad Wali',
             'status' => 'aktif',
+            'jenis' => 'guru',
             'jenis_kelamin' => 'L',
         ])->assertRedirect('/gtk');
 
