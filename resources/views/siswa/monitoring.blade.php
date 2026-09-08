@@ -27,15 +27,8 @@
 @endphp
 
 <style>
-    /* Kunci overflow ke viewport: jangan biarkan konten melebar ke body/shell/sidebar */
-    html:has(.monitoring-page),
-    body:has(.monitoring-page) {
-        overflow-x: hidden;
-    }
-    .madani-shell:has(.monitoring-page) {
-        max-width: 100vw;
-        overflow-x: hidden;
-    }
+    /* Contain overflow only on the content column — never on .madani-shell
+       (overflow-x on the shell breaks sticky sidebar → “menggantung”). */
     .madani-shell:has(.monitoring-page) > .flex-grow-1 {
         min-width: 0;
         max-width: 100%;
