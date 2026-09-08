@@ -76,7 +76,7 @@
         td.bdy {
             background: #ffffff;
             height: 93.5pt;
-            padding: 2pt 1.5pt 1pt 3pt !important;
+            padding: 4.5pt 1.5pt 1pt 3pt !important;
             vertical-align: top !important;
         }
 
@@ -120,7 +120,7 @@
             padding: 0 !important;
             border: none !important;
         }
-        .ribbon-gap { height: 3.6pt; font-size: 1pt; line-height: 1pt; }
+        .ribbon-gap { height: 5.8pt; font-size: 1pt; line-height: 1pt; }
 
         table.main { width: 100%; border-collapse: collapse; }
         table.main > tbody > tr > td { vertical-align: top; padding: 0; }
