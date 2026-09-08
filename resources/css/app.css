@@ -922,6 +922,371 @@ a.biodata-path-item:hover {
     height: auto;
 }
 
+/* —— Madani auth login (operator + siswa) —— */
+.madani-login {
+    --login-emerald: #0b4a3c;
+    --login-emerald-deep: #062e26;
+    --login-gold: #c4a035;
+    --login-gold-soft: #e8d48a;
+    position: relative;
+    isolation: isolate;
+    min-height: 100vh;
+    overflow: hidden;
+    background:
+        radial-gradient(ellipse 80% 60% at 10% 20%, rgba(16, 185, 129, 0.18), transparent 55%),
+        radial-gradient(ellipse 70% 50% at 90% 80%, rgba(196, 160, 53, 0.12), transparent 50%),
+        linear-gradient(160deg, #f4faf7 0%, #eef2f0 45%, #e8f0ec 100%);
+}
+
+.madani-login__glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(64px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.madani-login__glow--a {
+    width: min(420px, 70vw);
+    height: min(420px, 70vw);
+    top: -12%;
+    left: -8%;
+    background: rgba(11, 74, 60, 0.22);
+}
+
+.madani-login__glow--b {
+    width: min(360px, 60vw);
+    height: min(360px, 60vw);
+    bottom: -10%;
+    right: -6%;
+    background: rgba(196, 160, 53, 0.16);
+}
+
+.madani-login__pattern {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.35;
+    background-image:
+        linear-gradient(rgba(11, 74, 60, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(11, 74, 60, 0.04) 1px, transparent 1px);
+    background-size: 28px 28px;
+    mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+}
+
+.madani-login__frame {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    min-height: 100vh;
+    width: min(1120px, 100%);
+    margin: 0 auto;
+    padding: 1.25rem;
+    gap: 1.25rem;
+    align-items: stretch;
+}
+
+@media (min-width: 992px) {
+    .madani-login__frame {
+        grid-template-columns: 1.05fr 0.95fr;
+        padding: 2rem;
+        gap: 1.75rem;
+    }
+}
+
+.madani-login__brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 28px;
+    padding: 1.75rem 1.5rem;
+    color: #fff;
+    background:
+        linear-gradient(155deg, rgba(255, 255, 255, 0.08), transparent 42%),
+        linear-gradient(165deg, var(--login-emerald) 0%, var(--login-emerald-deep) 100%);
+    box-shadow:
+        0 24px 48px rgba(6, 46, 38, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    overflow: hidden;
+    position: relative;
+}
+
+.madani-login__brand::after {
+    content: '';
+    position: absolute;
+    inset: auto -20% -30% auto;
+    width: 70%;
+    height: 70%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(196, 160, 53, 0.22), transparent 68%);
+    pointer-events: none;
+}
+
+.madani-login__brand-inner {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+}
+
+.madani-login__logo {
+    display: block;
+    width: min(220px, 70%);
+    height: auto;
+    margin-bottom: 1.25rem;
+    filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.25));
+}
+
+.madani-login__school {
+    margin: 0 0 0.35rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--login-gold-soft);
+}
+
+.madani-login__headline {
+    margin: 0 0 0.75rem;
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+}
+
+.madani-login__tagline {
+    margin: 0 0 1.5rem;
+    min-height: 3.2em;
+    font-size: 1.05rem;
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.88);
+    font-weight: 600;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.madani-login__tagline.is-swap {
+    opacity: 0;
+    transform: translateY(6px);
+}
+
+.madani-login__pillars {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.madani-login__pillars li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.madani-login__pillars i {
+    color: var(--login-gold-soft);
+}
+
+.madani-login__panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.madani-login__card {
+    position: relative;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 28px;
+    padding: 1.75rem 1.5rem 1.5rem;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+}
+
+@media (min-width: 576px) {
+    .madani-login__card {
+        padding: 2rem 1.85rem 1.75rem;
+    }
+}
+
+.madani-login__card-accent {
+    position: absolute;
+    top: 0;
+    left: 12%;
+    right: 12%;
+    height: 3px;
+    border-radius: 0 0 4px 4px;
+    background: linear-gradient(90deg, transparent, var(--login-emerald), var(--login-gold), transparent);
+}
+
+.madani-login__card--enter {
+    animation: madani-login-enter 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes madani-login-enter {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.madani-login__eyebrow {
+    margin: 0 0 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--login-emerald);
+}
+
+.madani-login__title {
+    margin: 0 0 0.35rem;
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: var(--emis-ink);
+}
+
+.madani-login__subtitle {
+    margin: 0 0 1.25rem;
+    color: var(--emis-muted);
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.madani-login__form .form-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #4b5563;
+}
+
+.madani-login__form .form-control {
+    border-radius: 14px;
+    padding: 0.7rem 0.9rem;
+    border-color: #e5e7eb;
+}
+
+.madani-login__form .form-control:focus {
+    border-color: var(--login-emerald);
+    box-shadow: 0 0 0 0.2rem rgba(11, 74, 60, 0.15);
+}
+
+.madani-login__password {
+    position: relative;
+}
+
+.madani-login__password .form-control {
+    padding-right: 2.75rem;
+}
+
+.madani-login__password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 0.55rem;
+    transform: translateY(-50%);
+    border: 0;
+    background: transparent;
+    color: #94a3b8;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.madani-login__password-toggle:hover,
+.madani-login__password-toggle:focus {
+    color: var(--login-emerald);
+    background: rgba(11, 74, 60, 0.06);
+}
+
+.madani-login__submit {
+    border: 0;
+    border-radius: 16px;
+    padding: 0.8rem 1rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    background: linear-gradient(135deg, #0d6b55, var(--login-emerald-deep));
+    color: #fff;
+    box-shadow: 0 12px 24px rgba(11, 74, 60, 0.28);
+}
+
+.madani-login__submit:hover,
+.madani-login__submit:focus {
+    background: linear-gradient(135deg, #128066, #0b4a3c);
+    color: #fff;
+}
+
+.madani-login__submit:disabled {
+    opacity: 0.7;
+    box-shadow: none;
+}
+
+.madani-login__footer {
+    margin-top: 1.15rem;
+    text-align: center;
+    font-size: 0.88rem;
+}
+
+.madani-login__footer a {
+    color: var(--login-emerald);
+    font-weight: 700;
+}
+
+.madani-login__footer a:hover {
+    color: var(--login-emerald-deep);
+}
+
+.madani-login__credit {
+    margin: 0;
+    text-align: center;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: #94a3b8;
+}
+
+@media (max-width: 991.98px) {
+    .madani-login__brand {
+        min-height: auto;
+        padding: 1.35rem 1.25rem 1.5rem;
+        border-radius: 24px;
+    }
+
+    .madani-login__logo {
+        width: min(180px, 55%);
+        margin-bottom: 0.85rem;
+    }
+
+    .madani-login__headline {
+        font-size: 1.75rem;
+    }
+
+    .madani-login__tagline {
+        min-height: 0;
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+    }
+
+    .madani-login__pillars {
+        display: none;
+    }
+}
+
 .hero-panel {
     background: var(--emis-blue);
     color: #fff;

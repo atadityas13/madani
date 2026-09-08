@@ -8,45 +8,26 @@ use App\Support\SiswaPassword;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
 class SiswaAuthController extends Controller
 {
-    public function create(): View
+    /**
+     * Portal web siswa dinonaktifkan sementara — masuk lewat Ta'lim.
+     */
+    public function create(): RedirectResponse
     {
-        return view('portal.masuk');
+        return redirect()
+            ->route('login')
+            ->with('error', 'Portal web siswa dinonaktifkan. Silakan masuk lewat aplikasi Ta\'lim.');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(): RedirectResponse
     {
-        $data = $request->validate([
-            'nisn' => ['required', 'digits:10'],
-            'password' => ['required', 'string'],
-        ]);
-
-        $siswa = Siswa::query()->where('nisn', $data['nisn'])->first();
-        $pesanGagal = 'NISN atau kata sandi tidak sesuai.';
-
-        if (! $siswa || ! filled($siswa->getAuthPassword()) || ! Hash::check($data['password'], $siswa->getAuthPassword())) {
-            return back()->withErrors(['nisn' => $pesanGagal])->onlyInput('nisn');
-        }
-
-        if (! $siswa->bisaMasuk()) {
-            return back()->withErrors([
-                'nisn' => 'Akun siswa ini tidak aktif. Hubungi madrasah.',
-            ])->onlyInput('nisn');
-        }
-
-        Auth::guard('siswa')->login($siswa, $request->boolean('remember'));
-        $request->session()->regenerate();
-
-        if ($siswa->must_change_password) {
-            return redirect()->route('siswa.password.edit');
-        }
-
-        return redirect()->intended(route('siswa.portal'));
+        return redirect()
+            ->route('login')
+            ->with('error', 'Portal web siswa dinonaktifkan. Silakan masuk lewat aplikasi Ta\'lim.');
     }
 
     public function destroy(Request $request): RedirectResponse
@@ -55,7 +36,7 @@ class SiswaAuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('siswa.masuk');
+        return redirect()->route('login');
     }
 
     public function editPassword(): View
@@ -79,16 +60,17 @@ class SiswaAuthController extends Controller
                 Password::min(8),
                 function (string $attribute, mixed $value, \Closure $fail) use ($awal): void {
                     if ($awal !== null && hash_equals($awal, (string) $value)) {
-                        $fail('Kata sandi baru tidak boleh sama dengan tanggal lahir.');
+                        $fail('Kata sandi baru tidak boleh sama dengan password awal (tanggal lahir).');
                     }
                 },
             ],
         ]);
 
-        $siswa->gantiPassword($request->string('password')->toString());
+        $siswa->forceFill([
+            'password' => $request->string('password')->toString(),
+            'must_change_password' => false,
+        ])->save();
 
-        return redirect()
-            ->route('siswa.portal')
-            ->with('status', 'Kata sandi berhasil diubah.');
+        return redirect()->route('siswa.portal');
     }
 }

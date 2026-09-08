@@ -28,6 +28,16 @@ class Peran
     }
 
     /**
+     * Peran yang boleh masuk lewat web MADANI (bukan Ta'lim).
+     *
+     * @return list<string>
+     */
+    public static function aksesWeb(): array
+    {
+        return [self::SUPERADMIN, self::ADMIN];
+    }
+
+    /**
      * @return list<string>
      */
     public static function pengelola(): array

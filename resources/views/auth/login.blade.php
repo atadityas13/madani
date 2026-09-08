@@ -3,34 +3,59 @@
 @section('title', 'Masuk')
 
 @section('body')
-<div class="login-shell d-flex align-items-center justify-content-center p-3">
-    <div class="login-card">
-        <div class="login-brand mb-4">
-            <img src="{{ asset('images/logo-madani.png') }}?v={{ filemtime(public_path('images/logo-madani.png')) }}" alt="MADANI — Management Academic Data Native Integration">
-        </div>
-        <div class="emis-topbar-sub mb-3">MTsN 11 Majalengka</div>
-        <h1 class="h5 fw-bold mb-1">Masuk operator</h1>
-        <p class="text-secondary small mb-4">Gunakan username atau email yang terdaftar.</p>
-        <form method="POST" action="{{ route('login') }}">
+    <x-auth-login-layout
+        title="Masuk admin"
+        subtitle="Hanya Super Admin dan Admin. Guru serta siswa masuk lewat aplikasi Ta'lim."
+    >
+        <form method="POST" action="{{ route('login') }}" data-auth-form data-loading-text="Memverifikasi…">
             @csrf
             <div class="mb-3">
-                <label class="form-label">Username / email</label>
-                <input class="form-control @error('login') is-invalid @enderror" type="text" name="login" value="{{ old('login') }}" required autofocus>
-                @error('login') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <label class="form-label" for="login">Username / email</label>
+                <input
+                    id="login"
+                    class="form-control @error('login') is-invalid @enderror"
+                    type="text"
+                    name="login"
+                    value="{{ old('login') }}"
+                    autocomplete="username"
+                    required
+                    autofocus
+                >
+                @error('login')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
             <div class="mb-3">
-                <label class="form-label">Kata sandi</label>
-                <input class="form-control" type="password" name="password" required>
+                <label class="form-label" for="password">Kata sandi</label>
+                <div class="madani-login__password">
+                    <input
+                        id="password"
+                        class="form-control"
+                        type="password"
+                        name="password"
+                        autocomplete="current-password"
+                        required
+                        data-password-input
+                    >
+                    <button
+                        class="madani-login__password-toggle"
+                        type="button"
+                        data-password-toggle
+                        aria-label="Tampilkan kata sandi"
+                    >
+                        <i class="bi bi-eye" data-password-icon></i>
+                    </button>
+                </div>
             </div>
             <div class="form-check mb-4">
-                <input class="form-check-input" type="checkbox" name="remember" id="remember">
+                <input class="form-check-input" type="checkbox" name="remember" id="remember" value="1">
                 <label class="form-check-label" for="remember">Ingat sesi ini</label>
             </div>
-            <button class="btn btn-madani w-100" type="submit">Masuk</button>
+            <button class="btn madani-login__submit w-100" type="submit">Masuk</button>
         </form>
-        <p class="text-center small mt-3 mb-0">
-            <a href="{{ route('siswa.masuk') }}">Saya siswa</a>
-        </p>
-    </div>
-</div>
+
+        <x-slot:footer>
+            <a href="{{ route('privacy-policy') }}">Kebijakan privasi</a>
+        </x-slot:footer>
+    </x-auth-login-layout>
 @endsection

@@ -19,45 +19,19 @@ class SiswaPortalTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_siswa_can_login_with_nisn_and_birthdate_password(): void
-    {
-        $this->seed();
-        $siswa = $this->buatSiswa();
-
-        $this->post('/siswa/masuk', [
-            'nisn' => '1234567890',
-            'password' => '02092012',
-        ])->assertRedirect('/siswa/password');
-
-        $this->assertAuthenticatedAs($siswa, 'siswa');
-    }
-
-    public function test_siswa_login_fails_with_wrong_password(): void
+    public function test_siswa_web_login_is_disabled(): void
     {
         $this->seed();
         $this->buatSiswa();
 
-        $this->from('/siswa/masuk')
-            ->post('/siswa/masuk', [
-                'nisn' => '1234567890',
-                'password' => 'salah',
-            ])
-            ->assertRedirect('/siswa/masuk')
-            ->assertSessionHasErrors('nisn');
-    }
+        $this->post('/siswa/masuk', [
+            'nisn' => '1234567890',
+            'password' => '02092012',
+        ])
+            ->assertRedirect(route('login'))
+            ->assertSessionHas('error');
 
-    public function test_inactive_siswa_cannot_login(): void
-    {
-        $this->seed();
-        $this->buatSiswa(['status_keaktifan' => 'nonaktif']);
-
-        $this->from('/siswa/masuk')
-            ->post('/siswa/masuk', [
-                'nisn' => '1234567890',
-                'password' => '02092012',
-            ])
-            ->assertRedirect('/siswa/masuk')
-            ->assertSessionHasErrors('nisn');
+        $this->assertGuest('siswa');
     }
 
     public function test_siswa_must_change_password_before_using_portal(): void

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Support\Peran;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,11 +31,21 @@ class LoginController extends Controller
             ])->onlyInput('login');
         }
 
-        if (! Auth::user()?->is_aktif) {
+        $user = Auth::user();
+
+        if (! $user?->is_aktif) {
             Auth::logout();
 
             return back()->withErrors([
                 'login' => 'Akun ini tidak aktif. Hubungi super admin.',
+            ])->onlyInput('login');
+        }
+
+        if (! $user->hasAnyRole(Peran::aksesWeb())) {
+            Auth::logout();
+
+            return back()->withErrors([
+                'login' => 'Akses web MADANI hanya untuk Super Admin dan Admin. Guru dan siswa masuk lewat aplikasi Ta\'lim.',
             ])->onlyInput('login');
         }
 

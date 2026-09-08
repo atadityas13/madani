@@ -184,7 +184,66 @@ function bindFormLoading() {
             return;
         }
 
-        window.madaniAlert.loading(form.getAttribute('data-loading-text') || 'Menyimpan…');
+        const submitters = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+        submitters.forEach((el) => {
+            el.disabled = true;
+        });
+
+        const custom = form.getAttribute('data-loading-text');
+        const isAuth = form.hasAttribute('data-auth-form');
+        const message = custom || (isAuth ? 'Memverifikasi…' : 'Menyimpan…');
+
+        window.madaniAlert.loading(message);
+    });
+}
+
+function bindPasswordToggles() {
+    document.querySelectorAll('[data-password-toggle]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const wrap = button.closest('.madani-login__password');
+            const input = wrap?.querySelector('[data-password-input]');
+            const icon = button.querySelector('[data-password-icon]');
+
+            if (! (input instanceof HTMLInputElement)) {
+                return;
+            }
+
+            const show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            button.setAttribute('aria-label', show ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi');
+
+            if (icon) {
+                icon.classList.toggle('bi-eye', ! show);
+                icon.classList.toggle('bi-eye-slash', show);
+            }
+        });
+    });
+}
+
+function bindLoginTaglines() {
+    document.querySelectorAll('[data-madani-tagline]').forEach((node) => {
+        let lines = [];
+
+        try {
+            lines = JSON.parse(node.getAttribute('data-madani-taglines') || '[]');
+        } catch {
+            lines = [];
+        }
+
+        if (! Array.isArray(lines) || lines.length < 2) {
+            return;
+        }
+
+        let index = 0;
+
+        setInterval(() => {
+            index = (index + 1) % lines.length;
+            node.classList.add('is-swap');
+            window.setTimeout(() => {
+                node.textContent = lines[index];
+                node.classList.remove('is-swap');
+            }, 280);
+        }, 4200);
     });
 }
 
@@ -1436,5 +1495,7 @@ bindFormatInputs();
 bindDokumenBoxes();
 bindConfirmForms();
 bindFormLoading();
+bindPasswordToggles();
+bindLoginTaglines();
 readMadaniFlash();
 bindStaticWarnings();

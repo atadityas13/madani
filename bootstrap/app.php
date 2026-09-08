@@ -20,17 +20,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo(function (Request $request) {
-            if ($request->is('siswa/portal*') || $request->is('siswa/keluar') || $request->is('siswa/password*')) {
-                return route('siswa.masuk');
-            }
-
             return route('login');
         });
         $middleware->redirectUsersTo(function (Request $request) {
-            if ($request->is('siswa/masuk')) {
-                return route('siswa.portal');
-            }
-
             return route('dashboard');
         });
         $middleware->alias([
