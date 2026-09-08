@@ -90,13 +90,81 @@ class SiswaIndexPageTest extends TestCase
             ->get(route('siswa.index', ['tingkat' => 'VII']))
             ->assertOk()
             ->assertSee('Siswa Tujuh A', false)
-            ->assertDontSee('Siswa Delapan B', false);
+            ->assertDontSee('Siswa Delapan B', false)
+            ->assertSee('>VII-A<', false)
+            ->assertDontSee('>VIII-B<', false);
+
+        $this->actingAs($admin)
+            ->get(route('siswa.index'))
+            ->assertOk()
+            ->assertSee('>VII-A<', false)
+            ->assertSee('>VIII-B<', false);
 
         $this->actingAs($admin)
             ->get(route('siswa.index', ['rombel_id' => $rombelB->id]))
             ->assertOk()
             ->assertSee('Siswa Delapan B', false)
             ->assertDontSee('Siswa Tujuh A', false);
+    }
+
+    public function test_index_shows_red_cancel_icon_only_when_pernyataan_confirmed(): void
+    {
+        $this->seed();
+
+        $siswa = Siswa::query()->create([
+            'nama' => 'Siswa Konfirmasi',
+            'nisn' => '3333333333',
+            'tempat_lahir' => 'Majalengka',
+            'tanggal_lahir' => '2012-01-01',
+            'jenis_kelamin' => 'L',
+            'agama' => 'Islam',
+            'status_keaktifan' => 'aktif',
+        ]);
+
+        $admin = User::query()->where('username', 'admin')->first();
+
+        $this->actingAs($admin)
+            ->get(route('siswa.index'))
+            ->assertOk()
+            ->assertDontSee('emis-aksi-btn--danger', false)
+            ->assertDontSee('bi-x-lg', false);
+
+        $siswa->pernyataan()->create([
+            'versi_teks' => 'v1',
+            'teks_poin_1' => 'Poin 1',
+            'teks_poin_2' => 'Poin 2',
+            'setuju_poin_1' => true,
+            'setuju_poin_2' => true,
+            'nama_siswa' => $siswa->nama,
+            'nama_wali' => 'Wali Siswa',
+            'ttd_siswa_path' => 'ttd/siswa.png',
+            'ttd_wali_path' => 'ttd/wali.png',
+            'dikonfirmasi_at' => now(),
+        ]);
+
+        $html = $this->actingAs($admin)
+            ->get(route('siswa.index'))
+            ->assertOk()
+            ->assertSee('emis-aksi-btn--danger', false)
+            ->assertSee('bi-x-lg', false)
+            ->assertSee('title="Batalkan pernyataan"', false)
+            ->getContent();
+
+        $detailPos = strpos($html, 'title="Detail"');
+        $portoPos = strpos($html, 'title="Portofolio"');
+        $editPos = strpos($html, 'title="Edit"');
+        $resetPos = strpos($html, 'title="Reset password"');
+        $batalPos = strpos($html, 'title="Batalkan pernyataan"');
+
+        $this->assertNotFalse($detailPos);
+        $this->assertNotFalse($portoPos);
+        $this->assertNotFalse($editPos);
+        $this->assertNotFalse($resetPos);
+        $this->assertNotFalse($batalPos);
+        $this->assertTrue($detailPos < $portoPos);
+        $this->assertTrue($portoPos < $editPos);
+        $this->assertTrue($editPos < $resetPos);
+        $this->assertTrue($resetPos < $batalPos);
     }
 
     public function test_edit_page_no_longer_shows_moved_actions(): void

@@ -64,33 +64,15 @@
                                     <i class="bi bi-eye"></i>
                                     <span class="visually-hidden">Detail</span>
                                 </a>
-                                @can('update', $siswa)
-                                    <a class="emis-aksi-btn" href="{{ route('siswa.edit', $siswa) }}" title="Edit">
-                                        <i class="bi bi-pencil"></i>
-                                        <span class="visually-hidden">Edit</span>
-                                    </a>
-                                @endcan
                                 <a class="emis-aksi-btn" href="{{ route('siswa.portofolio', $siswa) }}" title="Portofolio">
                                     <i class="bi bi-file-earmark-text"></i>
                                     <span class="visually-hidden">Portofolio</span>
                                 </a>
                                 @can('update', $siswa)
-                                    @if ($siswa->pernyataan)
-                                        <form
-                                            method="POST"
-                                            action="{{ route('siswa.pernyataan.batalkan', $siswa) }}"
-                                            data-confirm="Batalkan konfirmasi dan hapus pernyataan siswa ini? Akses edit data akan dibuka kembali selama periode pendataan terbuka."
-                                            data-confirm-title="Batalkan pernyataan"
-                                            data-loading-text="Membatalkan…"
-                                        >
-                                            @csrf
-                                            @method('DELETE')
-                                            <button class="emis-aksi-btn" type="submit" title="Batalkan pernyataan">
-                                                <i class="bi bi-arrow-counterclockwise"></i>
-                                                <span class="visually-hidden">Batalkan pernyataan</span>
-                                            </button>
-                                        </form>
-                                    @endif
+                                    <a class="emis-aksi-btn" href="{{ route('siswa.edit', $siswa) }}" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                        <span class="visually-hidden">Edit</span>
+                                    </a>
                                     @if ($siswa->tanggal_lahir)
                                         <form
                                             method="POST"
@@ -103,6 +85,22 @@
                                             <button class="emis-aksi-btn" type="submit" title="Reset password">
                                                 <i class="bi bi-arrow-clockwise"></i>
                                                 <span class="visually-hidden">Reset password</span>
+                                            </button>
+                                        </form>
+                                    @endif
+                                    @if ($siswa->pernyataan)
+                                        <form
+                                            method="POST"
+                                            action="{{ route('siswa.pernyataan.batalkan', $siswa) }}"
+                                            data-confirm="Batalkan konfirmasi dan hapus pernyataan siswa ini? Akses edit data akan dibuka kembali selama periode pendataan terbuka."
+                                            data-confirm-title="Batalkan pernyataan"
+                                            data-loading-text="Membatalkan…"
+                                        >
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="emis-aksi-btn emis-aksi-btn--danger" type="submit" title="Batalkan pernyataan">
+                                                <i class="bi bi-x-lg"></i>
+                                                <span class="visually-hidden">Batalkan pernyataan</span>
                                             </button>
                                         </form>
                                     @endif

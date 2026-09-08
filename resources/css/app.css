@@ -1568,6 +1568,16 @@ a.biodata-path-item:hover {
     color: #fff;
 }
 
+.emis-aksi-btn--danger {
+    color: #dc2626;
+    background: #fee2e2;
+}
+
+.emis-aksi-btn--danger:hover {
+    background: #dc2626;
+    color: #fff;
+}
+
 .siswa-index-toolbar {
     display: flex;
     flex-wrap: wrap;
@@ -1579,14 +1589,15 @@ a.biodata-path-item:hover {
 .siswa-index-toolbar__filters,
 .siswa-index-toolbar__search {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     gap: 0.5rem;
 }
 
 .siswa-index-toolbar__filters .form-select {
+    width: 10.5rem;
     min-width: 9rem;
-    max-width: 12rem;
+    flex: 0 0 auto;
 }
 
 .siswa-index-toolbar__search {
@@ -1594,8 +1605,14 @@ a.biodata-path-item:hover {
 }
 
 .siswa-index-toolbar__search .form-control {
-    min-width: 14rem;
-    max-width: 22rem;
+    width: 16rem;
+    min-width: 12rem;
+    flex: 1 1 auto;
+}
+
+.siswa-index-toolbar__search .btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
 }
 
 .siswa-index-pagination {
