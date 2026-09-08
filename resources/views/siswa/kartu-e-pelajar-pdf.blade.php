@@ -98,8 +98,20 @@
             display: block;
         }
 
-        /* Badge bervariasi: bingkai emas atas–bawah + rail kiri–kanan (aman DomPDF) */
+        /* Opsi A: pill hijau + garis emas tipis di bawah (aman DomPDF) */
         table.ribbon { border-collapse: collapse; width: auto; }
+        td.ribbon-main {
+            background: #065F46;
+            color: #ffffff;
+            font-size: 5.5pt;
+            font-weight: bold;
+            letter-spacing: 1.05pt;
+            padding: 2.2pt 10pt !important;
+            white-space: nowrap;
+            vertical-align: middle !important;
+            border: none !important;
+            text-align: center;
+        }
         td.ribbon-gold-row {
             background: #F59E0B;
             height: 1.5pt;
@@ -107,26 +119,6 @@
             line-height: 1pt;
             padding: 0 !important;
             border: none !important;
-        }
-        td.ribbon-rail {
-            width: 2.4pt;
-            background: #F59E0B;
-            padding: 0 !important;
-            border: none !important;
-            font-size: 1pt;
-            line-height: 1pt;
-        }
-        td.ribbon-main {
-            background: #065F46;
-            color: #ffffff;
-            font-size: 5.5pt;
-            font-weight: bold;
-            letter-spacing: 1.05pt;
-            padding: 2.0pt 7pt !important;
-            white-space: nowrap;
-            vertical-align: middle !important;
-            border: none !important;
-            text-align: center;
         }
         .ribbon-gap { height: 3.6pt; font-size: 1pt; line-height: 1pt; }
 
@@ -325,15 +317,10 @@
                                     <td class="top-left">
                                         <table class="ribbon">
                                             <tr>
-                                                <td class="ribbon-gold-row" colspan="3">&nbsp;</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="ribbon-rail">&nbsp;</td>
                                                 <td class="ribbon-main">KARTU PELAJAR</td>
-                                                <td class="ribbon-rail">&nbsp;</td>
                                             </tr>
                                             <tr>
-                                                <td class="ribbon-gold-row" colspan="3">&nbsp;</td>
+                                                <td class="ribbon-gold-row">&nbsp;</td>
                                             </tr>
                                         </table>
                                         <div class="ribbon-gap">&nbsp;</div>
@@ -387,7 +374,7 @@
                     <tr>
                         <td class="ftr">
                             <table class="ftr-tbl"><tr>
-                                <td class="ftr-cell">Kartu Pelajar ini dihasilkan oleh sistem resmi {{ $namaSingkat }} dan merupakan dokumen yang sah serta dapat dipergunakan untuk keperluan administrasi akademik maupun nonakademik.</td>
+                                <td class="ftr-cell">Kartu Pelajar ini merupakan dokumen resmi yang sah serta dapat dipergunakan untuk keperluan administrasi akademik maupun nonakademik.</td>
                             </tr></table>
                         </td>
                     </tr>

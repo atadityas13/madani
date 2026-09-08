@@ -125,7 +125,7 @@ class SiswaKartuEPelajarTest extends TestCase
         $this->assertStringContainsString('IKRAR PELAJAR INDONESIA', $html);
         $this->assertStringContainsString('Berlaku selama menjadi siswa', $html);
         $this->assertStringContainsString('Kami Pelajar Indonesia, berikrar untuk:', $html);
-        $this->assertStringContainsString('Kartu Pelajar ini dihasilkan oleh sistem resmi', $html);
+        $this->assertStringContainsString('Kartu Pelajar ini merupakan dokumen resmi yang sah', $html);
         $this->assertStringContainsString('alt="MADANI"', $html);
         $this->assertStringContainsString('class="cap-txt"', $html);
         $this->assertStringContainsString('white-space: nowrap', $html);
@@ -149,9 +149,10 @@ class SiswaKartuEPelajarTest extends TestCase
         $this->assertStringContainsString('font-size: 5.9pt', $html);
         $this->assertStringContainsString('font-size: 6.2pt', $html);
         $this->assertStringNotContainsString('ribbon-cut', $html);
+        $this->assertStringNotContainsString('ribbon-rail', $html);
         $this->assertStringContainsString('ribbon-gold-row', $html);
-        $this->assertStringContainsString('ribbon-rail', $html);
         $this->assertStringNotContainsString('ribbon-gold"', $html);
+        $this->assertStringNotContainsString('dihasilkan oleh sistem resmi', $html);
         $this->assertStringNotContainsString('alamat-wrap', $html);
         $this->assertStringNotContainsString('ftr-abs', $html);
         $this->assertStringNotContainsString('bf-abs', $html);
