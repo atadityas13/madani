@@ -10,29 +10,50 @@ use App\Support\PernyataanSiswa;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Storage;
+use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Response;
 
 class PernyataanPdfService
 {
+    public const JENIS_BIODATA = 'biodata';
+
+    public const JENIS_PESERTA_DIDIK = 'peserta-didik';
+
+    /** @var list<string> */
+    public const JENIS_VALID = [
+        self::JENIS_BIODATA,
+        self::JENIS_PESERTA_DIDIK,
+    ];
+
     public function __construct(private PortofolioPdfService $portofolio) {}
 
     /**
      * @param  array{ttd_siswa_data_uri: string, ttd_wali_data_uri: string, nama_wali: string, tanggal: CarbonInterface}  $tandaTangan
      */
-    public function preview(Siswa $siswa, array $tandaTangan): Response
+    public function preview(Siswa $siswa, array $tandaTangan, string $jenis): Response
     {
-        return $this->makePdf($siswa, $tandaTangan)->stream($this->filename($siswa));
+        return $this->makePdf($siswa, $tandaTangan, $jenis)->stream($this->filename($siswa, $jenis));
     }
 
     /**
      * @param  array{ttd_siswa_data_uri: string, ttd_wali_data_uri: string, nama_wali: string, tanggal: CarbonInterface}  $tandaTangan
      */
-    public function raw(Siswa $siswa, array $tandaTangan): string
+    public function raw(Siswa $siswa, array $tandaTangan, string $jenis): string
     {
-        return $this->makePdf($siswa, $tandaTangan)->output();
+        return $this->makePdf($siswa, $tandaTangan, $jenis)->output();
     }
 
-    public function downloadSaved(SiswaPernyataan $pernyataan): Response
+    public function downloadSaved(SiswaPernyataan $pernyataan, string $jenis): Response
+    {
+        return $this->responseSaved($pernyataan, $jenis, download: true);
+    }
+
+    public function streamSaved(SiswaPernyataan $pernyataan, string $jenis): Response
+    {
+        return $this->responseSaved($pernyataan, $jenis, download: false);
+    }
+
+    private function responseSaved(SiswaPernyataan $pernyataan, string $jenis, bool $download): Response
     {
         $siswa = $pernyataan->siswa()->firstOrFail();
         $tandaTangan = [
@@ -42,23 +63,43 @@ class PernyataanPdfService
             'tanggal' => $pernyataan->dikonfirmasi_at ?? now(),
         ];
 
-        return $this->makePdf($siswa, $tandaTangan)->download($this->filename($siswa));
+        $pdf = $this->makePdf($siswa, $tandaTangan, $jenis);
+        $name = $this->filename($siswa, $jenis);
+
+        return $download ? $pdf->download($name) : $pdf->stream($name);
     }
 
     /**
      * @param  array{ttd_siswa_data_uri: string, ttd_wali_data_uri: string, nama_wali: string, tanggal: CarbonInterface}  $tandaTangan
      */
-    private function makePdf(Siswa $siswa, array $tandaTangan): \Barryvdh\DomPDF\PDF
+    private function makePdf(Siswa $siswa, array $tandaTangan, string $jenis): \Barryvdh\DomPDF\PDF
     {
-        return Pdf::loadView('siswa.biodata-pernyataan-pdf', $this->viewData($siswa, $tandaTangan))
+        $jenis = $this->normalizeJenis($jenis);
+        $view = $jenis === self::JENIS_PESERTA_DIDIK
+            ? 'siswa.pernyataan-peserta-didik-pdf'
+            : 'siswa.pernyataan-biodata-pdf';
+
+        return Pdf::loadView($view, $this->viewData($siswa, $tandaTangan))
             ->setPaper('a4', 'portrait');
     }
 
-    private function filename(Siswa $siswa): string
+    public function normalizeJenis(string $jenis): string
+    {
+        if (! in_array($jenis, self::JENIS_VALID, true)) {
+            throw new InvalidArgumentException('Jenis pernyataan tidak valid.');
+        }
+
+        return $jenis;
+    }
+
+    private function filename(Siswa $siswa, string $jenis): string
     {
         $nama = preg_replace('/[^A-Za-z0-9 _-]+/', '', $siswa->nama) ?: 'siswa';
+        $suffix = $jenis === self::JENIS_PESERTA_DIDIK
+            ? 'Surat Pernyataan Peserta Didik'
+            : 'Pernyataan Biodata';
 
-        return trim($nama).' - Biodata dan Surat Pernyataan.pdf';
+        return trim($nama).' - '.$suffix.'.pdf';
     }
 
     /**

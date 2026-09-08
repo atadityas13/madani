@@ -323,9 +323,11 @@ class SiswaController extends Controller
 
         $label = match ($jenis) {
             'kk' => 'KK',
+            'akta_lahir' => 'Akta',
             'kip' => 'KIP',
             'kks' => 'KKS',
             'pkh' => 'PKH',
+            'ijazah_sd' => 'IjazahSD',
             default => abort(404),
         };
 
@@ -341,6 +343,19 @@ class SiswaController extends Controller
         $filename = "{$basename}_{$label}.{$extension}";
 
         return Storage::disk('r2')->download((string) $dokumen->path, $filename);
+    }
+
+    public function downloadFoto(Siswa $siswa): StreamedResponse
+    {
+        $this->authorize('view', $siswa);
+        abort_unless(filled($siswa->foto), 404);
+
+        $extension = pathinfo((string) $siswa->foto, PATHINFO_EXTENSION) ?: 'jpg';
+        $basename = preg_replace('/[\\\\\\/:*?"<>|]+/', ' ', $siswa->nama) ?: 'Siswa';
+        $basename = trim(preg_replace('/\\s+/', ' ', $basename) ?? 'Siswa');
+        $filename = "{$basename}_Foto.{$extension}";
+
+        return Storage::disk('r2')->download((string) $siswa->foto, $filename);
     }
 
     public function portofolio(Siswa $siswa): View
@@ -366,13 +381,24 @@ class SiswaController extends Controller
         return $portofolio->download($siswa);
     }
 
-    public function pernyataanDownload(Siswa $siswa, PernyataanPdfService $pdf): Response
+    public function pernyataanDownload(Siswa $siswa, string $jenis, PernyataanPdfService $pdf): Response
     {
         $this->authorize('view', $siswa);
         $item = $siswa->pernyataan;
         abort_unless($item, 404);
+        abort_unless(in_array($jenis, PernyataanPdfService::JENIS_VALID, true), 404);
 
-        return $pdf->downloadSaved($item);
+        return $pdf->downloadSaved($item, $jenis);
+    }
+
+    public function pernyataanStream(Siswa $siswa, string $jenis, PernyataanPdfService $pdf): Response
+    {
+        $this->authorize('view', $siswa);
+        $item = $siswa->pernyataan;
+        abort_unless($item, 404);
+        abort_unless(in_array($jenis, PernyataanPdfService::JENIS_VALID, true), 404);
+
+        return $pdf->streamSaved($item, $jenis);
     }
 
     public function batalkanPernyataan(Siswa $siswa, SiswaPernyataanService $pernyataan): RedirectResponse

@@ -44,12 +44,13 @@ class SiswaAuthController extends Controller
 
         $siswa->tokens()->where('name', 'talim')->delete();
         $token = $siswa->createToken('talim')->plainTextToken;
+        $siswa->catatLogin();
 
         return response()->json([
             'success' => true,
             'token' => $token,
             'must_change_password' => (bool) $siswa->must_change_password,
-            'data' => SiswaPortalPayload::make($siswa),
+            'data' => SiswaPortalPayload::make($siswa->fresh()),
         ]);
     }
 

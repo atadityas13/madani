@@ -65,7 +65,11 @@ class SiswaPernyataanApiTest extends TestCase
         $this->assertTrue(Storage::disk('r2')->exists($siswa->pernyataan->ttd_wali_path));
 
         $this->withToken($token)
-            ->get('/api/v1/siswa/pernyataan/unduh')
+            ->get('/api/v1/siswa/pernyataan/unduh?jenis=biodata')
+            ->assertOk();
+
+        $this->withToken($token)
+            ->get('/api/v1/siswa/pernyataan/unduh?jenis=peserta-didik')
             ->assertOk();
 
         $this->withToken($token)
@@ -177,14 +181,15 @@ class SiswaPernyataanApiTest extends TestCase
     /**
      * @return array<string, mixed>
      */
-    private function payloadPernyataan(): array
+    private function payloadPernyataan(array $overrides = []): array
     {
-        return [
+        return array_merge([
             'setuju_poin_1' => true,
             'setuju_poin_2' => true,
             'ttd_siswa' => self::PNG_1X1,
             'ttd_wali' => self::PNG_1X1,
-        ];
+            'jenis' => 'biodata',
+        ], $overrides);
     }
 
     private function tokenSiswa(Siswa $siswa): string

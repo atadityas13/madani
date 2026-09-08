@@ -18,6 +18,7 @@ use App\Http\Controllers\Portal\SiswaPortalController;
 use App\Http\Controllers\PrivacyPolicyController;
 use App\Http\Controllers\RombelController;
 use App\Http\Controllers\SiswaController;
+use App\Http\Controllers\SiswaMonitoringController;
 use App\Http\Controllers\TahunAjaranController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebviewEnterController;
@@ -145,6 +146,8 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('siswa', [SiswaController::class, 'index'])->name('siswa.index');
+    Route::get('siswa/monitoring', [SiswaMonitoringController::class, 'index'])->name('siswa.monitoring');
+    Route::get('siswa/monitoring/export', [SiswaMonitoringController::class, 'export'])->name('siswa.monitoring.export');
     Route::get('siswa/{siswa}', [SiswaController::class, 'show'])->name('siswa.show')->whereUuid('siswa');
     Route::get('siswa/{siswa}/edit', [SiswaController::class, 'edit'])->name('siswa.edit')->whereUuid('siswa');
     Route::put('siswa/{siswa}', [SiswaController::class, 'update'])->name('siswa.update')->whereUuid('siswa');
@@ -153,7 +156,14 @@ Route::middleware('auth')->group(function () {
     Route::get('siswa/{siswa}/portofolio', [SiswaController::class, 'portofolio'])->name('siswa.portofolio')->whereUuid('siswa');
     Route::get('siswa/{siswa}/portofolio/stream', [SiswaController::class, 'portofolioStream'])->name('siswa.portofolio.stream')->whereUuid('siswa');
     Route::get('siswa/{siswa}/portofolio.pdf', [SiswaController::class, 'portofolioDownload'])->name('siswa.portofolio.download')->whereUuid('siswa');
-    Route::get('siswa/{siswa}/pernyataan.pdf', [SiswaController::class, 'pernyataanDownload'])->name('siswa.pernyataan.download')->whereUuid('siswa');
+    Route::get('siswa/{siswa}/pernyataan/{jenis}/unduh', [SiswaController::class, 'pernyataanDownload'])
+        ->name('siswa.pernyataan.download')
+        ->whereUuid('siswa')
+        ->where('jenis', 'biodata|peserta-didik');
+    Route::get('siswa/{siswa}/pernyataan/{jenis}/stream', [SiswaController::class, 'pernyataanStream'])
+        ->name('siswa.pernyataan.stream')
+        ->whereUuid('siswa')
+        ->where('jenis', 'biodata|peserta-didik');
     Route::delete('siswa/{siswa}/pernyataan', [SiswaController::class, 'batalkanPernyataan'])->name('siswa.pernyataan.batalkan')->whereUuid('siswa');
     Route::delete('siswa/{siswa}/relasi', [SiswaController::class, 'destroyRelasi'])->name('siswa.relasi.destroy')->whereUuid('siswa');
     Route::delete('siswa/{siswa}/dokumen/{jenis}', [SiswaController::class, 'destroyDokumen'])
@@ -163,7 +173,10 @@ Route::middleware('auth')->group(function () {
     Route::get('siswa/{siswa}/dokumen/{jenis}', [SiswaController::class, 'downloadDokumen'])
         ->name('siswa.dokumen.download')
         ->whereUuid('siswa')
-        ->where('jenis', 'kk|kip|kks|pkh');
+        ->where('jenis', 'kk|akta_lahir|kip|kks|pkh|ijazah_sd');
+    Route::get('siswa/{siswa}/foto', [SiswaController::class, 'downloadFoto'])
+        ->name('siswa.foto.download')
+        ->whereUuid('siswa');
     Route::get('rombel', [RombelController::class, 'index'])->name('rombel.index');
     Route::get('rombel/{rombel}', [RombelController::class, 'show'])->name('rombel.show');
 });

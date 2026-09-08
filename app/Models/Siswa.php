@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
@@ -20,7 +21,7 @@ use Laravel\Sanctum\HasApiTokens;
     'anak_ke', 'jumlah_saudara',
     'cita_cita', 'hobi', 'email', 'no_hp',
     'tidak_punya_hp', 'tidak_punya_email', 'foto', 'status_keaktifan', 'angkatan', 'tanggal_nonaktif',
-    'alasan_nonaktif', 'must_change_password',
+    'alasan_nonaktif', 'must_change_password', 'first_login_at', 'last_login_at',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class Siswa extends Authenticatable
@@ -37,8 +38,22 @@ class Siswa extends Authenticatable
             'tidak_punya_hp' => 'boolean',
             'tidak_punya_email' => 'boolean',
             'must_change_password' => 'boolean',
+            'first_login_at' => 'datetime',
+            'last_login_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function catatLogin(): void
+    {
+        $now = now();
+        $payload = ['last_login_at' => $now];
+
+        if ($this->first_login_at === null) {
+            $payload['first_login_at'] = $now;
+        }
+
+        $this->forceFill($payload)->save();
     }
 
     public function bisaMasuk(): bool
@@ -169,6 +184,11 @@ class Siswa extends Authenticatable
     public function pernyataan(): HasOne
     {
         return $this->hasOne(SiswaPernyataan::class);
+    }
+
+    public function deviceTokens(): MorphMany
+    {
+        return $this->morphMany(DeviceToken::class, 'tokenable');
     }
 
     public function rombelAktif(): ?Rombel

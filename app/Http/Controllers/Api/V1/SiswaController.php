@@ -297,6 +297,7 @@ class SiswaController extends Controller
             'setuju_poin_2' => ['accepted'],
             'ttd_siswa' => ['required', 'string'],
             'ttd_wali' => ['required', 'string'],
+            'jenis' => ['required', 'in:biodata,peserta-didik'],
         ]);
 
         $tanda = $pernyataan->siapkanTandaTangan($siswa, $validated['ttd_siswa'], $validated['ttd_wali']);
@@ -306,7 +307,7 @@ class SiswaController extends Controller
             'ttd_wali_data_uri' => $tanda['ttd_wali_data_uri'],
             'nama_wali' => $tanda['nama_wali'],
             'tanggal' => $tanda['tanggal'],
-        ]);
+        ], $validated['jenis']);
     }
 
     public function storePernyataan(Request $request, SiswaPernyataanService $pernyataan): JsonResponse
@@ -349,6 +350,10 @@ class SiswaController extends Controller
             ], 404);
         }
 
-        return $pdf->downloadSaved($item);
+        $validated = $request->validate([
+            'jenis' => ['required', 'in:biodata,peserta-didik'],
+        ]);
+
+        return $pdf->downloadSaved($item, $validated['jenis']);
     }
 }
