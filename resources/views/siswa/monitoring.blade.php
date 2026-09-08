@@ -27,11 +27,48 @@
 @endphp
 
 <style>
-    .monitoring-page {
+    /* Kunci overflow ke viewport: jangan biarkan konten melebar ke body/shell/sidebar */
+    html:has(.monitoring-page),
+    body:has(.monitoring-page) {
+        overflow-x: hidden;
+    }
+    .madani-shell:has(.monitoring-page) {
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+    .madani-shell:has(.monitoring-page) > .flex-grow-1 {
         min-width: 0;
         max-width: 100%;
-        overflow-x: clip;
+        overflow-x: hidden;
     }
+    .madani-shell:has(.monitoring-page) main {
+        min-width: 0;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .monitoring-page {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: hidden;
+        box-sizing: border-box;
+    }
+    .monitoring-page .siswa-index-toolbar,
+    .monitoring-page .siswa-index-toolbar__filters,
+    .monitoring-page .siswa-index-toolbar__search {
+        min-width: 0;
+        max-width: 100%;
+        flex-wrap: wrap;
+    }
+    .monitoring-page .siswa-index-toolbar__filters .form-select {
+        width: auto;
+        min-width: 8.5rem;
+        max-width: 100%;
+        flex: 1 1 8.5rem;
+    }
+
     .monitoring-flag {
         display: inline-flex;
         align-items: center;
@@ -43,21 +80,25 @@
         padding: 0;
         line-height: 1;
         color: #0d6efd;
+        text-decoration: none;
     }
     .monitoring-flag.is-ok.is-clickable { cursor: pointer; }
     .monitoring-flag.is-ok.is-clickable:hover { color: #0a58ca; }
     .monitoring-flag.is-ok:not(.is-clickable) { color: #198754; }
     .monitoring-flag.is-no { color: #dc3545; cursor: default; }
+
     .monitoring-card {
         min-width: 0;
         max-width: 100%;
         overflow: hidden;
     }
     .monitoring-scroll {
+        display: block;
         width: 100%;
         max-width: 100%;
+        min-width: 0;
         overflow-x: auto;
-        overflow-y: visible;
+        overflow-y: hidden;
         overscroll-behavior-x: contain;
         -webkit-overflow-scrolling: touch;
     }
@@ -122,7 +163,7 @@
 
 <div class="monitoring-page">
 <form class="siswa-index-toolbar mb-3" method="GET" action="{{ route('siswa.monitoring') }}" id="monitoringFilterForm">
-    <div class="siswa-index-toolbar__filters flex-wrap gap-2 align-items-center">
+    <div class="siswa-index-toolbar__filters align-items-center">
         <select class="form-select" name="tingkat" aria-label="Filter tingkat" onchange="this.form.rombel_id.value=''; this.form.submit()">
             <option value="">Semua tingkat</option>
             @foreach ($tingkat_options as $option)
@@ -189,7 +230,7 @@
 </form>
 
 <div class="madani-card monitoring-card">
-    <div class="monitoring-scroll">
+    <div class="monitoring-scroll" data-monitoring-scroll>
         <table class="table table-hover align-middle monitoring-table">
             <thead>
                 <tr>
@@ -311,11 +352,10 @@ window.madaniMonitoringToggleVariabel = function (value) {
 
 (() => {
     const modalEl = document.getElementById('monitoringPreviewModal');
-    if (!modalEl) return;
     const titleEl = document.getElementById('monitoringPreviewTitle');
     const bodyEl = document.getElementById('monitoringPreviewBody');
     const downloadEl = document.getElementById('monitoringPreviewDownload');
-    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    if (!modalEl || !titleEl || !bodyEl || !downloadEl) return;
 
     document.querySelectorAll('[data-monitoring-preview]').forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -323,12 +363,6 @@ window.madaniMonitoringToggleVariabel = function (value) {
             const previewUrl = btn.getAttribute('data-preview-url') || '';
             const downloadUrl = btn.getAttribute('data-download-url') || previewUrl;
             const isPdf = btn.getAttribute('data-is-pdf') === '1';
-            const external = btn.getAttribute('data-external') === '1';
-
-            if (external) {
-                window.open(previewUrl, '_blank', 'noopener');
-                return;
-            }
 
             titleEl.textContent = label;
             downloadEl.href = downloadUrl;
@@ -348,7 +382,13 @@ window.madaniMonitoringToggleVariabel = function (value) {
                 bodyEl.appendChild(img);
             }
 
-            modal.show();
+            const bootstrapApi = window.bootstrap;
+            if (bootstrapApi?.Modal) {
+                bootstrapApi.Modal.getOrCreateInstance(modalEl).show();
+            } else {
+                modalEl.classList.add('show');
+                modalEl.style.display = 'block';
+            }
         });
     });
 })();

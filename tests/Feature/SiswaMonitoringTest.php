@@ -106,6 +106,8 @@ class SiswaMonitoringTest extends TestCase
             ->assertSee('Belum Login', false)
             ->assertSee('bi-person-vcard', false)
             ->assertSee('data-monitoring-preview', false)
+            ->assertSee('/siswa/'.$sudah->id.'/kartu', false)
+            ->assertSee('data-monitoring-scroll', false)
             ->assertDontSee('>Angkatan<', false)
             ->assertDontSee('Belum lengkap semua variabel', false);
 

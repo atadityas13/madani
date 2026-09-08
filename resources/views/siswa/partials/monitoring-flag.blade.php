@@ -13,19 +13,31 @@
         'card' => 'bi-person-vcard',
         default => 'bi-check-lg',
     };
+    $previewUrl = is_array($preview) ? ($preview['preview_url'] ?? null) : null;
+    $downloadUrl = is_array($preview) ? ($preview['download_url'] ?? $previewUrl) : null;
+    $isExternal = is_array($preview) && ! empty($preview['external']);
+    $isPdf = is_array($preview) && ! empty($preview['is_pdf']);
 @endphp
 
-@if ($ok && is_array($preview) && filled($preview['preview_url'] ?? null))
+@if ($ok && filled($previewUrl) && $isExternal)
+    <a
+        href="{{ $previewUrl }}"
+        class="monitoring-flag is-ok is-clickable"
+        title="{{ $title ?? 'Buka' }}"
+    >
+        <i class="bi {{ $iconClass }}" aria-hidden="true"></i>
+        <span class="visually-hidden">{{ $label ?? 'Buka' }}</span>
+    </a>
+@elseif ($ok && filled($previewUrl))
     <button
         type="button"
         class="monitoring-flag is-ok is-clickable"
         title="{{ $title ?? 'Lihat preview' }}"
         data-monitoring-preview
         data-label="{{ $label ?? 'Preview' }}"
-        data-preview-url="{{ $preview['preview_url'] }}"
-        data-download-url="{{ $preview['download_url'] ?? $preview['preview_url'] }}"
-        data-is-pdf="{{ ! empty($preview['is_pdf']) ? '1' : '0' }}"
-        data-external="{{ ! empty($preview['external']) ? '1' : '0' }}"
+        data-preview-url="{{ $previewUrl }}"
+        data-download-url="{{ $downloadUrl }}"
+        data-is-pdf="{{ $isPdf ? '1' : '0' }}"
     >
         <i class="bi {{ $iconClass }}" aria-hidden="true"></i>
         <span class="visually-hidden">Ya</span>

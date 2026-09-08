@@ -344,7 +344,7 @@ class SiswaMonitoringService
         ] : null;
         $previews['kartu'] = [
             'preview_url' => route('siswa.kartu', $siswa),
-            'download_url' => route('siswa.kartu', $siswa),
+            'download_url' => route('siswa.kartu.download', $siswa),
             'is_pdf' => false,
             'external' => true,
         ];
