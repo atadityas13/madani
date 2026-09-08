@@ -184,26 +184,28 @@
         td.cap-logo { width: 50pt; text-align: right; padding-right: 3.5pt !important; }
         td.cap-logo img { height: 9pt; width: auto; display: block; margin-left: auto; }
 
-        /* Caption footer hijau: bold + center H/V */
+        /* Caption footer hijau: bold + center H/V (DomPDF: top + padding terukur) */
         td.ftr {
             background: #022C22;
             height: 14.98pt;
             padding: 0 !important;
             vertical-align: top !important;
+            text-align: center;
         }
         table.ftr-tbl { width: 100%; border-collapse: collapse; }
         td.ftr-cell {
             background: #022C22;
             height: 14.98pt;
-            padding: 4.1pt 2pt 0 2pt !important;
+            width: 100%;
+            padding: 4.7pt 2.5pt 0 2.5pt !important;
             vertical-align: top !important;
             text-align: center;
             color: #ffffff;
-            font-size: 2.45pt;
+            font-size: 2.9pt;
             font-weight: bold;
-            line-height: 2.45pt;
+            line-height: 2.9pt;
             white-space: nowrap;
-            letter-spacing: -0.01pt;
+            letter-spacing: -0.02pt;
         }
 
         /* ===== BELAKANG: bh 18.5 + gold 1.8 + bc 112.2 + bf 20.48 = 152.98 ===== */

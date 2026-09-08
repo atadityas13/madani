@@ -139,6 +139,7 @@ class SiswaKartuEPelajarTest extends TestCase
         $this->assertStringContainsString('height: 56pt', $html);
         $this->assertStringContainsString('val-alamat', $html);
         $this->assertStringContainsString('ftr-cell', $html);
+        $this->assertStringContainsString('font-size: 2.9pt', $html);
         $this->assertStringContainsString('font-weight: bold', $html);
         $this->assertStringContainsString('bf-cell', $html);
         $this->assertStringContainsString('Madrasah Maju, Bermutu, Mendunia.', $html);
