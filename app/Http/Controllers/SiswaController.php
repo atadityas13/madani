@@ -414,13 +414,11 @@ class SiswaController extends Controller
             ->with('status', 'Konfirmasi pernyataan dibatalkan. Siswa dapat mengedit data kembali selama periode pendataan terbuka.');
     }
 
-    public function kartu(Siswa $siswa): View
+    public function kartu(Siswa $siswa): RedirectResponse
     {
         $this->authorize('view', $siswa);
 
-        return view('siswa.kartu-e-pelajar-preview', [
-            'siswa' => $siswa,
-        ]);
+        return redirect()->route('siswa.kartu.stream', $siswa);
     }
 
     public function kartuStream(Siswa $siswa, KartuEPelajarPdfService $kartuPdf): Response

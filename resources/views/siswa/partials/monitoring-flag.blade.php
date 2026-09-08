@@ -24,6 +24,8 @@
         href="{{ $previewUrl }}"
         class="monitoring-flag is-ok is-clickable"
         title="{{ $title ?? 'Buka' }}"
+        target="_blank"
+        rel="noopener noreferrer"
     >
         <i class="bi {{ $iconClass }}" aria-hidden="true"></i>
         <span class="visually-hidden">{{ $label ?? 'Buka' }}</span>

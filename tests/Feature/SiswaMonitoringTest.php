@@ -106,7 +106,8 @@ class SiswaMonitoringTest extends TestCase
             ->assertSee('Belum Login', false)
             ->assertSee('bi-person-vcard', false)
             ->assertSee('data-monitoring-preview', false)
-            ->assertSee('/siswa/'.$sudah->id.'/kartu', false)
+            ->assertSee('/siswa/'.$sudah->id.'/kartu/stream', false)
+            ->assertSee('target="_blank"', false)
             ->assertSee('data-monitoring-scroll', false)
             ->assertDontSee('>Angkatan<', false)
             ->assertDontSee('Belum lengkap semua variabel', false);
@@ -130,9 +131,7 @@ class SiswaMonitoringTest extends TestCase
 
         $this->actingAs($admin)
             ->get(route('siswa.kartu', $sudah))
-            ->assertOk()
-            ->assertSee('Kartu E-Pelajar', false)
-            ->assertSee(route('siswa.kartu.stream', $sudah), false);
+            ->assertRedirect(route('siswa.kartu.stream', $sudah));
 
         $this->actingAs($admin)
             ->get(route('siswa.kartu.stream', $sudah))

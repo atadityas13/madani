@@ -104,9 +104,7 @@ class SiswaKartuEPelajarTest extends TestCase
 
         $this->actingAs($admin)
             ->get(route('siswa.kartu', $siswa))
-            ->assertOk()
-            ->assertSee('Preview kartu e-pelajar', false)
-            ->assertDontSee('Kartu E-Pelajar Terverifikasi', false);
+            ->assertRedirect(route('siswa.kartu.stream', $siswa));
 
         $this->actingAs($admin)
             ->get(route('siswa.kartu.stream', $siswa))
