@@ -9,7 +9,7 @@
     <iframe
         class="portofolio-preview-frame"
         title="Preview kartu e-pelajar {{ $siswa->nama }}"
-        src="{{ route('siswa.kartu.stream', $siswa) }}"
+        src="{{ route('siswa.kartu.stream', $siswa) }}?v={{ now()->timestamp }}"
     ></iframe>
 
     <a

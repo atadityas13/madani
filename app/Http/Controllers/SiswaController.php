@@ -427,7 +427,10 @@ class SiswaController extends Controller
     {
         $this->authorize('view', $siswa);
 
-        return $kartuPdf->stream($siswa);
+        return $kartuPdf->stream($siswa)->withHeaders([
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+        ]);
     }
 
     public function kartuDownload(Siswa $siswa, KartuEPelajarPdfService $kartuPdf): Response

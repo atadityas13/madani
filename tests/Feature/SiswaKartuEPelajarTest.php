@@ -130,7 +130,14 @@ class SiswaKartuEPelajarTest extends TestCase
         $this->assertStringContainsString('class="ftr"', $html);
         $this->assertStringContainsString('class="cap-txt"', $html);
         $this->assertStringContainsString('white-space: nowrap', $html);
+        $this->assertStringContainsString('240.45pt', $html);
+        $this->assertStringContainsString('150.8pt', $html);
+        $this->assertStringContainsString('class="card"', $html);
+        $this->assertStringContainsString('ISO/IEC 7810 ID-1', $html);
+        $this->assertStringContainsString('top-qr', $html);
+        $this->assertStringContainsString('body-spacer', $html);
         $this->assertStringNotContainsString('bc-panel', $html);
+        $this->assertStringNotContainsString('kop-pad', $html);
         $this->assertStringNotContainsString('Preview Kartu E-Pelajar', $html);
         $this->assertStringNotContainsString('Preview admin MADANI', $html);
         $this->assertStringNotContainsString('Depan ·', $html);
