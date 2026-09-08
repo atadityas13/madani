@@ -23,33 +23,17 @@
 <div class="madani-card p-4 mb-3">
     <div class="stat-label mb-3">Identitas rombel</div>
     <div class="row g-3">
-        <div class="col-md-3">
+        <div class="col-md-4">
             <label class="form-label">Tingkat</label>
             <input class="form-control bg-light" value="{{ $rombel->tingkat }}" readonly>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <label class="form-label">Nama</label>
             <input class="form-control bg-light" value="{{ $rombel->nama }}" readonly>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <label class="form-label">Wali kelas</label>
             <input class="form-control bg-light" value="{{ $rombel->waliKelas?->nama ?: '—' }}" readonly>
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">Ruangan</label>
-            <input class="form-control bg-light" value="{{ $rombel->ruangan ?: '—' }}" readonly>
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">Jenis</label>
-            <input class="form-control bg-light" value="{{ $rombel->jenis_rombel ?: '—' }}" readonly>
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">Waktu</label>
-            <input class="form-control bg-light" value="{{ $rombel->waktu_mengajar ?: '—' }}" readonly>
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">Kurikulum</label>
-            <input class="form-control bg-light" value="{{ $rombel->kurikulum ?: '—' }}" readonly>
         </div>
     </div>
 </div>

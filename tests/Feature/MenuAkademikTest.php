@@ -49,10 +49,6 @@ class MenuAkademikTest extends TestCase
             'tingkat' => 'VII',
             'nama' => 'A',
             'gtk_id' => $gtk->id,
-            'jenis_rombel' => 'Reguler',
-            'waktu_mengajar' => 'Pagi',
-            'kurikulum' => 'Kurikulum Merdeka',
-            'ruangan' => 'VII A',
         ])->assertRedirect();
 
         $rombel = Rombel::query()->first();

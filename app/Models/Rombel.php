@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 #[Fillable([
     'tahun_ajaran_id', 'tingkat', 'nama', 'program', 'wali_kelas_id',
-    'gtk_id', 'ruangan', 'jenis_rombel', 'waktu_mengajar', 'kurikulum',
+    'gtk_id', 'source_simpatisans_kelas_id',
 ])]
 class Rombel extends Model
 {

@@ -40,6 +40,12 @@ return [
         'secret' => env('MADANI_INTROSPECT_SECRET'),
     ],
 
+    'simpatisans' => [
+        // Base URL termasuk prefix /api, contoh: https://simpatisans.example/api
+        'base_url' => env('SIMPATISANS_API_URL'),
+        'secret' => env('MADANI_INTROSPECT_SECRET'),
+    ],
+
     'firebase' => [
         'project_id' => env('FIREBASE_PROJECT_ID'),
         'credentials' => env('FIREBASE_CREDENTIALS'),

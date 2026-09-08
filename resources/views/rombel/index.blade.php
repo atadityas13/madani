@@ -8,12 +8,17 @@
 <div class="d-flex align-items-center mb-3 gap-3 flex-wrap">
     <div class="stat-label mb-0">Daftar rombel</div>
     @can('create', \App\Models\Rombel::class)
-        <a class="btn btn-madani" href="{{ route('rombel.create') }}">Tambah</a>
+        @if ($tahunAktif)
+            <form method="POST" action="{{ route('rombel.sync-simpatisans') }}" data-loading-text="Menyinkronkan…">
+                @csrf
+                <button class="btn btn-madani" type="submit">Sync Simpatisans</button>
+            </form>
+        @endif
     @endcan
 </div>
 
 @unless ($tahunAktif)
-    <div class="d-none" data-swal-warning="Aktifkan tahun ajaran di menu Kelembagaan sebelum membuat rombel."></div>
+    <div class="d-none" data-swal-warning="Aktifkan tahun ajaran di menu Kelembagaan sebelum sinkron rombel."></div>
 @endunless
 
 <div class="madani-card p-0">
@@ -24,8 +29,6 @@
                     <th>Tingkat</th>
                     <th>Nama rombel</th>
                     <th>Wali kelas</th>
-                    <th>Ruangan</th>
-                    <th>Jenis</th>
                     <th>Siswa</th>
                     <th></th>
                 </tr>
@@ -36,8 +39,6 @@
                         <td>{{ $rombel->tingkat }}</td>
                         <td>{{ $rombel->nama }}</td>
                         <td>{{ $rombel->waliKelas?->nama ?: '—' }}</td>
-                        <td>{{ $rombel->ruangan ?: '—' }}</td>
-                        <td>{{ $rombel->jenis_rombel ?: '—' }}</td>
                         <td>{{ $rombel->anggota_count }}</td>
                         <td class="text-end">
                             <div class="emis-aksi">
@@ -53,7 +54,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="7" class="text-secondary p-3">Belum ada rombel pada tahun ajaran ini.</td></tr>
+                    <tr><td colspan="5" class="text-secondary p-3">Belum ada rombel pada tahun ajaran ini.</td></tr>
                 @endforelse
             </tbody>
         </table>

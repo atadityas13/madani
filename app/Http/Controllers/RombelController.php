@@ -6,11 +6,13 @@ use App\Models\Gtk;
 use App\Models\Rombel;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
+use App\Services\Simpatisans\RombelSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use RuntimeException;
 
 class RombelController extends Controller
 {
@@ -33,6 +35,35 @@ class RombelController extends Controller
         return view('rombel.index', compact('rombels', 'tahunAktif'));
     }
 
+    public function syncFromSimpatisans(RombelSyncService $syncService): RedirectResponse
+    {
+        $this->authorize('create', Rombel::class);
+
+        $tahun = TahunAjaran::aktif();
+        if (! $tahun) {
+            return redirect()
+                ->route('tahun-ajaran.index')
+                ->with('error', 'Aktifkan tahun ajaran terlebih dahulu sebelum sinkron rombel.');
+        }
+
+        try {
+            $result = $syncService->sync($tahun);
+        } catch (RuntimeException $e) {
+            return redirect()
+                ->route('rombel.index')
+                ->with('error', $e->getMessage());
+        }
+
+        return redirect()
+            ->route('rombel.index')
+            ->with('status', sprintf(
+                'Sinkron rombel berhasil: %d baru, %d diperbarui (total %d).',
+                $result['created'],
+                $result['updated'],
+                $result['total']
+            ));
+    }
+
     public function create(): View|RedirectResponse
     {
         $this->authorize('create', Rombel::class);
@@ -43,11 +74,7 @@ class RombelController extends Controller
         }
 
         return view('rombel.form', [
-            'rombel' => new Rombel([
-                'jenis_rombel' => 'Reguler',
-                'waktu_mengajar' => 'Pagi',
-                'kurikulum' => 'Kurikulum Merdeka',
-            ]),
+            'rombel' => new Rombel,
             'gtks' => Gtk::query()->where('status', 'aktif')->orderBy('nama')->get(),
             'tahunAktif' => TahunAjaran::aktif(),
         ]);
@@ -189,10 +216,6 @@ class RombelController extends Controller
                     ->ignore($rombel?->id),
             ],
             'gtk_id' => ['nullable', 'exists:gtks,id'],
-            'ruangan' => ['nullable', 'string', 'max:50'],
-            'jenis_rombel' => ['nullable', 'string', Rule::in(array_keys(config('emis.jenis_rombel')))],
-            'waktu_mengajar' => ['nullable', 'string', Rule::in(array_keys(config('emis.waktu_mengajar')))],
-            'kurikulum' => ['nullable', 'string', Rule::in(array_keys(config('emis.kurikulum')))],
             'program' => ['nullable', 'string', 'max:50'],
         ]);
     }
