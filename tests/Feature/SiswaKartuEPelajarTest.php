@@ -125,7 +125,9 @@ class SiswaKartuEPelajarTest extends TestCase
         $this->assertStringContainsString('Kami Pelajar Indonesia, berikrar untuk:', $html);
         $this->assertStringContainsString('Kartu Pelajar ini dihasilkan oleh sistem resmi', $html);
         $this->assertStringContainsString('alt="MADANI"', $html);
-        $this->assertStringContainsString('front-footer', $html);
+        $this->assertStringContainsString('class="ftr"', $html);
+        $this->assertStringContainsString('class="cap-txt"', $html);
+        $this->assertStringContainsString('Berlaku selama menjadi siswa', $html);
         $this->assertStringNotContainsString('Preview Kartu E-Pelajar', $html);
         $this->assertStringNotContainsString('Preview admin MADANI', $html);
         $this->assertStringNotContainsString('Depan ·', $html);
