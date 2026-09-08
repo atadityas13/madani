@@ -78,25 +78,26 @@ class KartuEPelajarPdfService
         try {
             $payload = $this->kartu->payload($siswa);
             $madrasah = Madrasah::saatIni();
-            $logoBrandMadani = $this->rawAssetDataUri(public_path('img/logo-madani-wordmark-kartu.png'))
-                ?? $this->assetDataUri(public_path('images/logo-madani.png'), 160);
-            $logoBrandOnDark = $this->rawAssetDataUri(public_path('img/logo-madani-wordmark-on-emerald.png'))
+            // Sumber asli, di-scale tajam (~280px) — bukan aset kartu kecil yang blur.
+            $logoBrandMadani = $this->assetDataUri(public_path('images/logo-madani.png'), 320)
+                ?? $this->rawAssetDataUri(public_path('img/logo-madani-wordmark-kartu.png'));
+            $logoBrandOnDark = $this->assetDataUri(public_path('images/logo-madani.png'), 320)
+                ?? $this->rawAssetDataUri(public_path('img/logo-madani-wordmark-on-emerald.png'))
                 ?? $logoBrandMadani;
-            // Kop kanan: logo madrasah (R2); fallback wordmark transparan untuk latar hijau.
-            $logoMadrasah = $this->r2DataUri($madrasah->logo_path, 72) ?? $logoBrandOnDark;
+            $logoMadrasah = $this->r2DataUri($madrasah->logo_path, 280) ?? $logoBrandOnDark;
 
             return [
                 'siswa' => $siswa,
                 'kartu' => $payload,
                 'logoDataUri' => $logoMadrasah,
-                'logoKemenagDataUri' => $this->rawAssetDataUri(public_path('img/logo-kemenag-kartu.png'))
-                    ?? $this->assetDataUri(public_path('img/logo-kemenag.png'), 72),
+                'logoKemenagDataUri' => $this->assetDataUri(public_path('img/logo-kemenag.png'), 280)
+                    ?? $this->rawAssetDataUri(public_path('img/logo-kemenag-kartu.png')),
                 'logoMadaniDataUri' => $logoBrandMadani,
                 'fotoPlaceholderDataUri' => $this->rawAssetDataUri(public_path('img/foto-placeholder-kartu.png')),
                 'bgBelakangDataUri' => $this->rawAssetDataUri(public_path('img/bg-kartu-belakang-wash.jpg'), 'image/jpeg')
                     ?? $this->washedBackgroundDataUri(public_path('img/bg-kartu-belakang-kartu.jpg'))
                     ?? $this->washedBackgroundDataUri(public_path('img/bg-kartu-belakang.jpg')),
-                'fotoDataUri' => $this->r2DataUri($siswa->foto, 140),
+                'fotoDataUri' => $this->r2DataUri($siswa->foto, 220),
                 'qrDataUri' => $this->qrDataUri($payload['verify_url']),
                 'generatedAt' => now(),
             ];
@@ -232,7 +233,7 @@ class KartuEPelajarPdfService
         }
 
         ob_start();
-        imagepng($image, null, 6);
+        imagepng($image, null, 3);
         $png = ob_get_clean();
         imagedestroy($image);
 

@@ -17,6 +17,7 @@
         .sheet > tbody > tr > td { vertical-align: top; width: 48%; }
         .sheet > tbody > tr > td.gap { width: 4%; }
 
+        /* Border di luar box → lebar isi 240.45pt agar luar ≈ 242.65pt */
         .card {
             width: 240.45pt;
             height: 150.8pt;
@@ -32,10 +33,10 @@
         }
         table.inner > tbody > tr > td { padding: 0; margin: 0; }
 
-        /* Kop ~25% */
+        /* hdr 35 + bdy 101.5 + ftr 14.3 = 150.8 */
         td.hdr {
             background: #022C22;
-            height: 38pt;
+            height: 35pt;
             padding: 0 !important;
         }
         table.kop { width: 100%; border-collapse: collapse; }
@@ -46,38 +47,38 @@
             vertical-align: middle !important;
             padding: 0.5pt 0.8pt !important;
         }
-        td.kop-logo img { width: 31pt; height: 31pt; }
+        td.kop-logo img { width: 30pt; height: 30pt; }
         td.kop-text {
             background: #022C22;
             text-align: center;
             vertical-align: middle !important;
-            padding: 1.5pt 0.5pt !important;
+            padding: 1.2pt 0.5pt !important;
             line-height: 1.08;
         }
         .kop-l1, .kop-l2 {
             color: #FBBF24;
-            font-size: 4.15pt;
+            font-size: 4.1pt;
             font-weight: bold;
             white-space: nowrap;
         }
         .kop-l3 {
             color: #FBBF24;
-            font-size: 5.0pt;
+            font-size: 4.9pt;
             font-weight: bold;
-            margin-top: 0.35pt;
+            margin-top: 0.3pt;
             white-space: nowrap;
         }
         .kop-l4, .kop-l5 {
             color: #ffffff;
-            font-size: 3.35pt;
-            margin-top: 0.3pt;
+            font-size: 3.25pt;
+            margin-top: 0.25pt;
             white-space: nowrap;
         }
 
         td.bdy {
             background: #ffffff;
-            height: 102pt;
-            padding: 2.5pt 1.5pt 0.8pt 3pt !important;
+            height: 101.5pt;
+            padding: 2.2pt 1.2pt 1pt 3pt !important;
             vertical-align: top !important;
         }
         table.body-fill {
@@ -86,11 +87,10 @@
         }
         table.body-fill > tbody > tr > td { padding: 0; }
         td.body-main { vertical-align: top !important; }
-        td.body-spacer { height: 18pt; font-size: 1pt; line-height: 1pt; }
         td.body-cap {
-            height: 9pt;
+            height: 10pt;
             vertical-align: bottom !important;
-            padding: 0 !important;
+            padding-top: 3pt !important;
         }
 
         table.top-row { width: 100%; border-collapse: collapse; }
@@ -119,33 +119,34 @@
             font-size: 5.0pt;
             font-weight: bold;
             letter-spacing: 0.55pt;
-            padding: 1.6pt 9pt 1.6pt 4pt !important;
+            padding: 1.5pt 9pt 1.5pt 4pt !important;
             white-space: nowrap;
         }
         .ribbon-gold {
             width: 50pt;
             height: 1.7pt;
             background: #F59E0B;
-            margin: 1pt 0 2.2pt 0;
+            margin: 1pt 0 2pt 0;
         }
 
         table.main { width: 100%; border-collapse: collapse; }
         table.main > tbody > tr > td { vertical-align: top; padding: 0; }
-        td.foto-col { width: 30pt; padding-right: 3.5pt !important; }
+        /* Foto lebih besar → data digeser kanan, kolom QR tetap */
+        td.foto-col { width: 44pt; padding-right: 2.5pt !important; }
         img.foto, .foto-box {
-            width: 27pt;
-            height: 36pt;
-            border: 0.8pt solid #065F46;
+            width: 41pt;
+            height: 54pt;
+            border: 0.85pt solid #065F46;
             display: block;
         }
         .foto-box { background: #f8fafc; text-align: center; }
-        .foto-box img { width: 12pt; margin-top: 10pt; }
+        .foto-box img { width: 16pt; margin-top: 16pt; }
 
         table.data { width: 100%; border-collapse: collapse; }
         table.data td {
-            padding: 0.2pt 0;
-            font-size: 4.85pt;
-            line-height: 1.1;
+            padding: 0.15pt 0;
+            font-size: 4.7pt;
+            line-height: 1.08;
             vertical-align: top;
             font-weight: bold;
             color: #020617;
@@ -153,21 +154,22 @@
         table.data tr:not(:last-child) td { white-space: nowrap; }
         td.lbl { width: 22pt; text-transform: uppercase; }
         td.col { width: 4.5pt; }
+        td.val-alamat { font-size: 4.3pt; line-height: 1.1; }
 
         table.cap { width: 100%; border-collapse: collapse; }
         table.cap td { vertical-align: middle !important; padding: 0 !important; }
-        td.cap-txt { font-size: 3.35pt; font-weight: bold; color: #020617; white-space: nowrap; }
-        td.cap-logo { width: 40pt; text-align: right; }
-        td.cap-logo img { height: 7pt; width: auto; }
+        td.cap-txt { font-size: 3.3pt; font-weight: bold; color: #020617; white-space: nowrap; }
+        td.cap-logo { width: 42pt; text-align: right; }
+        td.cap-logo img { height: 8pt; width: auto; }
 
         td.ftr {
             background: #022C22;
             color: #ffffff;
             text-align: center;
-            height: 11pt;
-            font-size: 2.15pt;
-            line-height: 1.1;
-            padding: 1.8pt 2pt !important;
+            height: 14.3pt;
+            font-size: 2.2pt;
+            line-height: 1.15;
+            padding: 2.2pt 2pt !important;
             white-space: nowrap;
             vertical-align: middle !important;
         }
@@ -186,7 +188,7 @@
         }
         td.bgold { height: 1.8pt; background: #F59E0B; font-size: 1pt; line-height: 1pt; }
         td.bc {
-            height: 118.2pt;
+            height: 117.2pt;
             text-align: center;
             vertical-align: middle !important;
             padding: 4pt 8pt !important;
@@ -209,7 +211,7 @@
             background: #022C22;
             color: #ffffff;
             text-align: center;
-            height: 11pt;
+            height: 11.8pt;
             font-size: 3.7pt;
             font-weight: bold;
             letter-spacing: 0.45pt;
@@ -245,7 +247,7 @@
                                 <tr>
                                     <td class="kop-logo">
                                         @if ($logoKemenagDataUri)
-                                            <img src="{{ $logoKemenagDataUri }}" width="31" height="31" alt="Kemenag">
+                                            <img src="{{ $logoKemenagDataUri }}" width="30" height="30" alt="Kemenag">
                                         @endif
                                     </td>
                                     <td class="kop-text">
@@ -261,7 +263,7 @@
                                     </td>
                                     <td class="kop-logo">
                                         @if ($logoDataUri)
-                                            <img src="{{ $logoDataUri }}" width="31" height="31" alt="Madrasah">
+                                            <img src="{{ $logoDataUri }}" width="30" height="30" alt="Madrasah">
                                         @endif
                                     </td>
                                 </tr>
@@ -295,9 +297,9 @@
                                                         <tr>
                                                             <td class="foto-col">
                                                                 @if ($fotoDataUri)
-                                                                    <img class="foto" src="{{ $fotoDataUri }}" width="27" height="36" alt="Foto">
+                                                                    <img class="foto" src="{{ $fotoDataUri }}" width="41" height="54" alt="Foto">
                                                                 @elseif ($fotoPlaceholderDataUri)
-                                                                    <div class="foto-box"><img src="{{ $fotoPlaceholderDataUri }}" width="12" alt=""></div>
+                                                                    <div class="foto-box"><img src="{{ $fotoPlaceholderDataUri }}" width="16" alt=""></div>
                                                                 @else
                                                                     <div class="foto-box"></div>
                                                                 @endif
@@ -309,7 +311,7 @@
                                                                     <tr><td class="lbl">NIS</td><td class="col">:</td><td>{{ $dash($kartu['nis']) }}</td></tr>
                                                                     <tr><td class="lbl">TTL</td><td class="col">:</td><td>{{ $dash($kartu['ttl']) }}</td></tr>
                                                                     <tr><td class="lbl">JK</td><td class="col">:</td><td>{{ $dash($kartu['jenis_kelamin_label']) }}</td></tr>
-                                                                    <tr><td class="lbl">ALAMAT</td><td class="col">:</td><td>{{ $dash($kartu['alamat']) }}</td></tr>
+                                                                    <tr><td class="lbl">ALAMAT</td><td class="col">:</td><td class="val-alamat">{{ $dash($kartu['alamat']) }}</td></tr>
                                                                 </table>
                                                             </td>
                                                         </tr>
@@ -320,16 +322,13 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td class="body-spacer">&nbsp;</td>
-                                </tr>
-                                <tr>
                                     <td class="body-cap">
                                         <table class="cap">
                                             <tr>
                                                 <td class="cap-txt">Berlaku selama menjadi siswa {{ $namaSingkat }}</td>
                                                 <td class="cap-logo">
                                                     @if ($logoMadaniDataUri)
-                                                        <img src="{{ $logoMadaniDataUri }}" height="7" alt="MADANI">
+                                                        <img src="{{ $logoMadaniDataUri }}" height="8" alt="MADANI">
                                                     @endif
                                                 </td>
                                             </tr>
