@@ -50,9 +50,25 @@
             padding: 2pt 3pt !important;
             line-height: 1.12;
         }
-        .kop-l1, .kop-l2 { color: #FBBF24; font-size: 4.5pt; font-weight: bold; }
-        .kop-l3 { color: #FBBF24; font-size: 5.6pt; font-weight: bold; margin-top: 1pt; }
-        .kop-l4, .kop-l5 { color: #ffffff; font-size: 3.6pt; margin-top: 0.8pt; }
+        .kop-l1, .kop-l2 {
+            color: #FBBF24;
+            font-size: 3.4pt;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .kop-l3 {
+            color: #FBBF24;
+            font-size: 4.1pt;
+            font-weight: bold;
+            margin-top: 0.5pt;
+            white-space: nowrap;
+        }
+        .kop-l4, .kop-l5 {
+            color: #ffffff;
+            font-size: 2.8pt;
+            margin-top: 0.4pt;
+            white-space: nowrap;
+        }
 
         td.bdy {
             background: #ffffff;
@@ -93,11 +109,14 @@
         table.data { width: 100%; border-collapse: collapse; }
         table.data td {
             padding: 0.35pt 0;
-            font-size: 5.5pt;
+            font-size: 5.2pt;
             line-height: 1.14;
             vertical-align: top;
             font-weight: bold;
             color: #020617;
+        }
+        table.data tr:not(:last-child) td {
+            white-space: nowrap;
         }
         td.lbl { width: 26pt; text-transform: uppercase; }
         td.col { width: 6pt; }
@@ -126,10 +145,10 @@
             background: #022C22;
             color: #ffffff;
             text-align: center;
-            font-size: 3.2pt;
-            line-height: 4.2pt;
-            padding: 5pt 8pt 5pt 8pt !important;
-            height: 18pt;
+            font-size: 2.15pt;
+            line-height: 1.15;
+            padding: 3.5pt 3pt !important;
+            white-space: nowrap;
         }
 
         /* Belakang */
@@ -152,22 +171,35 @@
         }
         td.bgold { height: 2pt; background: #F59E0B; font-size: 1pt; line-height: 1pt; }
         td.bc {
+            height: 108pt;
             text-align: center;
             vertical-align: middle !important;
-            padding: 8pt 12pt !important;
-            background-color: #ffffff;
+            padding: 6pt 10pt !important;
+            background-color: #f3f4f6;
         }
-        .bc-panel { background-color: #ffffff; padding: 6pt 8pt; }
-        .bc-lead { color: #022C22; font-size: 6pt; font-weight: bold; margin-bottom: 5pt; }
-        .bc-item { color: #020617; font-size: 6.4pt; font-weight: bold; margin: 3.2pt 0; }
+        /* Teks ikrar langsung di atas wash (mirror Ta'lim: tanpa kotak putih solid) */
+        .bc-lead {
+            color: #022C22;
+            font-size: 5.8pt;
+            font-weight: bold;
+            margin-bottom: 5pt;
+        }
+        .bc-item {
+            color: #020617;
+            font-size: 6.2pt;
+            font-weight: bold;
+            margin: 3pt 0;
+            white-space: nowrap;
+        }
         td.bf {
             background: #022C22;
             color: #ffffff;
             text-align: center;
-            font-size: 4.3pt;
+            font-size: 4.0pt;
             font-weight: bold;
             letter-spacing: 0.5pt;
-            padding: 4.5pt 6pt !important;
+            padding: 4pt 6pt !important;
+            white-space: nowrap;
         }
     </style>
 </head>
@@ -269,13 +301,7 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td class="ftr">
-                                    <div style="padding: 2pt 0;">
-                                        Kartu Pelajar ini dihasilkan oleh sistem resmi {{ $namaSingkat }}
-                                        dan merupakan dokumen yang sah serta dapat dipergunakan untuk keperluan
-                                        administrasi akademik maupun nonakademik.
-                                    </div>
-                                </td>
+                                <td class="ftr">Kartu Pelajar ini dihasilkan oleh sistem resmi {{ $namaSingkat }} dan merupakan dokumen yang sah serta dapat dipergunakan untuk keperluan administrasi akademik maupun nonakademik.</td>
                             </tr>
                         </table>
                     </td>
@@ -292,12 +318,10 @@
                             <tr><td class="bgold">&nbsp;</td></tr>
                             <tr>
                                 <td class="bc"@if ($bgBelakangDataUri) style="background-image: url('{{ $bgBelakangDataUri }}'); background-position: center; background-repeat: no-repeat; background-size: cover;"@endif>
-                                    <div class="bc-panel">
-                                        <div class="bc-lead">Kami Pelajar Indonesia, berikrar untuk:</div>
-                                        @foreach ($ikrarItems as $i => $item)
-                                            <div class="bc-item">{{ $i + 1 }}.&nbsp;&nbsp;{{ $item }}</div>
-                                        @endforeach
-                                    </div>
+                                    <div class="bc-lead">Kami Pelajar Indonesia, berikrar untuk:</div>
+                                    @foreach ($ikrarItems as $i => $item)
+                                        <div class="bc-item">{{ $i + 1 }}.&nbsp;&nbsp;{{ $item }}</div>
+                                    @endforeach
                                 </td>
                             </tr>
                             <tr><td class="bf">{{ mb_strtoupper((string) $namaSingkat) }}</td></tr>

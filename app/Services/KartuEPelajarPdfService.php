@@ -93,8 +93,9 @@ class KartuEPelajarPdfService
                     ?? $this->assetDataUri(public_path('img/logo-kemenag.png'), 72),
                 'logoMadaniDataUri' => $logoBrandMadani,
                 'fotoPlaceholderDataUri' => $this->rawAssetDataUri(public_path('img/foto-placeholder-kartu.png')),
-                'bgBelakangDataUri' => $this->rawAssetDataUri(public_path('img/bg-kartu-belakang-kartu.jpg'), 'image/jpeg')
-                    ?? $this->assetJpegDataUri(public_path('img/bg-kartu-belakang.jpg'), 420),
+                'bgBelakangDataUri' => $this->rawAssetDataUri(public_path('img/bg-kartu-belakang-wash.jpg'), 'image/jpeg')
+                    ?? $this->washedBackgroundDataUri(public_path('img/bg-kartu-belakang-kartu.jpg'))
+                    ?? $this->washedBackgroundDataUri(public_path('img/bg-kartu-belakang.jpg')),
                 'fotoDataUri' => $this->r2DataUri($siswa->foto, 140),
                 'qrDataUri' => $this->qrDataUri($payload['verify_url']),
                 'generatedAt' => now(),
@@ -167,6 +168,55 @@ class KartuEPelajarPdfService
         }
 
         return $this->resizedJpegDataUri($bytes, $maxWidth);
+    }
+
+    /**
+     * Mirror Ta'lim: drone image (~48% opacity) + white wash (~55%).
+     */
+    private function washedBackgroundDataUri(string $absolutePath): ?string
+    {
+        if (! is_file($absolutePath)) {
+            return null;
+        }
+
+        $bytes = file_get_contents($absolutePath);
+        if ($bytes === false || $bytes === '') {
+            return null;
+        }
+
+        $drone = @imagecreatefromstring($bytes);
+        if ($drone === false) {
+            return null;
+        }
+
+        $drone = $this->scaleImage($drone, 520);
+        if ($drone === null) {
+            return null;
+        }
+
+        $width = imagesx($drone);
+        $height = imagesy($drone);
+        $out = imagecreatetruecolor($width, $height);
+        $white = imagecolorallocate($out, 255, 255, 255);
+        imagefilledrectangle($out, 0, 0, $width, $height, $white);
+        imagecopymerge($out, $drone, 0, 0, 0, 0, $width, $height, 48);
+        imagedestroy($drone);
+
+        $wash = imagecreatetruecolor($width, $height);
+        imagefilledrectangle($wash, 0, 0, $width, $height, imagecolorallocate($wash, 255, 255, 255));
+        imagecopymerge($out, $wash, 0, 0, 0, 0, $width, $height, 55);
+        imagedestroy($wash);
+
+        ob_start();
+        imagejpeg($out, null, 78);
+        $jpeg = ob_get_clean();
+        imagedestroy($out);
+
+        if ($jpeg === false || $jpeg === '') {
+            return null;
+        }
+
+        return 'data:image/jpeg;base64,'.base64_encode($jpeg);
     }
 
     private function resizedPngDataUri(string $bytes, int $maxWidth): ?string
