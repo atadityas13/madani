@@ -58,7 +58,6 @@ class RombelSyncService
                 }
 
                 $rombel = Rombel::query()
-                    ->where('tahun_ajaran_id', $tahunAjaran->id)
                     ->where('source_simpatisans_kelas_id', $kelasId)
                     ->first();
 
