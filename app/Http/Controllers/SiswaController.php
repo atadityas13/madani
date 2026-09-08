@@ -15,6 +15,7 @@ use App\Support\KelengkapanSiswa;
 use App\Support\R2Url;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
@@ -102,8 +103,20 @@ class SiswaController extends Controller
                 $siswaQuery->whereHas('rombels', fn ($inner) => $inner
                     ->where('rombels.id', $rombelId)
                     ->where('rombel_siswas.status', 'aktif'));
-            })
-            ->orderBy('nama');
+            });
+
+        $rombelUrut = DB::table('rombel_siswas')
+            ->join('rombels', 'rombels.id', '=', 'rombel_siswas.rombel_id')
+            ->where('rombel_siswas.status', 'aktif')
+            ->when($tahun, fn ($join) => $join->where('rombels.tahun_ajaran_id', $tahun->id))
+            ->select('rombel_siswas.siswa_id', 'rombels.nama as rombel_nama');
+
+        $query->leftJoinSub($rombelUrut, 'rombel_urut', 'rombel_urut.siswa_id', '=', 'siswas.id')
+            ->select('siswas.*')
+            ->orderByRaw("CASE siswas.angkatan WHEN 'VII' THEN 1 WHEN 'VIII' THEN 2 WHEN 'IX' THEN 3 ELSE 9 END")
+            ->orderByRaw('CAST(rombel_urut.rombel_nama AS UNSIGNED)')
+            ->orderBy('rombel_urut.rombel_nama')
+            ->orderBy('siswas.nama');
 
         $allowedPerPage = [10, 20, 50, 100];
         if ($perPageRaw === 'all') {

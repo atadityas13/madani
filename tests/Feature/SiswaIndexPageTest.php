@@ -55,6 +55,77 @@ class SiswaIndexPageTest extends TestCase
             ->assertDontSee('Periode pendataan', false);
     }
 
+    public function test_index_urut_angkatan_lalu_rombel_lalu_nama(): void
+    {
+        $this->seed();
+
+        $tahun = TahunAjaran::aktif();
+        $vii2 = Rombel::query()->create([
+            'tahun_ajaran_id' => $tahun->id,
+            'tingkat' => 'VII',
+            'nama' => '2',
+        ]);
+        $vii1 = Rombel::query()->create([
+            'tahun_ajaran_id' => $tahun->id,
+            'tingkat' => 'VII',
+            'nama' => '1',
+        ]);
+        $viii1 = Rombel::query()->create([
+            'tahun_ajaran_id' => $tahun->id,
+            'tingkat' => 'VIII',
+            'nama' => '1',
+        ]);
+
+        $siswaViii = Siswa::query()->create([
+            'nama' => 'Aaaa Siswa Delapan',
+            'nisn' => '1000000001',
+            'angkatan' => 'VIII',
+            'status_keaktifan' => 'aktif',
+        ]);
+        $siswaViiZ = Siswa::query()->create([
+            'nama' => 'Zainab Tujuh Satu',
+            'nisn' => '1000000002',
+            'angkatan' => 'VII',
+            'status_keaktifan' => 'aktif',
+        ]);
+        $siswaViiA = Siswa::query()->create([
+            'nama' => 'Ahmad Tujuh Satu',
+            'nisn' => '1000000003',
+            'angkatan' => 'VII',
+            'status_keaktifan' => 'aktif',
+        ]);
+        $siswaViiDua = Siswa::query()->create([
+            'nama' => 'Budi Tujuh Dua',
+            'nisn' => '1000000004',
+            'angkatan' => 'VII',
+            'status_keaktifan' => 'aktif',
+        ]);
+
+        $viii1->siswas()->attach($siswaViii->id, ['status' => 'aktif']);
+        $vii1->siswas()->attach($siswaViiZ->id, ['status' => 'aktif']);
+        $vii1->siswas()->attach($siswaViiA->id, ['status' => 'aktif']);
+        $vii2->siswas()->attach($siswaViiDua->id, ['status' => 'aktif']);
+
+        $admin = User::query()->where('username', 'admin')->first();
+        $content = $this->actingAs($admin)
+            ->get(route('siswa.index', ['per_page' => 'all']))
+            ->assertOk()
+            ->getContent();
+
+        $posAhmad = strpos($content, 'Ahmad Tujuh Satu');
+        $posZainab = strpos($content, 'Zainab Tujuh Satu');
+        $posBudi = strpos($content, 'Budi Tujuh Dua');
+        $posDelapan = strpos($content, 'Aaaa Siswa Delapan');
+
+        $this->assertNotFalse($posAhmad);
+        $this->assertNotFalse($posZainab);
+        $this->assertNotFalse($posBudi);
+        $this->assertNotFalse($posDelapan);
+        $this->assertTrue($posAhmad < $posZainab, 'Dalam rombel sama, nama alfabetis');
+        $this->assertTrue($posZainab < $posBudi, 'VII-1 sebelum VII-2');
+        $this->assertTrue($posBudi < $posDelapan, 'Angkatan VII sebelum VIII');
+    }
+
     public function test_index_filters_by_tingkat_and_rombel(): void
     {
         $this->seed();

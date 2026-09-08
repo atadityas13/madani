@@ -132,7 +132,7 @@ class SiswaExcelImportTest extends TestCase
         $content = $index->getContent();
         $this->assertTrue(
             strpos($content, 'Ahmad Budi') < strpos($content, 'Zainab Putri'),
-            'Index siswa harus alfabetis berdasarkan nama'
+            'Dalam angkatan/rombel sama, index siswa urut nama'
         );
 
         $show = $this->get(route('rombel.show', $rombel))->assertOk();
