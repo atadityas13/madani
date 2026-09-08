@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use RuntimeException;
 
@@ -80,6 +81,7 @@ class RombelController extends Controller
 
         $kandidat = Siswa::query()
             ->where('status_keaktifan', '!=', 'nonaktif')
+            ->where('angkatan', $rombel->tingkat)
             ->whereNotIn('id', $sudahTerisi)
             ->orderBy('nama')
             ->get();
@@ -88,6 +90,7 @@ class RombelController extends Controller
             ->with('waliKelas')
             ->withCount(['siswas as anggota_count' => fn ($query) => $query->where('rombel_siswas.status', 'aktif')])
             ->where('tahun_ajaran_id', $rombel->tahun_ajaran_id)
+            ->where('tingkat', $rombel->tingkat)
             ->where('id', '!=', $rombel->id)
             ->orderByRaw("CASE tingkat WHEN 'VII' THEN 1 WHEN 'VIII' THEN 2 WHEN 'IX' THEN 3 ELSE 9 END")
             ->orderByRaw('CAST(nama AS UNSIGNED)')
@@ -108,6 +111,12 @@ class RombelController extends Controller
         DB::transaction(function () use ($data, $rombel) {
             foreach ($data['siswa_ids'] as $siswaId) {
                 $siswa = Siswa::query()->findOrFail($siswaId);
+
+                if ($siswa->angkatan !== $rombel->tingkat) {
+                    throw ValidationException::withMessages([
+                        'siswa_ids' => 'Siswa hanya boleh di rombel angkatan '.($rombel->tingkat ?? '—').'.',
+                    ]);
+                }
 
                 DB::table('rombel_siswas')
                     ->where('siswa_id', $siswa->id)
@@ -140,6 +149,7 @@ class RombelController extends Controller
                 'integer',
                 Rule::exists('rombels', 'id')
                     ->where('tahun_ajaran_id', $rombel->tahun_ajaran_id)
+                    ->where('tingkat', $rombel->tingkat)
                     ->whereNot('id', $rombel->id),
             ],
         ]);
@@ -150,6 +160,12 @@ class RombelController extends Controller
             return redirect()
                 ->route('rombel.show', $rombel)
                 ->with('error', 'Rombel tujuan harus pada tahun ajaran yang sama.');
+        }
+
+        if ($siswa->angkatan !== $tujuan->tingkat) {
+            return redirect()
+                ->route('rombel.show', $rombel)
+                ->with('error', 'Siswa hanya boleh di rombel angkatan '.($siswa->angkatan ?? '—').'.');
         }
 
         $aktifDiSumber = $rombel->siswas()

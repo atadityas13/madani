@@ -72,6 +72,22 @@
     </div>
 
     <div class="col-md-4">
+        <label class="form-label">Angkatan</label>
+        @if ($kunci)
+            <input type="hidden" name="angkatan" value="{{ $s?->angkatan }}">
+            <input class="form-control" value="{{ $s?->angkatan }}" readonly>
+        @else
+            <select class="form-select @error('angkatan') is-invalid @enderror" name="angkatan" required>
+                <option value="">Pilih</option>
+                @foreach (config('emis.tingkat_rombel') as $kode => $label)
+                    <option value="{{ $kode }}" @selected(old('angkatan', $s?->angkatan) === $kode)>{{ $label }}</option>
+                @endforeach
+            </select>
+            @error('angkatan') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        @endif
+    </div>
+
+    <div class="col-md-4">
         <label class="form-label">NISN</label>
         <div class="input-group">
             <input class="form-control @error('nisn') is-invalid @enderror" name="nisn" value="{{ old('nisn', $s?->nisn) }}" maxlength="10" inputmode="numeric" data-angka @if ($kunci) readonly @else required @endif>

@@ -19,6 +19,7 @@ class SiswaBiodataService
 
     public function create(Request $request): Siswa
     {
+        // PPDB (nanti): set angkatan = VII otomatis. Mutasi (nanti): wajib pilih angkatan di form masuk.
         $data = $this->validateDataSiswa($request);
 
         return DB::transaction(function () use ($request, $data) {
@@ -89,9 +90,10 @@ class SiswaBiodataService
                 'tempat_lahir' => $siswa->tempat_lahir,
                 'tanggal_lahir' => $siswa->tanggal_lahir?->toDateString(),
                 'jenis_kelamin' => $siswa->jenis_kelamin,
+                'angkatan' => $siswa->angkatan,
             ]);
         }
-        $data = $this->validateDataSiswa($request, $siswa);
+        $data = $this->validateDataSiswa($request, $siswa, kunciIdentitas: $kunciIdentitas);
 
         $siswa->update($this->siswaPayload($request, $data, $siswa));
 
@@ -487,7 +489,7 @@ class SiswaBiodataService
         return 'Rekam didik disimpan.';
     }
 
-    public function validateDataSiswa(Request $request, ?Siswa $siswa = null): array
+    public function validateDataSiswa(Request $request, ?Siswa $siswa = null, bool $kunciIdentitas = false): array
     {
         $siswa?->load('dokumens');
 
@@ -506,6 +508,12 @@ class SiswaBiodataService
 
         return $request->validate([
             'nama' => ['required', 'string', 'max:255', 'regex:'.self::NAMA_ORANG],
+            'angkatan' => [
+                Rule::requiredIf(! $kunciIdentitas),
+                'nullable',
+                'string',
+                Rule::in(array_keys(config('emis.tingkat_rombel'))),
+            ],
             'nis' => ['nullable', 'digits_between:1,20'],
             'nisn' => [
                 'required',
@@ -591,6 +599,8 @@ class SiswaBiodataService
             'foto' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:1024'],
         ], [
             'nama.regex' => 'Nama lengkap hanya dapat diisi huruf dan simbol -\'.,',
+            'angkatan.required' => 'Angkatan wajib dipilih',
+            'angkatan.in' => 'Angkatan tidak valid',
             'kepala_keluarga.regex' => 'Nama kepala keluarga hanya dapat diisi huruf dan simbol -\'.,',
             'no_hp.regex' => 'Nomor HP/Whatsapp harus diawali 62 diikuti 8 sampai 15 digit',
             'nis.digits_between' => 'NIS lokal hanya boleh angka',
@@ -630,6 +640,7 @@ class SiswaBiodataService
 
         $payload = [
             'nama' => $data['nama'],
+            'angkatan' => $data['angkatan'] ?? null,
             'nis' => $data['nis'] ?? null,
             'punya_nisn' => true,
             'nisn' => $data['nisn'],
@@ -648,6 +659,10 @@ class SiswaBiodataService
             'tidak_punya_email' => $tidakPunyaEmail,
             'email' => $tidakPunyaEmail ? null : ($data['email'] ?? null),
         ];
+
+        if ($siswa && ! array_key_exists('angkatan', $data)) {
+            unset($payload['angkatan']);
+        }
 
         if (! $siswa) {
             $payload['status_keaktifan'] = 'aktif_tanpa_rombel';

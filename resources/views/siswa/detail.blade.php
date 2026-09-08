@@ -69,6 +69,7 @@
         'NIK' => $fmt($siswa->nik),
         'NISN' => $fmt($siswa->nisn),
         'NISM' => $fmt($siswa->nism ?: $siswa->nis),
+        'ANGKATAN' => $fmt($siswa->angkatan),
         'TEMPAT LAHIR' => $fmt($siswa->tempat_lahir),
         'TANGGAL LAHIR' => $fmt($siswa->tanggal_lahir),
         'JENIS KELAMIN' => $jk,

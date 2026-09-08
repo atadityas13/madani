@@ -19,7 +19,7 @@ use Laravel\Sanctum\HasApiTokens;
     'tempat_lahir', 'tanggal_lahir', 'jenis_kelamin', 'agama',
     'anak_ke', 'jumlah_saudara',
     'cita_cita', 'hobi', 'email', 'no_hp',
-    'tidak_punya_hp', 'tidak_punya_email', 'foto', 'status_keaktifan', 'tanggal_nonaktif',
+    'tidak_punya_hp', 'tidak_punya_email', 'foto', 'status_keaktifan', 'angkatan', 'tanggal_nonaktif',
     'alasan_nonaktif', 'must_change_password',
 ])]
 #[Hidden(['password', 'remember_token'])]

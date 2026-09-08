@@ -55,6 +55,7 @@ class MenuAkademikTest extends TestCase
         $siswa = Siswa::query()->create([
             'nama' => 'Siswa Rombel',
             'status_keaktifan' => 'aktif_tanpa_rombel',
+            'angkatan' => 'VII',
         ]);
 
         $this->post('/rombel/'.$rombel->id.'/anggota', [
@@ -90,6 +91,7 @@ class MenuAkademikTest extends TestCase
         $siswa = Siswa::query()->create([
             'nama' => 'Siswa Pindah',
             'status_keaktifan' => 'aktif',
+            'angkatan' => 'VII',
         ]);
         $sumber->siswas()->attach($siswa->id, ['status' => 'aktif']);
 
