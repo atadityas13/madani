@@ -21,11 +21,13 @@
     <div class="madani-login__frame">
         <aside class="madani-login__brand">
             <div class="madani-login__brand-inner">
-                <img
-                    class="madani-login__logo"
-                    src="{{ asset('images/logo-madani.png') }}?v={{ filemtime(public_path('images/logo-madani.png')) }}"
-                    alt="MADANI — Management Academic Data Native Integration"
-                >
+                <div class="madani-login__logo-plate">
+                    <img
+                        class="madani-login__logo"
+                        src="{{ asset('images/logo-madani.png') }}?v={{ filemtime(public_path('images/logo-madani.png')) }}"
+                        alt="MADANI"
+                    >
+                </div>
                 <p class="madani-login__school">{{ $eyebrow }}</p>
                 <p
                     class="madani-login__tagline"
