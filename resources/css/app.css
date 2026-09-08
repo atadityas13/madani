@@ -1029,23 +1029,14 @@ a.biodata-path-item:hover {
     max-width: 420px;
 }
 
-.madani-login__logo-plate {
-    display: inline-block;
-    max-width: 100%;
-    margin-bottom: 1.25rem;
-    padding: 0.85rem 1rem;
-    border-radius: 18px;
-    background: #ffffff;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
-}
-
 .madani-login__logo {
     display: block;
-    width: min(260px, 72vw);
-    max-height: 72px;
+    width: min(360px, 92%);
     height: auto;
+    margin-bottom: 1.25rem;
     object-fit: contain;
     object-position: left center;
+    filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.25));
 }
 
 .madani-login__school {
@@ -1269,14 +1260,9 @@ a.biodata-path-item:hover {
         border-radius: 24px;
     }
 
-    .madani-login__logo-plate {
-        margin-bottom: 0.85rem;
-        padding: 0.65rem 0.8rem;
-    }
-
     .madani-login__logo {
-        width: min(200px, 65vw);
-        max-height: 56px;
+        width: min(280px, 85%);
+        margin-bottom: 0.85rem;
     }
 
     .madani-login__tagline {
