@@ -75,6 +75,7 @@ class SiswaExcelImportService
 
         $parsed = [];
         $errors = [];
+        $nisInFile = [];
         $nisnInFile = [];
         $nikInFile = [];
 
@@ -96,6 +97,12 @@ class SiswaExcelImportService
                 continue;
             }
 
+            if ($row['nis'] !== null && isset($nisInFile[$row['nis']])) {
+                $errors[] = "Baris {$excelRow}: NIS {$row['nis']} duplikat di file (juga di baris {$nisInFile[$row['nis']]}).";
+
+                continue;
+            }
+
             if (isset($nisnInFile[$row['nisn']])) {
                 $errors[] = "Baris {$excelRow}: NISN {$row['nisn']} duplikat di file (juga di baris {$nisnInFile[$row['nisn']]}).";
 
@@ -108,6 +115,9 @@ class SiswaExcelImportService
                 continue;
             }
 
+            if ($row['nis'] !== null) {
+                $nisInFile[$row['nis']] = $excelRow;
+            }
             $nisnInFile[$row['nisn']] = $excelRow;
             $nikInFile[$row['nik']] = $excelRow;
             $parsed[] = $row;
@@ -130,6 +140,10 @@ class SiswaExcelImportService
         }
 
         foreach ($parsed as $row) {
+            if ($row['nis'] !== null && Siswa::query()->where('nis', $row['nis'])->exists()) {
+                $errors[] = "Baris {$row['excel_row']}: NIS {$row['nis']} sudah ada di database.";
+            }
+
             if (Siswa::query()->where('nisn', $row['nisn'])->exists()) {
                 $errors[] = "Baris {$row['excel_row']}: NISN {$row['nisn']} sudah ada di database.";
             }

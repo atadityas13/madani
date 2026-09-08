@@ -108,6 +108,65 @@ class SiswaExcelImportTest extends TestCase
         $this->assertSame(0, Siswa::query()->count());
     }
 
+    public function test_daftar_siswa_dan_anggota_rombel_urut_nama(): void
+    {
+        $this->actingAsSuperadmin();
+        $tahun = TahunAjaran::aktif();
+
+        $rombel = Rombel::query()->create([
+            'tahun_ajaran_id' => $tahun->id,
+            'tingkat' => 'VII',
+            'nama' => '1',
+        ]);
+
+        $file = $this->buatExcel([
+            [1, 'Zainab Putri', '', '1111111111', '3210230911120011', 'Majalengka', '2012-01-01', 'Perempuan', 'VII', '1', '', 'Ibu Z'],
+            [2, 'Ahmad Budi', '', '2222222222', '3210230911120012', 'Majalengka', '2012-02-02', 'Laki-laki', 'VII', '1', '', 'Ibu A'],
+        ]);
+
+        $this->post(route('manajemen.database.siswa.impor'), [
+            'file' => $file,
+        ])->assertRedirect(route('manajemen.database'));
+
+        $index = $this->get(route('siswa.index', ['per_page' => 'all']))->assertOk();
+        $content = $index->getContent();
+        $this->assertTrue(
+            strpos($content, 'Ahmad Budi') < strpos($content, 'Zainab Putri'),
+            'Index siswa harus alfabetis berdasarkan nama'
+        );
+
+        $show = $this->get(route('rombel.show', $rombel))->assertOk();
+        $showContent = $show->getContent();
+        $this->assertTrue(
+            strpos($showContent, 'Ahmad Budi') < strpos($showContent, 'Zainab Putri'),
+            'Anggota rombel harus alfabetis berdasarkan nama'
+        );
+    }
+
+    public function test_impor_gagal_jika_nis_sudah_ada(): void
+    {
+        $this->actingAsSuperadmin();
+
+        Siswa::query()->create([
+            'nama' => 'Sudah Ada',
+            'nis' => '2026001',
+            'nisn' => '9999999999',
+            'nik' => '3210230911120099',
+            'status_keaktifan' => 'aktif_tanpa_rombel',
+            'agama' => 'Islam',
+        ]);
+
+        $file = $this->buatExcel([
+            [1, 'Siswa Baru', '2026001', '5555555555', '3210230911120055', 'Majalengka', '2012-01-01', 'Laki-laki', 'VII', '', '', 'Ibu Baru'],
+        ]);
+
+        $this->post(route('manajemen.database.siswa.impor'), [
+            'file' => $file,
+        ])->assertSessionHasErrors('file');
+
+        $this->assertNull(Siswa::query()->where('nisn', '5555555555')->first());
+    }
+
     public function test_normalisasi_nik_membuang_apostrof(): void
     {
         $service = app(SiswaExcelImportService::class);

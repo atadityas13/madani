@@ -103,7 +103,7 @@ class SiswaController extends Controller
                     ->where('rombels.id', $rombelId)
                     ->where('rombel_siswas.status', 'aktif'));
             })
-            ->latest();
+            ->orderBy('nama');
 
         $allowedPerPage = [10, 20, 50, 100];
         if ($perPageRaw === 'all') {

@@ -514,7 +514,11 @@ class SiswaBiodataService
                 'string',
                 Rule::in(array_keys(config('emis.tingkat_rombel'))),
             ],
-            'nis' => ['nullable', 'digits_between:1,20'],
+            'nis' => [
+                'nullable',
+                'digits_between:1,20',
+                Rule::unique('siswas', 'nis')->ignore($siswa?->id),
+            ],
             'nisn' => [
                 'required',
                 'digits:10',
@@ -604,6 +608,7 @@ class SiswaBiodataService
             'kepala_keluarga.regex' => 'Nama kepala keluarga hanya dapat diisi huruf dan simbol -\'.,',
             'no_hp.regex' => 'Nomor HP/Whatsapp harus diawali 62 diikuti 8 sampai 15 digit',
             'nis.digits_between' => 'NIS lokal hanya boleh angka',
+            'nis.unique' => 'NIS lokal sudah dipakai siswa lain',
             'nisn.required' => 'NISN tidak boleh kosong',
             'nisn.digits' => 'NISN harus 10 digit angka',
             'nik.required' => 'NIK tidak boleh kosong',

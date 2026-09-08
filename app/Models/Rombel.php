@@ -32,7 +32,9 @@ class Rombel extends Model
 
     public function anggotaAktif(): BelongsToMany
     {
-        return $this->siswas()->wherePivot('status', 'aktif');
+        return $this->siswas()
+            ->wherePivot('status', 'aktif')
+            ->orderBy('siswas.nama');
     }
 
     public function label(): string
