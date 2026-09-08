@@ -113,11 +113,19 @@ class SiswaKartuEPelajarTest extends TestCase
             ->assertOk()
             ->assertHeader('content-type', 'application/pdf');
 
-        $html = view('siswa.kartu-e-pelajar-pdf', app(KartuEPelajarPdfService::class)->viewData($siswa))->render();
+        $viewData = app(KartuEPelajarPdfService::class)->viewData($siswa);
+        $this->assertNotNull($viewData['logoMadaniDataUri']);
+        $this->assertNotNull($viewData['fotoPlaceholderDataUri']);
+        $this->assertStringStartsWith('data:image/png;base64,', $viewData['logoMadaniDataUri']);
+
+        $html = view('siswa.kartu-e-pelajar-pdf', $viewData)->render();
         $this->assertStringContainsString('KARTU PELAJAR', $html);
         $this->assertStringContainsString('IKRAR PELAJAR INDONESIA', $html);
         $this->assertStringContainsString('Berlaku selama menjadi siswa', $html);
         $this->assertStringContainsString('Kami Pelajar Indonesia, berikrar untuk:', $html);
+        $this->assertStringContainsString('Kartu Pelajar ini dihasilkan oleh sistem resmi', $html);
+        $this->assertStringContainsString('alt="MADANI"', $html);
+        $this->assertStringContainsString('front-footer', $html);
         $this->assertStringNotContainsString('Preview Kartu E-Pelajar', $html);
         $this->assertStringNotContainsString('Preview admin MADANI', $html);
         $this->assertStringNotContainsString('Depan ·', $html);

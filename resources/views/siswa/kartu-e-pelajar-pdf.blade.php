@@ -25,7 +25,7 @@
             width: 4%;
         }
 
-        /* ISO/IEC 7810 ID-1 (sama seperti Ta'lim) */
+        /* ISO/IEC 7810 ID-1 — proporsi mirror Ta'lim */
         .card {
             width: 85.60mm;
             height: 53.98mm;
@@ -37,9 +37,13 @@
         }
 
         .front-header {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 85.60mm;
             height: 14.84mm; /* 27.5% */
             background: #022C22;
-            padding: 0.7mm 1.4mm;
+            padding: 0.6mm 1.35mm;
         }
         .kop-table {
             width: 100%;
@@ -48,121 +52,141 @@
         }
         .kop-table td { vertical-align: middle; }
         .kop-logo {
-            width: 11.5mm;
+            width: 12.2mm;
             text-align: center;
         }
         .kop-logo img {
-            width: 10.5mm;
-            height: 10.5mm;
-            object-fit: contain;
+            width: 11.2mm;
+            height: 11.2mm;
         }
         .kop-center {
             text-align: center;
-            padding: 0 1mm;
-            line-height: 1.12;
+            padding: 0 0.8mm;
+            line-height: 1.1;
         }
         .kop-instansi {
             color: #FBBF24;
-            font-size: 5.2px;
+            font-size: 5px;
             font-weight: bold;
-            letter-spacing: 0.15px;
+            letter-spacing: 0.12px;
         }
         .kop-nama {
             color: #FBBF24;
-            font-size: 6.4px;
+            font-size: 6.2px;
             font-weight: bold;
-            letter-spacing: 0.2px;
-            margin-top: 0.4mm;
+            letter-spacing: 0.18px;
+            margin-top: 0.35mm;
         }
         .kop-meta {
             color: #ffffff;
-            font-size: 4.2px;
-            margin-top: 0.35mm;
+            font-size: 4px;
+            margin-top: 0.3mm;
         }
 
         .front-body {
-            height: 34.93mm; /* sisa setelah header+footer */
-            position: relative;
+            position: absolute;
+            left: 0;
+            top: 14.84mm;
+            width: 85.60mm;
+            height: 34.93mm; /* mid */
             background: #ffffff;
-            padding: 1.6mm 1.4mm 0.8mm;
+            overflow: hidden;
+        }
+        .body-pad {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            padding: 1.9mm 1.35mm 0.4mm;
         }
         .ribbon {
             display: inline-block;
             background: #065F46;
             color: #ffffff;
-            font-size: 5.6px;
+            font-size: 5.4px;
             font-weight: bold;
-            letter-spacing: 1.2px;
-            padding: 0.9mm 8mm 0.9mm 2.4mm;
-            border-bottom-right-radius: 4mm;
+            letter-spacing: 1.1px;
+            padding: 0.85mm 7.5mm 0.85mm 2.2mm;
+            /* DomPDF: bentuk slant Compose diganti radius */
+            border-bottom-right-radius: 3.8mm;
         }
         .ribbon-gold {
-            width: 28mm;
-            height: 0.9mm;
+            width: 26mm;
+            height: 0.85mm;
             background: #F59E0B;
-            margin-top: 0.55mm;
-            margin-bottom: 1.2mm;
-            border-bottom-right-radius: 2mm;
+            margin-top: 0.5mm;
+            margin-bottom: 1.1mm;
+            border-bottom-right-radius: 1.8mm;
         }
         .front-main {
             width: 100%;
             border-collapse: collapse;
         }
         .front-main td { vertical-align: top; }
-        .foto-cell { width: 16mm; padding-right: 1.4mm; }
+        .foto-cell { width: 17.2mm; padding-right: 1.5mm; }
         .foto, .foto-empty {
-            width: 14.5mm;
-            height: 19.3mm;
-            border: 0.35mm solid #065F46;
+            width: 16.2mm;
+            height: 21.6mm; /* ~62% midH, rasio 3:4 */
+            border: 0.32mm solid #065F46;
             display: block;
         }
         .foto-empty {
             background: #f8fafc;
             text-align: center;
-            color: #94a3b8;
-            font-size: 5px;
-            line-height: 19.3mm;
+        }
+        .foto-empty img {
+            width: 8mm;
+            height: auto;
+            margin-top: 5.5mm;
+        }
+        .data-wrap {
+            padding-right: 12.2mm; /* ruang QR overlay */
         }
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            margin-right: 14mm;
         }
         .data-table td {
-            padding: 0.15mm 0;
-            font-size: 5.8px;
-            line-height: 1.2;
+            padding: 0.12mm 0;
+            font-size: 5.7px;
+            line-height: 1.18;
             vertical-align: top;
         }
         .data-label {
-            width: 11mm;
-            color: #022C22;
+            width: 10.2mm;
+            color: #020617;
             font-weight: bold;
             text-transform: uppercase;
         }
-        .data-colon { width: 2mm; font-weight: bold; }
-        .data-value { font-weight: bold; color: #020617; }
+        .data-colon {
+            width: 1.8mm;
+            font-weight: bold;
+            color: #020617;
+        }
+        .data-value {
+            font-weight: bold;
+            color: #020617;
+        }
         .qr-box {
             position: absolute;
-            top: 1.6mm;
-            right: 1.4mm;
-            width: 12mm;
-            height: 12mm;
-            border: 0.2mm solid #D1FAE5;
+            top: 1.9mm;
+            right: 1.35mm;
+            width: 10.5mm;
+            height: 10.5mm;
+            border: 0.18mm solid #D1FAE5;
             background: #fff;
-            padding: 0.4mm;
+            padding: 0.35mm;
             text-align: center;
         }
         .qr-box img {
-            width: 11mm;
-            height: 11mm;
+            width: 9.6mm;
+            height: 9.6mm;
         }
         .caption-row {
             position: absolute;
-            left: 1.4mm;
-            right: 1.4mm;
-            bottom: 0.6mm;
-            height: 4mm;
+            left: 1.35mm;
+            right: 1.35mm;
+            bottom: 0.55mm;
+            height: 3.6mm;
         }
         .caption-row table {
             width: 100%;
@@ -170,27 +194,31 @@
         }
         .caption-row td { vertical-align: middle; }
         .caption-text {
-            font-size: 4.2px;
+            font-size: 4px;
             font-weight: bold;
             color: #020617;
         }
         .caption-logo {
-            width: 10mm;
+            width: 14mm;
             text-align: right;
         }
         .caption-logo img {
-            height: 3.4mm;
+            height: 3.2mm;
             width: auto;
         }
 
         .front-footer {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 85.60mm;
             height: 4.21mm; /* 7.8% */
             background: #022C22;
             color: #ffffff;
             text-align: center;
-            font-size: 3.4px;
-            line-height: 1.15;
-            padding: 0.45mm 1.6mm;
+            font-size: 3.2px;
+            line-height: 1.12;
+            padding: 0.55mm 1.5mm 0.35mm;
         }
 
         .back {
@@ -224,7 +252,7 @@
             height: 53.98mm;
         }
         .back-header {
-            height: 7.02mm; /* ~13% */
+            height: 7.02mm;
             background: #022C22;
             text-align: center;
             color: #FBBF24;
@@ -256,7 +284,7 @@
             letter-spacing: 0.1px;
         }
         .back-footer {
-            height: 4.86mm; /* ~9% */
+            height: 4.86mm;
             background: #022C22;
             color: #ffffff;
             text-align: center;
@@ -315,72 +343,80 @@
                 </div>
 
                 <div class="front-body">
-                    <div class="ribbon">KARTU PELAJAR</div>
-                    <div class="ribbon-gold"></div>
+                    <div class="body-pad">
+                        <div class="ribbon">KARTU PELAJAR</div>
+                        <div class="ribbon-gold"></div>
 
-                    <table class="front-main">
-                        <tr>
-                            <td class="foto-cell">
-                                @if ($fotoDataUri)
-                                    <img class="foto" src="{{ $fotoDataUri }}" alt="Foto">
-                                @else
-                                    <div class="foto-empty">Foto</div>
-                                @endif
-                            </td>
-                            <td>
-                                <table class="data-table">
-                                    <tr>
-                                        <td class="data-label">NAMA</td>
-                                        <td class="data-colon">:</td>
-                                        <td class="data-value">{{ mb_strtoupper((string) $dash($kartu['nama'])) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="data-label">NISN</td>
-                                        <td class="data-colon">:</td>
-                                        <td class="data-value">{{ $dash($kartu['nisn']) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="data-label">NIS</td>
-                                        <td class="data-colon">:</td>
-                                        <td class="data-value">{{ $dash($kartu['nis']) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="data-label">TTL</td>
-                                        <td class="data-colon">:</td>
-                                        <td class="data-value">{{ $dash($kartu['ttl']) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="data-label">JK</td>
-                                        <td class="data-colon">:</td>
-                                        <td class="data-value">{{ $dash($kartu['jenis_kelamin_label']) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="data-label">ALAMAT</td>
-                                        <td class="data-colon">:</td>
-                                        <td class="data-value">{{ $dash($kartu['alamat']) }}</td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                    </table>
-
-                    @if ($qrDataUri)
-                        <div class="qr-box">
-                            <img src="{{ $qrDataUri }}" alt="QR">
-                        </div>
-                    @endif
-
-                    <div class="caption-row">
-                        <table>
+                        <table class="front-main">
                             <tr>
-                                <td class="caption-text">Berlaku selama menjadi siswa {{ $namaSingkat }}</td>
-                                <td class="caption-logo">
-                                    @if ($logoMadaniDataUri)
-                                        <img src="{{ $logoMadaniDataUri }}" alt="MADANI">
+                                <td class="foto-cell">
+                                    @if ($fotoDataUri)
+                                        <img class="foto" src="{{ $fotoDataUri }}" alt="Foto">
+                                    @elseif ($fotoPlaceholderDataUri)
+                                        <div class="foto-empty">
+                                            <img src="{{ $fotoPlaceholderDataUri }}" alt="">
+                                        </div>
+                                    @else
+                                        <div class="foto-empty"></div>
                                     @endif
+                                </td>
+                                <td>
+                                    <div class="data-wrap">
+                                        <table class="data-table">
+                                            <tr>
+                                                <td class="data-label">NAMA</td>
+                                                <td class="data-colon">:</td>
+                                                <td class="data-value">{{ mb_strtoupper((string) $dash($kartu['nama'])) }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="data-label">NISN</td>
+                                                <td class="data-colon">:</td>
+                                                <td class="data-value">{{ $dash($kartu['nisn']) }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="data-label">NIS</td>
+                                                <td class="data-colon">:</td>
+                                                <td class="data-value">{{ $dash($kartu['nis']) }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="data-label">TTL</td>
+                                                <td class="data-colon">:</td>
+                                                <td class="data-value">{{ $dash($kartu['ttl']) }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="data-label">JK</td>
+                                                <td class="data-colon">:</td>
+                                                <td class="data-value">{{ $dash($kartu['jenis_kelamin_label']) }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="data-label">ALAMAT</td>
+                                                <td class="data-colon">:</td>
+                                                <td class="data-value">{{ $dash($kartu['alamat']) }}</td>
+                                            </tr>
+                                        </table>
+                                    </div>
                                 </td>
                             </tr>
                         </table>
+
+                        @if ($qrDataUri)
+                            <div class="qr-box">
+                                <img src="{{ $qrDataUri }}" alt="QR">
+                            </div>
+                        @endif
+
+                        <div class="caption-row">
+                            <table>
+                                <tr>
+                                    <td class="caption-text">Berlaku selama menjadi siswa {{ $namaSingkat }}</td>
+                                    <td class="caption-logo">
+                                        @if ($logoMadaniDataUri)
+                                            <img src="{{ $logoMadaniDataUri }}" alt="MADANI">
+                                        @endif
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
                     </div>
                 </div>
 

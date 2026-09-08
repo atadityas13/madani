@@ -78,20 +78,22 @@ class KartuEPelajarPdfService
         try {
             $payload = $this->kartu->payload($siswa);
             $madrasah = Madrasah::saatIni();
-            $logoMadani = $this->r2DataUri($madrasah->logo_path, 96)
-                ?? $this->rawAssetDataUri(public_path('img/logo-madani-kartu-sm.png'))
-                ?? $this->assetDataUri(public_path('images/logo-madani.png'), 96);
+            $logoBrandMadani = $this->rawAssetDataUri(public_path('img/logo-madani-wordmark-kartu.png'))
+                ?? $this->assetDataUri(public_path('images/logo-madani.png'), 160);
+            // Kop kanan: logo madrasah (R2); fallback wordmark seperti Ta'lim.
+            $logoMadrasah = $this->r2DataUri($madrasah->logo_path, 110) ?? $logoBrandMadani;
 
             return [
                 'siswa' => $siswa,
                 'kartu' => $payload,
-                'logoDataUri' => $logoMadani,
+                'logoDataUri' => $logoMadrasah,
                 'logoKemenagDataUri' => $this->rawAssetDataUri(public_path('img/logo-kemenag-kartu.png'))
                     ?? $this->assetDataUri(public_path('img/logo-kemenag.png'), 96),
-                'logoMadaniDataUri' => $logoMadani,
+                'logoMadaniDataUri' => $logoBrandMadani,
+                'fotoPlaceholderDataUri' => $this->rawAssetDataUri(public_path('img/foto-placeholder-kartu.png')),
                 'bgBelakangDataUri' => $this->rawAssetDataUri(public_path('img/bg-kartu-belakang-kartu.jpg'), 'image/jpeg')
                     ?? $this->assetJpegDataUri(public_path('img/bg-kartu-belakang.jpg'), 420),
-                'fotoDataUri' => $this->r2DataUri($siswa->foto, 140),
+                'fotoDataUri' => $this->r2DataUri($siswa->foto, 160),
                 'qrDataUri' => $this->qrDataUri($payload['verify_url']),
                 'generatedAt' => now(),
             ];
