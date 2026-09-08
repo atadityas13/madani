@@ -37,10 +37,14 @@ class SiswaDetailPageTest extends TestCase
             ->assertSee('3210230911120003', false)
             ->assertSee('3127710305', false)
             ->assertSee('Majalengka', false)
-            ->assertSee('09 November 2012', false)
+            ->assertSee('2012-11-09', false)
             ->assertSee('Laki-laki', false)
             ->assertSee('Islam', false)
             ->assertSee('siswa-detail', false)
+            ->assertSee('data-copy', false)
+            ->assertSee('Tempat tinggal', false)
+            ->assertSee('Rekam didik', false)
+            ->assertDontSee('09 November 2012', false)
             ->assertDontSee('name="bagian"', false)
             ->assertDontSee('Lengkapi tab lain', false);
     }

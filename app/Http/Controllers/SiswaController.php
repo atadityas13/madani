@@ -99,6 +99,12 @@ class SiswaController extends Controller
             'rombels.tahunAjaran',
             'dokumens',
             'pernyataan',
+            'ayah',
+            'ibu',
+            'wali',
+            'rekamDidik',
+            'prestasis',
+            'beasiswas',
         ]);
 
         $periodik = $siswa->periodikAktif();

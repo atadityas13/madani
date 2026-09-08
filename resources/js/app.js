@@ -220,6 +220,51 @@ function bindPasswordToggles() {
     });
 }
 
+function bindSiswaDetailCopy() {
+    const copyText = async (text) => {
+        if (! text) {
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch {
+            const area = document.createElement('textarea');
+            area.value = text;
+            area.setAttribute('readonly', '');
+            area.style.position = 'fixed';
+            area.style.opacity = '0';
+            document.body.appendChild(area);
+            area.select();
+            document.execCommand('copy');
+            area.remove();
+        }
+
+        Swal.fire({
+            ...swalBase,
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Disalin',
+            showConfirmButton: false,
+            timer: 1200,
+            timerProgressBar: true,
+        });
+    };
+
+    document.querySelectorAll('[data-copy]').forEach((node) => {
+        const run = () => copyText(node.getAttribute('data-copy') || '');
+
+        node.addEventListener('click', run);
+        node.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                run();
+            }
+        });
+    });
+}
+
 function bindLoginTaglines() {
     document.querySelectorAll('[data-madani-tagline]').forEach((node) => {
         let lines = [];
@@ -1496,6 +1541,7 @@ bindDokumenBoxes();
 bindConfirmForms();
 bindFormLoading();
 bindPasswordToggles();
+bindSiswaDetailCopy();
 bindLoginTaglines();
 readMadaniFlash();
 bindStaticWarnings();
