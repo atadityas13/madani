@@ -34,7 +34,9 @@ class GenerateNisSiswaTest extends TestCase
             ->assertOk()
             ->assertSee('nis-alert-badge', false)
             ->assertSee('Terdapat 1 siswa yang belum memiliki NIS', false)
-            ->assertSee('Generate NIS', false);
+            ->assertSee('Generate NIS', false)
+            ->assertDontSee('Format: NSM + 2 digit tahun masuk', false)
+            ->assertSee('data-counts=', false);
     }
 
     public function test_generate_nis_mengisi_format_nsm_tahun_urutan(): void

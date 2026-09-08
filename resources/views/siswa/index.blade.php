@@ -139,35 +139,106 @@
 </div>
 
 @if ($bisaGenerateNis ?? false)
+    <style>
+        .nis-alert-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 0.15rem;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: #dc3545;
+            font-size: 0.7rem;
+            font-weight: 700;
+            line-height: 1;
+            vertical-align: super;
+            cursor: pointer;
+        }
+        .nis-alert-badge:hover { color: #b02a37; }
+    </style>
     <div class="modal fade" id="generateNisModal" tabindex="-1" aria-labelledby="generateNisModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form method="POST" action="{{ route('siswa.generate-nis') }}" data-loading-text="Menggenerate…">
+                <form
+                    method="POST"
+                    action="{{ route('siswa.generate-nis') }}"
+                    id="generateNisForm"
+                    data-loading-text="Menggenerate…"
+                    data-confirm-title="Generate NIS"
+                    data-confirm-ok="Generate"
+                >
                     @csrf
                     <div class="modal-header">
                         <h5 class="modal-title" id="generateNisModalLabel">Generate NIS</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                     </div>
                     <div class="modal-body">
-                        <p class="small text-secondary mb-3">
-                            Format: NSM + 2 digit tahun masuk (dari TA aktif) + 4 digit urutan.
-                            Hanya siswa pada angkatan terpilih yang belum punya NIS.
-                        </p>
                         <label class="form-label" for="generateNisAngkatan">Angkatan</label>
-                        <select class="form-select" id="generateNisAngkatan" name="angkatan" required>
+                        <select
+                            class="form-select"
+                            id="generateNisAngkatan"
+                            name="angkatan"
+                            required
+                            data-counts='@json($jumlahTanpaNisPerAngkatan ?? [])'
+                        >
                             <option value="">Pilih angkatan</option>
                             @foreach (config('emis.tingkat_rombel') as $kode => $label)
                                 <option value="{{ $kode }}">{{ $label }}</option>
                             @endforeach
                         </select>
+                        <div class="form-text mt-2" id="generateNisCountInfo" hidden></div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-madani">Generate NIS</button>
+                        <button type="submit" class="btn btn-madani" id="generateNisSubmit" disabled>Generate NIS</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const select = document.getElementById('generateNisAngkatan');
+            const info = document.getElementById('generateNisCountInfo');
+            const submit = document.getElementById('generateNisSubmit');
+            const form = document.getElementById('generateNisForm');
+            if (!select || !info || !submit || !form) {
+                return;
+            }
+
+            const counts = JSON.parse(select.dataset.counts || '{}');
+
+            const sync = () => {
+                const angkatan = select.value;
+                const jumlah = Number(counts[angkatan] || 0);
+
+                if (!angkatan) {
+                    info.hidden = true;
+                    info.textContent = '';
+                    submit.disabled = true;
+                    form.removeAttribute('data-confirm');
+                    return;
+                }
+
+                info.hidden = false;
+                info.textContent = `${jumlah} siswa belum memiliki NIS`;
+                submit.disabled = jumlah < 1;
+
+                if (jumlah < 1) {
+                    form.removeAttribute('data-confirm');
+                    return;
+                }
+
+                form.setAttribute(
+                    'data-confirm',
+                    `${jumlah} siswa akan digenerate NIS nya. Yakin?`
+                );
+            };
+
+            select.addEventListener('change', sync);
+            sync();
+        });
+    </script>
 @endif
 @endsection

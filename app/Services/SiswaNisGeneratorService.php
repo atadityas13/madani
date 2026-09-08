@@ -80,6 +80,28 @@ class SiswaNisGeneratorService
             ->count();
     }
 
+    /**
+     * @return array<string, int>
+     */
+    public function jumlahTanpaNisPerAngkatan(): array
+    {
+        $rows = Siswa::query()
+            ->selectRaw('angkatan, COUNT(*) as total')
+            ->where(function ($query) {
+                $query->whereNull('nis')->orWhere('nis', '');
+            })
+            ->whereIn('angkatan', array_keys(config('emis.tingkat_rombel')))
+            ->groupBy('angkatan')
+            ->pluck('total', 'angkatan');
+
+        $hasil = [];
+        foreach (array_keys(config('emis.tingkat_rombel')) as $angkatan) {
+            $hasil[$angkatan] = (int) ($rows[$angkatan] ?? 0);
+        }
+
+        return $hasil;
+    }
+
     public function nsmDigits(): string
     {
         return preg_replace('/\D+/', '', (string) Madrasah::saatIni()->nsm) ?? '';

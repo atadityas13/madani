@@ -142,6 +142,7 @@ class SiswaController extends Controller
             'tingkatOptions' => $tingkatOptions,
             'rombels' => $rombelsForSelect,
             'jumlahTanpaNis' => $this->nisGenerator->jumlahTanpaNis(),
+            'jumlahTanpaNisPerAngkatan' => $this->nisGenerator->jumlahTanpaNisPerAngkatan(),
             'bisaGenerateNis' => auth()->user()?->can('create', Siswa::class) ?? false,
         ]);
     }
