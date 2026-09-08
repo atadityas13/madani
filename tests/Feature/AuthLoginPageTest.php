@@ -23,6 +23,9 @@ class AuthLoginPageTest extends TestCase
         $html = $this->get(route('login'))->getContent();
 
         $this->assertSame(1, substr_count($html, 'madani-login__title'));
+        $this->assertStringContainsString('logo-madani.png', $html);
+        $this->assertStringNotContainsString('logo-madani-mark.png', $html);
+        $this->assertStringNotContainsString('madani-login__logo-plate', $html);
         $this->assertStringNotContainsString('madani-login__headline', $html);
         $this->assertStringNotContainsString('madani-login__eyebrow', $html);
     }
