@@ -146,6 +146,10 @@ Route::middleware('auth')->group(function () {
         ->name('siswa.dokumen.destroy')
         ->whereUuid('siswa')
         ->where('jenis', 'kk|akta_lahir|kip|kks|pkh|ijazah_sd');
+    Route::get('siswa/{siswa}/dokumen/{jenis}', [SiswaController::class, 'downloadDokumen'])
+        ->name('siswa.dokumen.download')
+        ->whereUuid('siswa')
+        ->where('jenis', 'kk|kip|kks|pkh');
     Route::get('rombel', [RombelController::class, 'index'])->name('rombel.index');
     Route::get('rombel/{rombel}', [RombelController::class, 'show'])->name('rombel.show');
 });

@@ -699,6 +699,96 @@ a:hover {
     outline: none;
 }
 
+.siswa-detail__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.45rem;
+    margin: 0 0 1rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--emis-blue-dark);
+}
+
+.siswa-detail__meta-sep {
+    color: #94a3b8;
+}
+
+.siswa-detail__meta-item {
+    border-radius: 8px;
+    padding: 0.1rem 0.3rem;
+}
+
+.siswa-detail__meta-item.is-copyable {
+    cursor: pointer;
+}
+
+.siswa-detail__meta-item.is-copyable:hover,
+.siswa-detail__meta-item.is-copyable:focus-visible {
+    background: var(--emis-blue-soft);
+    outline: none;
+}
+
+.siswa-detail__dokumen-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 160px));
+    gap: 0.85rem;
+    margin-top: 1rem;
+}
+
+.siswa-detail__dokumen-label {
+    margin-bottom: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #8a8f98;
+}
+
+.siswa-detail__dokumen-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 140px;
+    height: 100px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    background: #f8fafc;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+}
+
+.siswa-detail__dokumen-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.siswa-detail__dokumen-preview.is-empty {
+    color: #94a3b8;
+    font-weight: 700;
+}
+
+.siswa-detail__dokumen-pdf {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    color: #b91c1c;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.siswa-detail__dokumen-pdf i {
+    font-size: 1.5rem;
+}
+
+a.siswa-detail__dokumen-preview:hover {
+    border-color: var(--emis-blue);
+    box-shadow: 0 0 0 2px rgba(44, 148, 253, 0.15);
+}
+
 .siswa-detail__section {
     margin: 1.35rem 0 0.75rem;
     font-size: 0.92rem;

@@ -15,8 +15,10 @@ use App\Support\KelengkapanSiswa;
 use App\Support\R2Url;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SiswaController extends Controller
 {
@@ -213,6 +215,32 @@ class SiswaController extends Controller
         return redirect()
             ->route('siswa.edit', ['siswa' => $siswa, 'tab' => $tab])
             ->with('status', 'Dokumen dihapus dari database dan storage.');
+    }
+
+    public function downloadDokumen(Siswa $siswa, string $jenis): StreamedResponse
+    {
+        $this->authorize('view', $siswa);
+
+        $label = match ($jenis) {
+            'kk' => 'KK',
+            'kip' => 'KIP',
+            'kks' => 'KKS',
+            'pkh' => 'PKH',
+            default => abort(404),
+        };
+
+        $dokumen = $siswa->dokumenJenis($jenis);
+        abort_unless($dokumen && filled($dokumen->path), 404);
+
+        $extension = pathinfo((string) $dokumen->path, PATHINFO_EXTENSION)
+            ?: pathinfo((string) $dokumen->nama_asli, PATHINFO_EXTENSION)
+            ?: 'bin';
+
+        $basename = preg_replace('/[\\\\\\/:*?"<>|]+/', ' ', $siswa->nama) ?: 'Siswa';
+        $basename = trim(preg_replace('/\\s+/', ' ', $basename) ?? 'Siswa');
+        $filename = "{$basename}_{$label}.{$extension}";
+
+        return Storage::disk('r2')->download((string) $dokumen->path, $filename);
     }
 
     public function portofolio(Siswa $siswa): View

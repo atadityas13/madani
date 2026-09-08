@@ -13,7 +13,7 @@
     $tanggalTerbit = old('tanggal_terbit_ijazah', $rd?->tanggal_terbit_ijazah?->format('Y-m-d'));
 
     $jkLabel = $siswa->jenis_kelamin === 'P' ? 'Perempuan' : ($siswa->jenis_kelamin === 'L' ? 'Laki-laki' : '—');
-    $namaAyah = $ayah?->nama ?: $rd?->nama_ayah_ijazah ?: $rd?->nama_ayah_kk;
+    $namaAyah = $ayah?->nama ?: $rd?->nama_ayah_ijazah;
 
     $ijazahItems = [
         ['key' => 'nama', 'label' => 'Nama', 'value' => $siswa->nama ?: '—', 'col' => 'col-md-6'],

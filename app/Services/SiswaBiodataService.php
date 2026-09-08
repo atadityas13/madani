@@ -474,8 +474,7 @@ class SiswaBiodataService
             $payload['tanggal_lahir_ijazah'] = $siswa->tanggal_lahir;
             $payload['jenis_kelamin_ijazah'] = $siswa->jenis_kelamin;
             $payload['nama_ayah_ijazah'] = $siswa->ayah?->nama
-                ?: $siswa->rekamDidik?->nama_ayah_ijazah
-                ?: $siswa->rekamDidik?->nama_ayah_kk;
+                ?: $siswa->rekamDidik?->nama_ayah_ijazah;
         }
 
         $siswa->rekamDidik()->updateOrCreate(
@@ -636,7 +635,6 @@ class SiswaBiodataService
             'nisn' => $data['nisn'],
             'punya_nik' => true,
             'nik' => $data['nik'],
-            'kewarganegaraan' => 'WNI',
             'tempat_lahir' => $data['tempat_lahir'],
             'tanggal_lahir' => $data['tanggal_lahir'],
             'jenis_kelamin' => $data['jenis_kelamin'],

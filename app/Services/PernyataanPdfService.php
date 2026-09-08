@@ -95,8 +95,7 @@ class PernyataanPdfService
             default => $siswa->jenis_kelamin,
         };
         $namaAyah = $siswa->ayah?->nama
-            ?: $rd?->nama_ayah_ijazah
-            ?: $rd?->nama_ayah_kk;
+            ?: $rd?->nama_ayah_ijazah;
 
         return [
             ['Nama lengkap', $siswa->nama],

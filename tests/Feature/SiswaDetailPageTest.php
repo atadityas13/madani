@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Siswa;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class SiswaDetailPageTest extends TestCase
@@ -34,23 +35,61 @@ class SiswaDetailPageTest extends TestCase
             ->assertOk()
             ->assertSee('Detail Siswa', false)
             ->assertSee('Adam Muhamad Albar', false)
+            ->assertSee('1. Identitas', false)
+            ->assertSee('Bagian Orang Tua', false)
+            ->assertSee('Bagian Penghasilan Orang tua/Wali', false)
+            ->assertSee('Bagian Alamat', false)
+            ->assertSee('Bagian Kebutuhan Khusus', false)
             ->assertSee('3210230911120003', false)
             ->assertSee('3127710305', false)
+            ->assertSee('NIK', false)
+            ->assertSee('NISM', false)
+            ->assertDontSee('>NIS<', false)
+            ->assertDontSee('KEWARGANEGARAAN', false)
             ->assertSee('Majalengka', false)
             ->assertSee('2012-11-09', false)
             ->assertSee('Laki-laki', false)
             ->assertSee('Islam', false)
             ->assertSee('siswa-detail', false)
             ->assertSee('data-copy', false)
-            ->assertSee('Tempat tinggal', false)
-            ->assertSee('Rekam didik', false)
+            ->assertSee('Bagian Rekam Didik', false)
             ->assertDontSee('PUNYA NIK', false)
             ->assertDontSee('TIDAK PUNYA EMAIL', false)
-            ->assertDontSee('Dokumen', false)
             ->assertDontSee('Klik nilai field', false)
             ->assertDontSee('09 November 2012', false)
-            ->assertDontSee('name="bagian"', false)
-            ->assertDontSee('Lengkapi tab lain', false);
+            ->assertDontSee('name="bagian"', false);
+    }
+
+    public function test_detail_dokumen_download_uses_siswa_name_filename(): void
+    {
+        Storage::fake('r2');
+        $this->seed();
+
+        $siswa = Siswa::query()->create([
+            'nama' => 'Adam Muhamad Albar',
+            'nisn' => '3127710305',
+            'nik' => '3210230911120003',
+            'tempat_lahir' => 'Majalengka',
+            'tanggal_lahir' => '2012-11-09',
+            'jenis_kelamin' => 'L',
+            'agama' => 'Islam',
+            'status_keaktifan' => 'aktif',
+        ]);
+
+        $path = "dokumen/{$siswa->id}/kk.jpg";
+        Storage::disk('r2')->put($path, 'fake-kk');
+        $siswa->dokumens()->create([
+            'jenis' => 'kk',
+            'path' => $path,
+            'nama_asli' => 'kk.jpg',
+        ]);
+
+        $admin = User::query()->where('username', 'admin')->first();
+
+        $this->actingAs($admin)
+            ->get(route('siswa.dokumen.download', [$siswa, 'kk']))
+            ->assertOk()
+            ->assertDownload('Adam Muhamad Albar_KK.jpg');
     }
 
     public function test_legacy_show_tab_query_redirects_to_edit(): void

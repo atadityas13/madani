@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'siswa_id', 'tahun_ajaran_id', 'tempat_tinggal', 'alamat', 'blok', 'rt', 'rw', 'desa',
-    'kecamatan', 'kota', 'provinsi', 'kode_pos', 'kode_wilayah', 'koordinat',
+    'kecamatan', 'kota', 'provinsi', 'kode_pos', 'koordinat',
     'transportasi', 'jarak', 'waktu_tempuh', 'pembiaya', 'no_kk', 'kepala_keluarga',
-    'no_kip', 'tidak_punya_kip', 'no_kks', 'tidak_punya_kks', 'no_pkh', 'tidak_punya_pkh', 'penghasilan_gabungan', 'pra_sekolah', 'pernah_tk_ra', 'pernah_paud',
+    'no_kip', 'tidak_punya_kip', 'no_kks', 'tidak_punya_kks', 'no_pkh', 'tidak_punya_pkh', 'penghasilan_gabungan', 'pernah_tk_ra', 'pernah_paud',
     'imunisasi', 'kebutuhan_khusus', 'kebutuhan_khusus_lainnya', 'disabilitas',
     'disabilitas_lainnya', 'tanggal_masuk', 'alasan_masuk', 'npsn_asal',
     'nama_sekolah_asal',

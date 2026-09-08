@@ -36,7 +36,6 @@ class SiswaPortalPayload
             'tanggal_lahir' => $siswa->tanggal_lahir?->toDateString(),
             'jenis_kelamin' => $siswa->jenis_kelamin,
             'agama' => $siswa->agama,
-            'kewarganegaraan' => $siswa->kewarganegaraan,
             'anak_ke' => $siswa->anak_ke,
             'jumlah_saudara' => $siswa->jumlah_saudara,
             'cita_cita' => $siswa->cita_cita,
@@ -174,7 +173,6 @@ class SiswaPortalPayload
         }
 
         $data = $rekam->toArray();
-        $data['tanggal_lahir_kk'] = $rekam->tanggal_lahir_kk?->toDateString();
         $data['tanggal_lahir_ijazah'] = $rekam->tanggal_lahir_ijazah?->toDateString();
         $data['tanggal_terbit_ijazah'] = $rekam->tanggal_terbit_ijazah?->toDateString();
 
