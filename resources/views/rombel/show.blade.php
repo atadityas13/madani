@@ -12,15 +12,11 @@
 <div class="madani-card p-4 mb-3">
     <div class="stat-label mb-3">Detail Rombel</div>
     <div class="row g-3">
-        <div class="col-md-4">
-            <label class="form-label">Tingkat</label>
-            <input class="form-control bg-light" value="{{ $rombel->tingkat }}" readonly>
+        <div class="col-md-6">
+            <label class="form-label">Rombel</label>
+            <input class="form-control bg-light" value="{{ $rombel->label() }}" readonly>
         </div>
-        <div class="col-md-4">
-            <label class="form-label">Nama</label>
-            <input class="form-control bg-light" value="{{ $rombel->nama }}" readonly>
-        </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
             <label class="form-label">Wali kelas</label>
             <input class="form-control bg-light" value="{{ $rombel->waliKelas?->nama_lengkap ?: '—' }}" readonly>
         </div>
@@ -154,8 +150,7 @@
                     <div id="rombelPindahDetail" class="madani-card p-3 mt-3 d-none">
                         <div class="stat-label mb-2">Detail rombel tujuan</div>
                         <div class="row g-2 small">
-                            <div class="col-6">Tingkat: <strong id="rombelPindahDetailTingkat">—</strong></div>
-                            <div class="col-6">Nama: <strong id="rombelPindahDetailNama">—</strong></div>
+                            <div class="col-12">Rombel: <strong id="rombelPindahDetailLabel">—</strong></div>
                             <div class="col-12">Wali: <strong id="rombelPindahDetailWali">—</strong></div>
                             <div class="col-12">Jumlah siswa: <strong id="rombelPindahDetailAnggota">—</strong></div>
                         </div>
@@ -205,8 +200,7 @@
             return;
         }
 
-        document.getElementById('rombelPindahDetailTingkat').textContent = option.dataset.tingkat || '—';
-        document.getElementById('rombelPindahDetailNama').textContent = option.dataset.nama || '—';
+        document.getElementById('rombelPindahDetailLabel').textContent = option.dataset.label || '—';
         document.getElementById('rombelPindahDetailWali').textContent = option.dataset.wali || '—';
         document.getElementById('rombelPindahDetailAnggota').textContent = option.dataset.anggota || '0';
         detail.classList.remove('d-none');
