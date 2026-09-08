@@ -226,6 +226,7 @@
                     <th>NISN</th>
                     <th>Rombel</th>
                     <th title="Login Ta'lim">Login</th>
+                    <th title="Identitas">Ident</th>
                     <th>Ortu</th>
                     <th>Almt</th>
                     <th>Rekam</th>
@@ -262,6 +263,7 @@
                         <td>{{ $row['nisn'] ?: '—' }}</td>
                         <td>{{ $row['rombel_label'] }}</td>
                         <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['login'], 'title' => $loginTitle])</td>
+                        <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['data-siswa'], 'title' => 'Identitas'])</td>
                         <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['orang-tua']])</td>
                         <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['alamat']])</td>
                         <td>@include('siswa.partials.monitoring-flag', ['ok' => $f['rekam-didik']])</td>

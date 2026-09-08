@@ -93,7 +93,7 @@ class SiswaMonitoringService
 
         $headers = [
             'No', 'Nama', 'NISN', 'NIS', 'Rombel',
-            'Login', 'Orang tua', 'Alamat', 'Rekam didik',
+            'Login', 'Identitas', 'Orang tua', 'Alamat', 'Rekam didik',
             'Foto', 'KK', 'Akta', 'KIP', 'KKS', 'PKH', 'Ijazah SD',
             'Pernyataan biodata', 'Pernyataan peserta didik', 'Pengajuan pending',
         ];
@@ -108,6 +108,7 @@ class SiswaMonitoringService
                 $row['nis'] ?: '',
                 $row['rombel_label'],
                 $this->yaTidak($row['flags']['login']),
+                $this->yaTidak($row['flags']['data-siswa']),
                 $this->yaTidak($row['flags']['orang-tua']),
                 $this->yaTidak($row['flags']['alamat']),
                 $this->yaTidak($row['flags']['rekam-didik']),
@@ -127,7 +128,7 @@ class SiswaMonitoringService
             $sheet->fromArray($data, null, 'A2');
         }
 
-        foreach (range('A', 'S') as $col) {
+        foreach (range('A', 'T') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 

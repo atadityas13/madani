@@ -108,6 +108,8 @@ class SiswaMonitoringTest extends TestCase
             ->assertSee('data-monitoring-preview', false)
             ->assertSee('/siswa/'.$sudah->id.'/kartu/stream', false)
             ->assertSee('target="_blank"', false)
+            ->assertSee('title="Identitas"', false)
+            ->assertSee('>Ident<', false)
             ->assertSee('data-monitoring-scroll', false)
             ->assertSee('monitoring-page', false)
             ->assertSee('madani-content', false)
