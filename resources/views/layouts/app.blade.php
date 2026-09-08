@@ -17,7 +17,7 @@
         </div>
     </div>
 
-    <div class="flex-grow-1 d-flex flex-column min-vh-100 min-w-0">
+    <div class="madani-main d-flex flex-column">
         <header class="madani-topbar px-3 px-md-4 py-2 d-flex justify-content-between align-items-center gap-3">
             <div class="d-flex align-items-center gap-2 min-w-0">
                 <button class="btn btn-link text-secondary d-lg-none p-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#emisSidebar">
@@ -51,7 +51,7 @@
                 </div>
             </div>
         </header>
-        <main class="p-3 p-md-4">
+        <main class="madani-content p-3 p-md-4">
             @yield('content')
         </main>
     </div>

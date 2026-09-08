@@ -27,17 +27,11 @@
 @endphp
 
 <style>
-    /* Contain overflow only on the content column — never on .madani-shell
-       (overflow-x on the shell breaks sticky sidebar → “menggantung”). */
-    .madani-shell:has(.monitoring-page) > .flex-grow-1 {
+    /* Overflow tabel tetap di area konten (shell/topbar/sidebar sudah terkunci) */
+    .madani-shell:has(.monitoring-page) .madani-main,
+    .madani-shell:has(.monitoring-page) .madani-content {
         min-width: 0;
         max-width: 100%;
-        overflow-x: hidden;
-    }
-    .madani-shell:has(.monitoring-page) main {
-        min-width: 0;
-        max-width: 100%;
-        overflow-x: hidden;
     }
 
     .monitoring-page {

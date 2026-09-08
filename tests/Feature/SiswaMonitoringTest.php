@@ -110,7 +110,7 @@ class SiswaMonitoringTest extends TestCase
             ->assertSee('target="_blank"', false)
             ->assertSee('data-monitoring-scroll', false)
             ->assertSee('monitoring-page', false)
-            ->assertDontSee('.madani-shell:has(.monitoring-page) {', false)
+            ->assertSee('madani-content', false)
             ->assertDontSee('>Angkatan<', false)
             ->assertDontSee('Belum lengkap semua variabel', false);
 

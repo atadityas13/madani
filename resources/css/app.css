@@ -44,6 +44,13 @@ body {
     min-height: 100%;
 }
 
+/* App shell: kunci viewport — hanya main content yang scroll */
+html:has(.madani-shell),
+body:has(.madani-shell) {
+    height: 100%;
+    overflow: hidden;
+}
+
 body {
     background: var(--emis-bg);
     color: var(--emis-ink);
@@ -60,7 +67,12 @@ a:hover {
 }
 
 .madani-shell {
-    min-height: 100vh;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
+    overflow: hidden;
+    align-items: stretch;
 }
 
 .madani-sidebar,
@@ -69,11 +81,8 @@ a:hover {
     background: #fff;
     color: #222;
     border-right: 1px solid #ececec;
-    min-height: 100vh;
-    height: auto;
-    align-self: stretch;
-    position: sticky;
-    top: 0;
+    height: 100%;
+    min-height: 0;
     overflow: hidden;
     z-index: 20;
     flex-direction: column;
@@ -84,12 +93,38 @@ a:hover {
     width: 76px;
 }
 
+.madani-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+.madani-topbar,
+.emis-topbar {
+    background: #fff;
+    border-bottom: 1px solid var(--emis-line);
+    min-height: 64px;
+    flex-shrink: 0;
+    z-index: 15;
+}
+
+.madani-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
 .emis-sidebar-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 1.1rem 1rem 0.85rem 1.15rem;
     gap: 0.5rem;
+    flex-shrink: 0;
 }
 
 .emis-logo {
@@ -133,6 +168,7 @@ a:hover {
 
 .emis-sidebar-nav {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding: 0.35rem 0.55rem 1rem;
 }
@@ -220,6 +256,7 @@ a:hover {
     font-size: 11px;
     line-height: 1.45;
     border-top: 1px solid #f3f4f6;
+    flex-shrink: 0;
 }
 
 .emis-sidebar-foot strong {
@@ -387,13 +424,6 @@ a:hover {
     font-weight: 800;
     font-size: 0.78rem;
     color: var(--emis-blue);
-}
-
-.madani-topbar,
-.emis-topbar {
-    background: #fff;
-    border-bottom: 1px solid var(--emis-line);
-    min-height: 64px;
 }
 
 .emis-topbar-title {

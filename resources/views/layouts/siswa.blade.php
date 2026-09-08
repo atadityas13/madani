@@ -7,7 +7,7 @@
 
 @section('body')
 <div class="madani-shell d-flex">
-    <div class="flex-grow-1 d-flex flex-column min-vh-100 min-w-0">
+    <div class="madani-main d-flex flex-column">
         <header class="madani-topbar px-3 px-md-4 py-2 d-flex justify-content-between align-items-center gap-3">
             <div class="d-flex align-items-center gap-2 min-w-0">
                 <img src="{{ asset('images/logo-madani.png') }}?v={{ filemtime(public_path('images/logo-madani.png')) }}" alt="MADANI" style="height: 36px;">
@@ -33,7 +33,7 @@
                 </div>
             </div>
         </header>
-        <main class="p-3 p-md-4">
+        <main class="madani-content p-3 p-md-4">
             @yield('content')
         </main>
     </div>
