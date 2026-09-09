@@ -164,6 +164,41 @@ class WaliKelasDashboardTest extends TestCase
         $this->assertTrue($keysGuru->contains(AppMenu::KEY_WALI_KELAS));
     }
 
+    public function test_guru_ditugaskan_di_rombel_boleh_akses_meski_tanpa_peran_wali(): void
+    {
+        $this->seed();
+        Role::findOrCreate(Peran::GURU);
+
+        $gtk = Gtk::query()->create([
+            'nama' => 'Guru Wali Rombel',
+            'nip' => '199201012010011005',
+            'jenis' => 'guru',
+            'status' => 'aktif',
+        ]);
+        $guru = User::factory()->create([
+            'username' => '199201012010011005',
+            'gtk_id' => $gtk->id,
+            'is_aktif' => true,
+        ]);
+        $guru->syncRoles([Peran::GURU]);
+
+        $tahun = TahunAjaran::aktif();
+        $rombel = Rombel::query()->create([
+            'tahun_ajaran_id' => $tahun->id,
+            'tingkat' => 'VIII',
+            'nama' => 'C',
+            'gtk_id' => $gtk->id,
+        ]);
+        $this->tambahSiswa($rombel, ['nama' => 'Siswa Rombel C']);
+
+        $this->actingAs($guru)
+            ->get(route('talim.wali'))
+            ->assertOk()
+            ->assertSee('VIII-C', false)
+            ->assertSee('Siswa Rombel C', false)
+            ->assertDontSee('Anda tidak memiliki akses wali kelas', false);
+    }
+
     public function test_empty_state_jika_belum_punya_rombel(): void
     {
         $this->seed();

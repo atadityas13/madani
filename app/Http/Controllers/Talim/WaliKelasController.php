@@ -18,10 +18,20 @@ class WaliKelasController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        if (! $user->hasRole(Peran::WALI_KELAS) && ! $user->bisaKelola()) {
+        // Wali ditentukan dari penugasan rombel (gtk_id), bukan hanya peran Spatie.
+        if (! $this->bolehAkses($user)) {
             return view('talim.wali.akses-ditolak');
         }
 
         return view('talim.wali.dashboard', $this->dashboard->untuk($user));
+    }
+
+    private function bolehAkses(User $user): bool
+    {
+        if ($user->bisaKelola() || $user->hasRole(Peran::WALI_KELAS)) {
+            return true;
+        }
+
+        return $this->dashboard->rombelWali($user) !== null;
     }
 }
