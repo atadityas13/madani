@@ -36,7 +36,12 @@ class ImportJurnalFromSimpatisansCommand extends Command
         $this->info('Updated: '.$hasil['updated']);
         $this->info('Skipped: '.$hasil['skipped']);
 
-        if ($hasil['orphans'] !== []) {
+        if (($hasil['skip_reasons'] ?? []) !== []) {
+            $this->warn('Alasan dilewati:');
+            foreach ($hasil['skip_reasons'] as $reason => $count) {
+                $this->line(" - [{$count}] {$reason}");
+            }
+        } elseif ($hasil['orphans'] !== []) {
             $this->warn('Contoh orphan (max 20):');
             foreach (array_slice($hasil['orphans'], 0, 20) as $line) {
                 $this->line(' - '.$line);

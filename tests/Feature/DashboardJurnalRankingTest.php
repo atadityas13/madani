@@ -67,6 +67,7 @@ class DashboardJurnalRankingTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee('Peringkat pengisian jurnal', false)
+            ->assertSee('Jumlah entri', false)
             ->assertSee('Guru Banyak', false)
             ->assertSee('Guru Sedang', false)
             ->assertSee('Guru Sedikit', false)

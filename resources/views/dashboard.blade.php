@@ -37,7 +37,7 @@
         <div class="p-3 border-bottom d-flex justify-content-between align-items-center gap-2 flex-wrap">
             <div>
                 <div class="stat-label mb-0">Peringkat pengisian jurnal</div>
-                <div class="small text-secondary">10 guru dengan jurnal terbanyak</div>
+                <div class="small text-secondary">10 guru dengan entri terbanyak</div>
             </div>
             <a class="btn btn-sm btn-outline-secondary" href="{{ route('gtk.monitoring') }}">Monitoring GTK</a>
         </div>
@@ -48,7 +48,7 @@
                         <th style="width: 4rem;">Rank</th>
                         <th>Nama guru</th>
                         <th>NIP / username</th>
-                        <th class="text-end" style="width: 9rem;">Jumlah jurnal</th>
+                        <th class="text-end" style="width: 9rem;">Jumlah entri</th>
                     </tr>
                 </thead>
                 <tbody>

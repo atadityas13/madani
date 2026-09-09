@@ -19,6 +19,7 @@ class JurnalSimpatisansImportService
      *     updated: int,
      *     skipped: int,
      *     orphans: list<string>,
+     *     skip_reasons: array<string, int>,
      *     dry_run: bool
      * }
      */
@@ -44,6 +45,7 @@ class JurnalSimpatisansImportService
      *     updated: int,
      *     skipped: int,
      *     orphans: list<string>,
+     *     skip_reasons: array<string, int>,
      *     dry_run: bool
      * }
      */
@@ -65,6 +67,7 @@ class JurnalSimpatisansImportService
      *     updated: int,
      *     skipped: int,
      *     orphans: list<string>,
+     *     skip_reasons: array<string, int>,
      *     dry_run: bool
      * }
      */
@@ -75,7 +78,8 @@ class JurnalSimpatisansImportService
             throw new InvalidArgumentException('Tabel jurnal tidak ditemukan di dump. Pastikan ada INSERT jurnal_pembelajaran.');
         }
 
-        $rows = $this->extractInsertRows($sql, $table);
+        $fallbackColumns = $this->columnsFromCreateTable($sql, $table);
+        $rows = $this->extractInsertRows($sql, $table, $fallbackColumns);
         if ($rows === []) {
             throw new InvalidArgumentException("Tidak ada INSERT untuk tabel {$table}.");
         }
@@ -88,7 +92,13 @@ class JurnalSimpatisansImportService
         $imported = 0;
         $updated = 0;
         $skipped = 0;
-        $orphans = [];
+        /** @var array<string, int> $skipReasons */
+        $skipReasons = [];
+
+        $noteSkip = function (string $reason) use (&$skipped, &$skipReasons): void {
+            $skipped++;
+            $skipReasons[$reason] = ($skipReasons[$reason] ?? 0) + 1;
+        };
 
         $runner = function () use (
             $rows,
@@ -97,40 +107,40 @@ class JurnalSimpatisansImportService
             $kelasNamaById,
             $mapelNamaById,
             $dryRun,
+            $noteSkip,
             &$imported,
             &$updated,
-            &$skipped,
-            &$orphans,
         ): void {
             foreach ($rows as $row) {
                 if (! is_array($row) || array_is_list($row)) {
-                    $skipped++;
-                    $orphans[] = 'baris tanpa nama kolom (butuh INSERT dengan daftar kolom)';
+                    $noteSkip('baris tanpa nama kolom (butuh INSERT --complete-insert atau CREATE TABLE di dump)');
 
                     continue;
                 }
 
                 $sourceId = $this->intVal($row['id'] ?? null);
                 $nip = $this->resolveNip($row, $userById, $guruById);
-                if ($nip === null || $sourceId === null) {
-                    $skipped++;
-                    $orphans[] = 'id='.($row['id'] ?? '?').' tanpa NIP/source id';
+                if ($sourceId === null) {
+                    $noteSkip('tanpa source id');
+
+                    continue;
+                }
+                if ($nip === null) {
+                    $noteSkip('tanpa NIP (user_id/guru_id tidak terpetakan — sertakan tabel users/gurus di dump)');
 
                     continue;
                 }
 
-                $madaniUser = User::query()->where('username', $nip)->first();
+                $madaniUser = $this->findMadaniUser($nip);
                 if ($madaniUser === null) {
-                    $skipped++;
-                    $orphans[] = "NIP {$nip} belum ada user Madani (source {$sourceId})";
+                    $noteSkip("NIP {$nip} belum ada user/GTK Madani");
 
                     continue;
                 }
 
                 $payload = $this->mapRow($row, $madaniUser->id, $sourceId, $kelasNamaById, $mapelNamaById);
                 if ($payload === null) {
-                    $skipped++;
-                    $orphans[] = "source {$sourceId} field wajib tidak lengkap";
+                    $noteSkip("source {$sourceId} field wajib tidak lengkap (kelas/mapel/tanggal)");
 
                     continue;
                 }
@@ -168,13 +178,21 @@ class JurnalSimpatisansImportService
             DB::transaction($runner);
         }
 
+        arsort($skipReasons);
+
+        $orphans = [];
+        foreach ($skipReasons as $reason => $count) {
+            $orphans[] = "{$reason} ×{$count}";
+        }
+
         return [
             'table' => $table,
             'source_rows' => count($rows),
             'imported' => $imported,
             'updated' => $updated,
             'skipped' => $skipped,
-            'orphans' => array_values(array_unique($orphans)),
+            'orphans' => $orphans,
+            'skip_reasons' => $skipReasons,
             'dry_run' => $dryRun,
         ];
     }
@@ -182,12 +200,52 @@ class JurnalSimpatisansImportService
     private function detectJurnalTable(string $sql): ?string
     {
         foreach (['jurnal_pembelajaran', 'jurnal_pembelajarans', 'jurnals'] as $table) {
-            if (preg_match('/INSERT INTO `'.preg_quote($table, '/').'`/i', $sql)) {
+            if (preg_match('/INSERT INTO (?:`[^`]+`\.)?`'.preg_quote($table, '/').'`/i', $sql)) {
                 return $table;
             }
         }
 
         return null;
+    }
+
+    /**
+     * @return list<string>|null
+     */
+    private function columnsFromCreateTable(string $sql, string $table): ?array
+    {
+        $pattern = '/CREATE TABLE (?:IF NOT EXISTS )?(?:`[^`]+`\.)?`'.preg_quote($table, '/').'`\s*\((.*)\)\s*(?:ENGINE|DEFAULT|COLLATE|AUTO_INCREMENT|;)/is';
+        if (! preg_match($pattern, $sql, $match)) {
+            return null;
+        }
+
+        $body = $match[1];
+        $columns = [];
+        foreach (preg_split('/\r\n|\r|\n/', $body) ?: [] as $line) {
+            $line = trim($line, " \t,");
+            if ($line === '' || ! str_starts_with($line, '`')) {
+                continue;
+            }
+            if (! preg_match('/^`([^`]+)`/', $line, $col)) {
+                continue;
+            }
+            $name = $col[1];
+            if (preg_match('/^(PRIMARY|UNIQUE|KEY|INDEX|CONSTRAINT|FULLTEXT|SPATIAL|FOREIGN)/i', $name)) {
+                continue;
+            }
+            $columns[] = $name;
+        }
+
+        return $columns === [] ? null : $columns;
+    }
+
+    private function findMadaniUser(string $nip): ?User
+    {
+        $nip = trim($nip);
+
+        return User::query()
+            ->where('username', $nip)
+            ->orWhereHas('gtk', fn ($query) => $query->where('nip', $nip))
+            ->first();
     }
 
     /**
@@ -198,7 +256,7 @@ class JurnalSimpatisansImportService
     {
         $indexed = [];
         foreach ($rows as $row) {
-            if (! is_array($row) || ! isset($row['id'])) {
+            if (! is_array($row) || array_is_list($row) || ! isset($row['id'])) {
                 continue;
             }
             $indexed[(string) $row['id']] = $row;
@@ -216,7 +274,7 @@ class JurnalSimpatisansImportService
     {
         $lookup = [];
         foreach ($rows as $row) {
-            if (! is_array($row) || ! isset($row['id'])) {
+            if (! is_array($row) || array_is_list($row) || ! isset($row['id'])) {
                 continue;
             }
             foreach ($nameKeys as $key) {
@@ -240,16 +298,26 @@ class JurnalSimpatisansImportService
     {
         foreach (['nip', 'username'] as $key) {
             if (! empty($row[$key])) {
-                return (string) $row[$key];
+                return trim((string) $row[$key]);
             }
         }
 
-        if (! empty($row['user_id']) && isset($userById[(string) $row['user_id']]['username'])) {
-            return (string) $userById[(string) $row['user_id']]['username'];
+        if (! empty($row['user_id']) && isset($userById[(string) $row['user_id']])) {
+            $user = $userById[(string) $row['user_id']];
+            foreach (['username', 'nip'] as $key) {
+                if (! empty($user[$key])) {
+                    return trim((string) $user[$key]);
+                }
+            }
         }
 
-        if (! empty($row['guru_id']) && isset($guruById[(string) $row['guru_id']]['username'])) {
-            return (string) $guruById[(string) $row['guru_id']]['username'];
+        if (! empty($row['guru_id']) && isset($guruById[(string) $row['guru_id']])) {
+            $guru = $guruById[(string) $row['guru_id']];
+            foreach (['username', 'nip'] as $key) {
+                if (! empty($guru[$key])) {
+                    return trim((string) $guru[$key]);
+                }
+            }
         }
 
         return null;
@@ -270,10 +338,11 @@ class JurnalSimpatisansImportService
     ): ?array {
         $kelasId = $this->intVal($row['kelas_id'] ?? null);
         $mapelId = $this->intVal($row['mapel_id'] ?? null);
-        $tanggal = $this->clean($row['tanggal'] ?? null);
-        $materi = $this->clean($row['materi_pokok'] ?? $row['materi'] ?? null);
+        $tanggal = $this->normalizeTanggal($row['tanggal'] ?? null);
+        // Materi kosong di Simpatisans tetap diimpor agar guru tidak kehilangan entri.
+        $materi = $this->clean($row['materi_pokok'] ?? $row['materi'] ?? null) ?? '-';
 
-        if ($kelasId === null || $mapelId === null || $tanggal === null || $materi === null) {
+        if ($kelasId === null || $mapelId === null || $tanggal === null) {
             return null;
         }
 
@@ -321,6 +390,28 @@ class JurnalSimpatisansImportService
             'semester_nama_tahun' => $this->clean($row['semester_nama_tahun'] ?? $row['nama_tahun'] ?? null),
             'source_simpatisans_id' => $sourceId,
         ];
+    }
+
+    private function normalizeTanggal(mixed $value): ?string
+    {
+        $raw = $this->clean(isset($value) ? (string) $value : null);
+        if ($raw === null) {
+            return null;
+        }
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}/', $raw, $match) === 1) {
+            return $match[0];
+        }
+
+        foreach (['d/m/Y', 'd-m-Y', 'Y/m/d'] as $format) {
+            try {
+                return Carbon::createFromFormat($format, $raw, 'Asia/Jakarta')->format('Y-m-d');
+            } catch (\Throwable) {
+                continue;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -377,12 +468,13 @@ class JurnalSimpatisansImportService
     }
 
     /**
+     * @param  list<string>|null  $fallbackColumns
      * @return list<array<string, mixed>>
      */
-    private function extractInsertRows(string $sql, string $table): array
+    private function extractInsertRows(string $sql, string $table, ?array $fallbackColumns = null): array
     {
         $rows = [];
-        $pattern = '/INSERT INTO `'.preg_quote($table, '/').'`\s*(?:\(([^)]*)\))?\s*VALUES\s*(.+?);/is';
+        $pattern = '/INSERT INTO (?:`[^`]+`\.)?`'.preg_quote($table, '/').'`\s*(?:\(([^)]*)\))?\s*VALUES\s*(.+?);/is';
         if (! preg_match_all($pattern, $sql, $matches, PREG_SET_ORDER)) {
             return $rows;
         }
@@ -391,12 +483,19 @@ class JurnalSimpatisansImportService
             $columns = null;
             if (! empty($match[1])) {
                 $columns = array_map(fn ($c) => trim($c, " `\n\r\t"), explode(',', $match[1]));
+            } elseif ($fallbackColumns !== null) {
+                $columns = $fallbackColumns;
             }
+
             foreach ($this->splitSqlTuples($match[2]) as $tuple) {
                 $vals = $this->splitSqlValues($tuple);
-                $rows[] = ($columns && count($columns) === count($vals))
-                    ? array_combine($columns, $vals)
-                    : $vals;
+                if ($columns !== null && count($columns) === count($vals)) {
+                    $rows[] = array_combine($columns, $vals);
+
+                    continue;
+                }
+
+                $rows[] = $vals;
             }
         }
 

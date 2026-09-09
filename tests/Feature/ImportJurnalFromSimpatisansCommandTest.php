@@ -131,4 +131,89 @@ SQL);
 
         $this->assertDatabaseCount('jurnal_pembelajarans', 0);
     }
+
+    public function test_import_values_without_column_list_uses_create_table(): void
+    {
+        Role::findOrCreate(Peran::GURU);
+        $gtk = Gtk::query()->create([
+            'nama' => 'Dedi',
+            'nip' => '198301012008011001',
+            'jenis' => 'guru',
+            'status' => 'aktif',
+        ]);
+        $user = User::factory()->create([
+            'username' => '198301012008011001',
+            'gtk_id' => $gtk->id,
+            'is_aktif' => true,
+        ]);
+        $user->syncRoles([Peran::GURU]);
+
+        $dump = sys_get_temp_dir().DIRECTORY_SEPARATOR.'jurnal_dump_no_cols.sql';
+        File::put($dump, <<<'SQL'
+CREATE TABLE `jurnal_pembelajaran` (
+  `id` bigint unsigned NOT NULL,
+  `user_id` bigint unsigned NOT NULL,
+  `kelas_id` bigint unsigned NOT NULL,
+  `mapel_id` bigint unsigned NOT NULL,
+  `tanggal` date NOT NULL,
+  `jam_ke` smallint NOT NULL,
+  `materi_pokok` text,
+  `ketercapaian` varchar(20) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB;
+INSERT INTO `users` (`id`, `username`, `password`) VALUES (11, '198301012008011001', 'hash');
+INSERT INTO `jurnal_pembelajaran` VALUES
+(101, 11, 5, 2, '2026-08-10', 1, NULL, 'tercapai');
+SQL);
+
+        $this->artisan('jurnal:import-from-simpatisans', [
+            'simpatisans' => $dump,
+        ])->assertSuccessful();
+
+        $this->assertDatabaseHas('jurnal_pembelajarans', [
+            'user_id' => $user->id,
+            'source_simpatisans_id' => 101,
+            'materi_pokok' => '-',
+            'kelas_id' => 5,
+            'mapel_id' => 2,
+        ]);
+    }
+
+    public function test_import_matches_madani_user_by_gtk_nip(): void
+    {
+        Role::findOrCreate(Peran::GURU);
+        $gtk = Gtk::query()->create([
+            'nama' => 'Eka',
+            'nip' => '198401012009012001',
+            'jenis' => 'guru',
+            'status' => 'aktif',
+        ]);
+        $user = User::factory()->create([
+            'username' => 'eka.login',
+            'gtk_id' => $gtk->id,
+            'is_aktif' => true,
+        ]);
+        $user->syncRoles([Peran::GURU]);
+
+        $dump = sys_get_temp_dir().DIRECTORY_SEPARATOR.'jurnal_dump_gtk_nip.sql';
+        File::put($dump, <<<'SQL'
+INSERT INTO `gurus` (`id`, `nip`, `nama`) VALUES (4, '198401012009012001', 'Eka');
+INSERT INTO `jurnal_pembelajaran` (`id`, `guru_id`, `kelas_id`, `mapel_id`, `tanggal`, `jam_ke`, `materi_pokok`, `ketercapaian`) VALUES
+(202, 4, 8, 9, '2026-08-11 07:30:00', 3, '', 'tercapai');
+SQL);
+
+        $this->artisan('jurnal:import-from-simpatisans', [
+            'simpatisans' => $dump,
+        ])->assertSuccessful();
+
+        $this->assertDatabaseHas('jurnal_pembelajarans', [
+            'user_id' => $user->id,
+            'source_simpatisans_id' => 202,
+            'materi_pokok' => '-',
+        ]);
+        $this->assertSame(
+            '2026-08-11',
+            JurnalPembelajaran::query()->where('source_simpatisans_id', 202)->first()?->tanggal?->format('Y-m-d'),
+        );
+    }
 }

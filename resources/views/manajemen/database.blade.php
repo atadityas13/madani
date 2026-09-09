@@ -79,9 +79,9 @@
                     </p>
                     @if (! empty($imporJurnalHasil['orphans']))
                         <div class="mt-3 small text-secondary">
-                            <div class="fw-semibold mb-1">Contoh dilewati:</div>
+                            <div class="fw-semibold mb-1">Dilewati (ringkas):</div>
                             <ul class="mb-0 ps-3">
-                                @foreach (array_slice($imporJurnalHasil['orphans'], 0, 5) as $orphan)
+                                @foreach (array_slice($imporJurnalHasil['orphans'], 0, 8) as $orphan)
                                     <li>{{ $orphan }}</li>
                                 @endforeach
                             </ul>
