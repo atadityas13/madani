@@ -46,6 +46,15 @@ class AppMenuSeeder extends Seeder
             ['key' => 'ejournal', 'type' => AppMenu::TYPE_BUILTIN, 'judul' => 'E-Journal', 'sort_order' => 30],
             ['key' => 'kinerja', 'type' => AppMenu::TYPE_BUILTIN, 'judul' => 'Kinerja', 'sort_order' => 40],
             [
+                'key' => AppMenu::KEY_WALI_KELAS,
+                'type' => AppMenu::TYPE_CUSTOM,
+                'judul' => 'Wali Kelas',
+                'url' => rtrim((string) config('app.url'), '/').'/talim/wali',
+                'open_mode' => AppMenu::OPEN_WEBVIEW,
+                'requires_auth' => true,
+                'sort_order' => 45,
+            ],
+            [
                 'key' => 'rdm',
                 'type' => AppMenu::TYPE_CUSTOM,
                 'judul' => 'RDM',

@@ -163,6 +163,11 @@
                 <option value="{{ $rombel->id }}" @selected((string) $rombel_id === (string) $rombel->id)>{{ $rombel->label() }}</option>
             @endforeach
         </select>
+        <select class="form-select" name="jenis_kelamin" aria-label="Jenis kelamin" onchange="this.form.submit()">
+            <option value="">Semua JK</option>
+            <option value="L" @selected($jenis_kelamin === 'L')>Laki-laki</option>
+            <option value="P" @selected($jenis_kelamin === 'P')>Perempuan</option>
+        </select>
         <select
             class="form-select"
             name="status_lengkap"
@@ -299,6 +304,7 @@
         'q' => $q,
         'tingkat' => $tingkat,
         'rombelId' => $rombel_id,
+        'jenisKelamin' => $jenis_kelamin,
         'perPage' => (string) $per_page,
         'statusLengkap' => $status_lengkap,
         'belum' => $belum,

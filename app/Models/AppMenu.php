@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\AppMenuHost;
+use App\Support\Peran;
 use App\Support\R2Url;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -40,6 +41,8 @@ class AppMenu extends Model
 
     public const AUDIENCE_SEMUA = 'semua';
 
+    public const KEY_WALI_KELAS = 'wali_kelas';
+
     protected function casts(): array
     {
         return [
@@ -70,6 +73,19 @@ class AppMenu extends Model
         return $this->isCustom()
             && in_array($this->open_mode, [self::OPEN_WEBVIEW, self::OPEN_CHROME_TAB], true)
             && AppMenuHost::isMadaniHost($this->url);
+    }
+
+    public function isVisibleToApiUser(mixed $user): bool
+    {
+        if ($this->key !== self::KEY_WALI_KELAS) {
+            return true;
+        }
+
+        if (! $user instanceof User) {
+            return false;
+        }
+
+        return $user->hasRole(Peran::WALI_KELAS) || $user->bisaKelola();
     }
 
     /**

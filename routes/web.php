@@ -21,6 +21,7 @@ use App\Http\Controllers\RombelController;
 use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\SiswaMonitoringController;
 use App\Http\Controllers\TahunAjaranController;
+use App\Http\Controllers\Talim\WaliKelasController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebviewEnterController;
 use Illuminate\Support\Facades\Route;
@@ -69,6 +70,10 @@ Route::middleware('auth:siswa')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+
+    Route::middleware('role:wali_kelas|superadmin|admin')->group(function () {
+        Route::get('/talim/wali', WaliKelasController::class)->name('talim.wali');
+    });
 
     Route::middleware('role:superadmin|admin|operator|kamad')->group(function () {
         Route::get('/kelembagaan/identitas', [KelembagaanController::class, 'identitas'])->name('kelembagaan.identitas');

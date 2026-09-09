@@ -15,7 +15,8 @@ class AppMenuController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $audience = $this->audienceFor($request->user());
+        $user = $request->user();
+        $audience = $this->audienceFor($user);
 
         $items = AppMenu::query()
             ->forAudience($audience)
@@ -23,6 +24,7 @@ class AppMenuController extends Controller
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get()
+            ->filter(fn (AppMenu $menu) => $menu->isVisibleToApiUser($user))
             ->map(fn (AppMenu $menu) => $menu->toApiArray())
             ->values();
 
@@ -35,9 +37,10 @@ class AppMenuController extends Controller
 
     public function launch(Request $request, AppMenu $menu): JsonResponse
     {
-        $audience = $this->audienceFor($request->user());
+        $user = $request->user();
+        $audience = $this->audienceFor($user);
 
-        if (! $this->menuVisibleToAudience($menu, $audience)) {
+        if (! $this->menuVisibleToAudience($menu, $audience) || ! $menu->isVisibleToApiUser($user)) {
             return response()->json(['success' => false, 'message' => 'Menu tidak ditemukan.'], 404);
         }
 
@@ -48,7 +51,6 @@ class AppMenuController extends Controller
             ], 422);
         }
 
-        $user = $request->user();
         $ticket = Str::random(48);
         $guard = $user instanceof Siswa ? 'siswa' : 'web';
 

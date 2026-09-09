@@ -23,6 +23,7 @@
         <input type="hidden" name="q" value="{{ $q }}">
         <input type="hidden" name="tingkat" value="{{ $tingkat }}">
         <input type="hidden" name="rombel_id" value="{{ $rombelId }}">
+        <input type="hidden" name="jenis_kelamin" value="{{ $jenisKelamin ?? '' }}">
         <input type="hidden" name="status_lengkap" value="{{ $statusLengkap }}">
         @foreach ($belum as $item)
             <input type="hidden" name="belum[]" value="{{ $item }}">

@@ -46,6 +46,7 @@ class SiswaMonitoringService
      *     q: string,
      *     tingkat: string,
      *     rombel_id: string,
+     *     jenis_kelamin: string,
      *     per_page: int,
      *     status_lengkap: string,
      *     belum: list<string>,
@@ -146,6 +147,7 @@ class SiswaMonitoringService
      *     q: string,
      *     tingkat: string,
      *     rombel_id: string,
+     *     jenis_kelamin: string,
      *     per_page: int,
      *     status_lengkap: string,
      *     belum: list<string>,
@@ -158,6 +160,10 @@ class SiswaMonitoringService
         $q = trim((string) $request->query('q', ''));
         $tingkat = trim((string) $request->query('tingkat', ''));
         $rombelId = trim((string) $request->query('rombel_id', ''));
+        $jenisKelamin = strtoupper(trim((string) $request->query('jenis_kelamin', '')));
+        if (! in_array($jenisKelamin, ['L', 'P'], true)) {
+            $jenisKelamin = '';
+        }
         $perPageRaw = (string) $request->query('per_page', '10');
         $perPage = in_array($perPageRaw, ['10', '25', '50', '100'], true) ? (int) $perPageRaw : 10;
         $statusLengkap = trim((string) $request->query('status_lengkap', ''));
@@ -210,6 +216,7 @@ class SiswaMonitoringService
             'q' => $q,
             'tingkat' => $tingkat,
             'rombel_id' => $rombelId,
+            'jenis_kelamin' => $jenisKelamin,
             'per_page' => $perPage,
             'status_lengkap' => $statusLengkap,
             'belum' => $belum,
@@ -219,7 +226,7 @@ class SiswaMonitoringService
     }
 
     /**
-     * @param  array{q: string, tingkat: string, rombel_id: string}  $filters
+     * @param  array{q: string, tingkat: string, rombel_id: string, jenis_kelamin: string}  $filters
      * @return Collection<int, array<string, mixed>>
      */
     private function kumpulkanRows(array $filters, User $user): Collection
@@ -261,6 +268,9 @@ class SiswaMonitoringService
                         ->orWhere('nik', 'like', "%{$q}%")
                         ->orWhere('nis', 'like', "%{$q}%");
                 });
+            })
+            ->when($filters['jenis_kelamin'] !== '', function ($siswaQuery) use ($filters) {
+                $siswaQuery->where('jenis_kelamin', $filters['jenis_kelamin']);
             })
             ->when($filters['tingkat'] !== '', function ($siswaQuery) use ($filters, $tahun) {
                 $siswaQuery->whereHas('rombels', fn ($inner) => $inner
