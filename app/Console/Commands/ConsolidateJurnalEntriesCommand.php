@@ -24,6 +24,8 @@ class ConsolidateJurnalEntriesCommand extends Command
         $this->info('Mode: '.($hasil['dry_run'] ? 'DRY-RUN' : 'APPLY'));
         $this->info('Grup digabung: '.$hasil['groups_merged']);
         $this->info('Baris dihapus (setelah digabung): '.$hasil['rows_removed']);
+        $this->info('Run dilewati (aman): '.$hasil['skipped_runs']);
+        $this->line('Catatan: materi "-" / terlalu generik dan rantai jam >3 tidak digabung.');
 
         return self::SUCCESS;
     }

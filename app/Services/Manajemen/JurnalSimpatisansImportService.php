@@ -4,7 +4,6 @@ namespace App\Services\Manajemen;
 
 use App\Models\JurnalPembelajaran;
 use App\Models\User;
-use App\Services\JurnalEntryConsolidationService;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -69,8 +68,6 @@ class JurnalSimpatisansImportService
      *     skipped: int,
      *     orphans: list<string>,
      *     skip_reasons: array<string, int>,
-     *     consolidated_groups?: int,
-     *     consolidated_removed?: int,
      *     dry_run: bool
      * }
      */
@@ -181,10 +178,9 @@ class JurnalSimpatisansImportService
             DB::transaction($runner);
         }
 
-        $consolidation = ['groups_merged' => 0, 'rows_removed' => 0, 'dry_run' => $dryRun];
-        if (! $dryRun && ($imported + $updated) > 0) {
-            $consolidation = app(JurnalEntryConsolidationService::class)->consolidate();
-        }
+        // Sengaja tidak auto-consolidate: penggabungan agresif bisa membuat
+        // jumlah entri guru turun drastis (materi "-" / materi sama seharian).
+        // Gunakan: php artisan jurnal:consolidate-entries
 
         arsort($skipReasons);
 
@@ -201,8 +197,6 @@ class JurnalSimpatisansImportService
             'skipped' => $skipped,
             'orphans' => $orphans,
             'skip_reasons' => $skipReasons,
-            'consolidated_groups' => $consolidation['groups_merged'],
-            'consolidated_removed' => $consolidation['rows_removed'],
             'dry_run' => $dryRun,
         ];
     }

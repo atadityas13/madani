@@ -74,14 +74,10 @@
                         Diperbarui: {{ number_format((int) $imporJurnalHasil['updated']) }} ·
                         Dilewati: {{ number_format((int) $imporJurnalHasil['skipped']) }}
                     </p>
-                    @if (($imporJurnalHasil['consolidated_groups'] ?? 0) > 0)
-                        <p class="mb-2 small">
-                            Jam berurutan digabung: {{ number_format((int) $imporJurnalHasil['consolidated_groups']) }} grup
-                            ({{ number_format((int) $imporJurnalHasil['consolidated_removed']) }} baris digabung).
-                        </p>
-                    @endif
                     <p class="mb-0 small text-secondary">
-                        Sumber: {{ $imporJurnalHasil['source_rows'] }} baris dari tabel {{ $imporJurnalHasil['table'] }}
+                        Sumber: {{ $imporJurnalHasil['source_rows'] }} baris dari tabel {{ $imporJurnalHasil['table'] }}.
+                        Impor tidak menggabung jam; untuk gabung opsional jalankan
+                        <code>php artisan jurnal:consolidate-entries</code>.
                     </p>
                     @if (! empty($imporJurnalHasil['orphans']))
                         <div class="mt-3 small text-secondary">

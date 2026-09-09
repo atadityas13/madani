@@ -9,15 +9,24 @@ use Illuminate\Support\Facades\DB;
 class JurnalEntryConsolidationService
 {
     /**
+     * Batasi penggabungan agar tidak menelan banyak jam sehari
+     * hanya karena materi sama / placeholder "-".
+     */
+    private const MAX_ENTRIES_PER_MERGE = 3;
+
+    /**
      * Gabungkan entri jam berurutan (mis. jam 1 & 2) menjadi satu baris dengan jam_list.
-     * Pola sama dengan penggabungan cetak jurnal di Ta'lim.
      *
-     * @return array{groups_merged: int, rows_removed: int, dry_run: bool}
+     * Hanya untuk pasangan/tiga serangkai yang materi-nya bermakna (bukan "-"),
+     * dan setiap baris masih mewakili ≤1 jam sebelum digabung.
+     *
+     * @return array{groups_merged: int, rows_removed: int, skipped_runs: int, dry_run: bool}
      */
     public function consolidate(?int $userId = null, bool $dryRun = false): array
     {
         $groupsMerged = 0;
         $rowsRemoved = 0;
+        $skippedRuns = 0;
 
         $query = JurnalPembelajaran::query()
             ->orderBy('user_id')
@@ -39,16 +48,34 @@ class JurnalEntryConsolidationService
             (string) $row->ketercapaian,
         ]));
 
-        $runner = function () use ($byBucket, $dryRun, &$groupsMerged, &$rowsRemoved): void {
+        $runner = function () use ($byBucket, $dryRun, &$groupsMerged, &$rowsRemoved, &$skippedRuns): void {
             foreach ($byBucket as $entries) {
                 /** @var Collection<int, JurnalPembelajaran> $entries */
                 if ($entries->count() < 2) {
                     continue;
                 }
 
+                if (! $this->materiBolehDigabung((string) $entries->first()->materi_pokok)) {
+                    $skippedRuns++;
+
+                    continue;
+                }
+
                 $runs = $this->consecutiveRuns($entries);
                 foreach ($runs as $run) {
                     if ($run->count() < 2) {
+                        continue;
+                    }
+
+                    if ($run->count() > self::MAX_ENTRIES_PER_MERGE) {
+                        $skippedRuns++;
+
+                        continue;
+                    }
+
+                    if ($run->contains(fn (JurnalPembelajaran $e) => count($this->jamListOf($e)) > 1)) {
+                        $skippedRuns++;
+
                         continue;
                     }
 
@@ -73,8 +100,20 @@ class JurnalEntryConsolidationService
         return [
             'groups_merged' => $groupsMerged,
             'rows_removed' => $rowsRemoved,
+            'skipped_runs' => $skippedRuns,
             'dry_run' => $dryRun,
         ];
+    }
+
+    private function materiBolehDigabung(string $materi): bool
+    {
+        $materi = trim($materi);
+
+        if ($materi === '' || $materi === '-') {
+            return false;
+        }
+
+        return mb_strlen($materi) >= 3;
     }
 
     /**
@@ -107,9 +146,9 @@ class JurnalEntryConsolidationService
             $lastJams = $this->jamListOf($last);
             $firstJam = (int) ($entryJams[0] ?? 0);
             $lastJam = (int) ($lastJams[array_key_last($lastJams)] ?? 0);
-            $overlaps = array_intersect($entryJams, $lastJams) !== [];
 
-            if ($overlaps || ($firstJam > 0 && $firstJam === $lastJam + 1)) {
+            // Hanya jam berurutan ketat; overlap tidak digabung otomatis.
+            if ($firstJam > 0 && $firstJam === $lastJam + 1) {
                 $current->push($entry);
 
                 continue;

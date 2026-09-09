@@ -80,40 +80,50 @@ class JurnalEntryConsolidationTest extends TestCase
         $this->assertSame('Aljabar', $row->materi_pokok);
     }
 
-    public function test_tidak_menggabung_jika_materi_berbeda(): void
+    public function test_tidak_menggabung_materi_placeholder_atau_rantai_panjang(): void
     {
         $user = $this->buatGuru('198501012010011002');
 
-        JurnalPembelajaran::query()->create([
-            'user_id' => $user->id,
-            'kelas_id' => 1,
-            'mapel_id' => 1,
-            'tanggal' => '2026-08-02',
-            'jam_ke' => 1,
-            'materi_pokok' => 'Materi A',
-            'ketercapaian' => 'tercapai',
-        ]);
-        JurnalPembelajaran::query()->create([
-            'user_id' => $user->id,
-            'kelas_id' => 1,
-            'mapel_id' => 1,
-            'tanggal' => '2026-08-02',
-            'jam_ke' => 2,
-            'materi_pokok' => 'Materi B',
-            'ketercapaian' => 'tercapai',
-        ]);
+        foreach ([1, 2] as $jam) {
+            JurnalPembelajaran::query()->create([
+                'user_id' => $user->id,
+                'kelas_id' => 1,
+                'mapel_id' => 1,
+                'tanggal' => '2026-08-02',
+                'jam_ke' => $jam,
+                'materi_pokok' => '-',
+                'ketercapaian' => 'tercapai',
+            ]);
+        }
 
-        $hasil = app(JurnalEntryConsolidationService::class)->consolidate();
-
-        $this->assertSame(0, $hasil['groups_merged']);
+        $hasilPlaceholder = app(JurnalEntryConsolidationService::class)->consolidate();
+        $this->assertSame(0, $hasilPlaceholder['groups_merged']);
         $this->assertDatabaseCount('jurnal_pembelajarans', 2);
+
+        JurnalPembelajaran::query()->delete();
+
+        foreach (range(1, 5) as $jam) {
+            JurnalPembelajaran::query()->create([
+                'user_id' => $user->id,
+                'kelas_id' => 1,
+                'mapel_id' => 1,
+                'tanggal' => '2026-08-03',
+                'jam_ke' => $jam,
+                'materi_pokok' => 'Materi Panjang',
+                'ketercapaian' => 'tercapai',
+            ]);
+        }
+
+        $hasilPanjang = app(JurnalEntryConsolidationService::class)->consolidate();
+        $this->assertSame(0, $hasilPanjang['groups_merged']);
+        $this->assertDatabaseCount('jurnal_pembelajarans', 5);
     }
 
-    public function test_import_simpatisans_otomatis_menggabung_jam_berurutan(): void
+    public function test_import_simpatisans_tidak_otomatis_menggabung(): void
     {
         $user = $this->buatGuru('198501012010011003');
 
-        $dump = sys_get_temp_dir().DIRECTORY_SEPARATOR.'jurnal_dump_merge.sql';
+        $dump = sys_get_temp_dir().DIRECTORY_SEPARATOR.'jurnal_dump_no_auto_merge.sql';
         File::put($dump, <<<SQL
 INSERT INTO `users` (`id`, `username`, `password`) VALUES (21, '{$user->username}', 'hash');
 INSERT INTO `jurnal_pembelajaran` (`id`, `user_id`, `kelas_id`, `nama_kelas`, `mapel_id`, `nama_mapel`, `tanggal`, `jam_ke`, `materi_pokok`, `ketercapaian`) VALUES
@@ -125,8 +135,6 @@ SQL);
             'simpatisans' => $dump,
         ])->assertSuccessful();
 
-        $this->assertDatabaseCount('jurnal_pembelajarans', 1);
-        $row = JurnalPembelajaran::query()->where('user_id', $user->id)->first();
-        $this->assertSame([1, 2], $row->jam_list);
+        $this->assertDatabaseCount('jurnal_pembelajarans', 2);
     }
 }
