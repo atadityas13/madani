@@ -15,6 +15,7 @@ use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\NotifikasiPembacaController;
 use App\Http\Controllers\NotifMediaController;
 use App\Http\Controllers\PeriodePendataanController;
+use App\Http\Controllers\Persuratan\SptjmTpgController;
 use App\Http\Controllers\Portal\SiswaAuthController;
 use App\Http\Controllers\Portal\SiswaPortalController;
 use App\Http\Controllers\PrivacyPolicyController;
@@ -98,6 +99,11 @@ Route::middleware('auth')->group(function () {
         Route::resource('vendor-jobs', VendorJobAdminController::class)
             ->parameters(['vendor-jobs' => 'vendorJob'])
             ->except(['show']);
+    });
+
+    Route::middleware('role:superadmin|admin')->prefix('persuratan')->name('persuratan.')->group(function () {
+        Route::get('sptjm-tpg', [SptjmTpgController::class, 'index'])->name('sptjm-tpg.index');
+        Route::get('sptjm-tpg/{gtk}/pdf', [SptjmTpgController::class, 'pdf'])->name('sptjm-tpg.pdf');
     });
 
     Route::middleware('role:wali_kelas|guru|superadmin|admin')->group(function () {

@@ -117,6 +117,7 @@ class GtkController extends Controller
             'gelar_belakang' => ['nullable', 'string', 'max:50'],
             'nip' => ['nullable', 'string', 'max:30'],
             'nuptk' => ['nullable', 'string', 'max:20', Rule::unique('gtks', 'nuptk')->ignore($gtk?->id)],
+            'nrg' => ['nullable', 'string', 'max:40'],
             'jenis_kelamin' => ['nullable', Rule::in(['L', 'P'])],
             'tempat_lahir' => ['nullable', 'string', 'max:100'],
             'tanggal_lahir' => ['nullable', 'date'],
@@ -133,7 +134,7 @@ class GtkController extends Controller
             'status' => ['required', Rule::in(['aktif', 'nonaktif'])],
         ]);
 
-        foreach (['nip', 'nuptk', 'gelar_depan', 'gelar_belakang', 'tempat_lahir', 'agama', 'nomor_hp', 'email', 'alamat', 'jabatan', 'golongan', 'status_pegawai', 'kode_internal', 'duk'] as $field) {
+        foreach (['nip', 'nuptk', 'nrg', 'gelar_depan', 'gelar_belakang', 'tempat_lahir', 'agama', 'nomor_hp', 'email', 'alamat', 'jabatan', 'golongan', 'status_pegawai', 'kode_internal', 'duk'] as $field) {
             $data[$field] = $data[$field] ?? null;
             if (is_string($data[$field]) && trim($data[$field]) === '') {
                 $data[$field] = null;

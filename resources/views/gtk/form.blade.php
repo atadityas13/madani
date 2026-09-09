@@ -48,15 +48,20 @@
         </div>
 
         <div class="row g-3 mb-3">
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <label class="form-label">NIP / NIK</label>
                 <input class="form-control" name="nip" value="{{ old('nip', $gtk->nip) }}">
                 <div class="form-text">Dipakai sebagai username akun Ta'lim.</div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <label class="form-label">NUPTK</label>
                 <input class="form-control @error('nuptk') is-invalid @enderror" name="nuptk" value="{{ old('nuptk', $gtk->nuptk) }}">
                 @error('nuptk') <div class="invalid-feedback">{{ $message }}</div> @enderror
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">NRG</label>
+                <input class="form-control @error('nrg') is-invalid @enderror" name="nrg" value="{{ old('nrg', $gtk->nrg) }}">
+                @error('nrg') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
         </div>
 

@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'gelar_belakang',
     'nip',
     'nuptk',
+    'nrg',
     'jenis_kelamin',
     'tempat_lahir',
     'tanggal_lahir',
