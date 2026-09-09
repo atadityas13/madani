@@ -73,19 +73,33 @@ class PeriodePendataanTest extends TestCase
         $admin->syncRoles([Peran::SUPERADMIN]);
 
         $this->actingAs($admin)
-            ->put(route('siswa.periode-pendataan.update'), [
+            ->put(route('manajemen.periode-pendataan.update'), [
                 'judul' => 'Pendataan biodata',
                 'pesan' => 'Mohon dilengkapi.',
                 'is_active' => '1',
                 'starts_at' => now()->format('Y-m-d\\TH:i'),
                 'ends_at' => now()->addWeek()->format('Y-m-d\\TH:i'),
             ])
-            ->assertRedirect(route('siswa.index'));
+            ->assertRedirect(route('manajemen.periode-pendataan.index'));
 
         $this->assertDatabaseHas('periode_pendataans', [
             'judul' => 'Pendataan biodata',
             'is_active' => 1,
         ]);
+    }
+
+    public function test_admin_bisa_membuka_halaman_periode_pendataan(): void
+    {
+        $this->seed();
+        Role::findOrCreate(Peran::SUPERADMIN);
+        $admin = User::factory()->create(['is_aktif' => true]);
+        $admin->syncRoles([Peran::SUPERADMIN]);
+
+        $this->actingAs($admin)
+            ->get(route('manajemen.periode-pendataan.index'))
+            ->assertOk()
+            ->assertSee('Periode pendataan', false)
+            ->assertSee('Aktifkan periode pendataan', false);
     }
 
     public function test_siswa_cannot_edit_when_periode_closed(): void

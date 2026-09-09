@@ -49,7 +49,7 @@ class Navigasi
                 'roles' => [Peran::SUPERADMIN, Peran::ADMIN, Peran::WALI_KELAS],
                 'children' => [
                     ['label' => 'PPDB', 'route' => 'ppdb.index', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN]],
-                    ['label' => 'Data siswa', 'route' => 'siswa.index', 'match' => ['siswa.index', 'siswa.create', 'siswa.store', 'siswa.show', 'siswa.edit', 'siswa.update', 'siswa.generate-nis', 'siswa.portofolio*', 'siswa.kartu*', 'siswa.dokumen.*', 'siswa.foto.*', 'siswa.pernyataan.*', 'siswa.reset-password', 'siswa.pengajuan.*', 'siswa.relasi.*', 'siswa.periode-pendataan.*'], 'roles' => [Peran::SUPERADMIN, Peran::ADMIN, Peran::WALI_KELAS]],
+                    ['label' => 'Data siswa', 'route' => 'siswa.index', 'match' => ['siswa.index', 'siswa.create', 'siswa.store', 'siswa.show', 'siswa.edit', 'siswa.update', 'siswa.generate-nis', 'siswa.portofolio*', 'siswa.kartu*', 'siswa.dokumen.*', 'siswa.foto.*', 'siswa.pernyataan.*', 'siswa.reset-password', 'siswa.pengajuan.*', 'siswa.relasi.*'], 'roles' => [Peran::SUPERADMIN, Peran::ADMIN, Peran::WALI_KELAS]],
                     ['label' => 'Monitoring', 'route' => 'siswa.monitoring', 'match' => 'siswa.monitoring*', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN, Peran::WALI_KELAS]],
                     ['label' => 'Mutasi', 'route' => 'mutasi.index', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN]],
                     ['label' => 'Alumni', 'route' => 'alumni.index', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN]],
@@ -75,10 +75,11 @@ class Navigasi
             [
                 'label' => 'Manajemen',
                 'icon' => 'bi-sliders',
-                'match' => ['tahun-ajaran.*', 'pengguna.*', 'manajemen.database*', 'manajemen.vendor-jobs.*'],
+                'match' => ['tahun-ajaran.*', 'pengguna.*', 'manajemen.database*', 'manajemen.vendor-jobs.*', 'manajemen.periode-pendataan.*', 'siswa.periode-pendataan.*'],
                 'roles' => [Peran::SUPERADMIN, Peran::ADMIN],
                 'children' => [
                     ['label' => 'Tahun ajaran', 'route' => 'tahun-ajaran.index', 'match' => 'tahun-ajaran.*', 'roles' => [Peran::SUPERADMIN]],
+                    ['label' => 'Periode pendataan', 'route' => 'manajemen.periode-pendataan.index', 'match' => ['manajemen.periode-pendataan.*', 'siswa.periode-pendataan.*'], 'roles' => [Peran::SUPERADMIN, Peran::ADMIN]],
                     ['label' => 'Pengguna', 'route' => 'pengguna.index', 'match' => 'pengguna.*', 'roles' => [Peran::SUPERADMIN]],
                     ['label' => 'Database', 'route' => 'manajemen.database', 'match' => 'manajemen.database*', 'roles' => [Peran::SUPERADMIN]],
                     ['label' => 'Job Vendor', 'route' => 'manajemen.vendor-jobs.index', 'match' => 'manajemen.vendor-jobs.*', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN]],

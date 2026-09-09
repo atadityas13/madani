@@ -7,9 +7,22 @@ use App\Models\Siswa;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
 
 class PeriodePendataanController extends Controller
 {
+    public function index(): View
+    {
+        $this->authorize('create', Siswa::class);
+
+        $periode = PeriodePendataan::current();
+
+        return view('manajemen.periode-pendataan', [
+            'periode' => $periode,
+            'sedangTerbuka' => $periode?->isCurrentlyOpen() ?? false,
+        ]);
+    }
+
     public function update(Request $request): RedirectResponse
     {
         $this->authorize('create', Siswa::class);
@@ -49,7 +62,7 @@ class PeriodePendataanController extends Controller
         }
 
         return redirect()
-            ->route('siswa.index')
+            ->route('manajemen.periode-pendataan.index')
             ->with('status', 'Pengaturan periode pendataan berhasil disimpan.');
     }
 }
