@@ -124,13 +124,14 @@
             border-collapse: collapse;
             margin: 0;
         }
+        /* Materai tempel resmi ~21×28.95 mm; tinggi + sedikit sisa agar teks tidak tertutup. */
         .ttd-materai-wrap td {
-            height: 110px;
+            height: 33mm;
             vertical-align: middle;
             text-align: left;
             padding: 0;
         }
-        .ttd-nama { margin-top: 8px; }
+        .ttd-nama { margin-top: 4px; }
     </style>
 </head>
 <body>
