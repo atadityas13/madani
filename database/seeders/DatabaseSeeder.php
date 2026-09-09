@@ -20,15 +20,24 @@ class DatabaseSeeder extends Seeder
             Role::findOrCreate($role);
         }
 
-        $admin = User::query()->updateOrCreate(
-            ['username' => 'admin'],
-            [
+        // Idempotent: production may already have this email under another username (or vice versa).
+        $admin = User::query()->where('username', 'admin')->first()
+            ?? User::query()->where('email', 'admin@mtsn11majalengka.sch.id')->first();
+
+        if ($admin === null) {
+            $admin = User::query()->create([
+                'username' => 'admin',
                 'name' => 'Operator MADANI',
                 'email' => 'admin@mtsn11majalengka.sch.id',
                 'password' => Hash::make('madani-admin'),
                 'is_aktif' => true,
-            ]
-        );
+            ]);
+        } else {
+            $admin->forceFill([
+                'is_aktif' => true,
+            ])->save();
+        }
+
         $admin->syncRoles(['superadmin']);
 
         Madrasah::saatIni();
