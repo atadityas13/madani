@@ -163,11 +163,13 @@ class SiswaKartuEPelajarTest extends TestCase
         $this->assertStringContainsString('font-size: 2.9pt', $html);
         $this->assertStringContainsString('font-weight: bold', $html);
         $this->assertStringContainsString('.kop-l4, .kop-l5', $html);
-        $this->assertStringContainsString('font-size: 3.9pt', $html);
+        $this->assertStringContainsString('font-size: 3.5pt', $html);
+        $this->assertStringContainsString('DejaVu Sans Bold', $html);
         $this->assertMatchesRegularExpression(
             '/\.kop-l4,\s*\.kop-l5\s*\{[^}]*font-weight:\s*bold/s',
             $html,
         );
+        $this->assertStringContainsString('td.kop-logo img { width: 24pt; height: 24pt; }', $html);
         $this->assertStringContainsString('bf-cell', $html);
         $this->assertStringContainsString('Madrasah Maju, Bermutu, Mendunia.', $html);
         $this->assertStringContainsString('cap-row', $html);

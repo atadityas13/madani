@@ -34,18 +34,18 @@ td.hdr {
 }
 table.kop { width: 100%; border-collapse: collapse; }
 td.kop-logo {
-    width: 32pt;
+    width: 30pt;
     background: #022C22;
     text-align: center;
     vertical-align: middle !important;
-    padding: 0.5pt 0.6pt !important;
+    padding: 0.4pt 0.45pt !important;
 }
-td.kop-logo img { width: 28pt; height: 28pt; }
+td.kop-logo img { width: 24pt; height: 24pt; }
 td.kop-text {
     background: #022C22;
     text-align: center;
     vertical-align: middle !important;
-    padding: 1pt 0.5pt !important;
+    padding: 1pt 0.35pt !important;
     line-height: 1.08;
 }
 .kop-l1, .kop-l2 {
@@ -63,10 +63,11 @@ td.kop-text {
 }
 .kop-l4, .kop-l5 {
     color: #ffffff;
-    font-size: 3.9pt;
+    font-family: DejaVu Sans Bold, DejaVu Sans, sans-serif;
+    font-size: 3.5pt;
     font-weight: bold;
-    margin-top: 0.25pt;
-    letter-spacing: 0.02pt;
+    margin-top: 0.2pt;
+    letter-spacing: -0.02pt;
     white-space: nowrap;
 }
 

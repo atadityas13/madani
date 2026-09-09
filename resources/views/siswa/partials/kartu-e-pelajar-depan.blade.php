@@ -12,7 +12,7 @@
                     <tr>
                         <td class="kop-logo">
                             @if ($logoKemenagDataUri ?? null)
-                                <img src="{{ $logoKemenagDataUri }}" width="28" height="28" alt="Kemenag">
+                                <img src="{{ $logoKemenagDataUri }}" width="24" height="24" alt="Kemenag">
                             @endif
                         </td>
                         <td class="kop-text">
@@ -28,7 +28,7 @@
                         </td>
                         <td class="kop-logo">
                             @if ($logoDataUri ?? null)
-                                <img src="{{ $logoDataUri }}" width="28" height="28" alt="Madrasah">
+                                <img src="{{ $logoDataUri }}" width="24" height="24" alt="Madrasah">
                             @endif
                         </td>
                     </tr>
