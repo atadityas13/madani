@@ -453,6 +453,16 @@ class SiswaController extends Controller
         ]);
     }
 
+    public function cekKartuEPelajarShort(Siswa $siswa, string $sig, KartuEPelajarService $kartu): View
+    {
+        abort_unless($kartu->signatureValid((string) $siswa->id, $sig), 403);
+
+        return view('siswa.kartu-e-pelajar-cek', [
+            'siswa' => $siswa,
+            'kartu' => $kartu->payload($siswa),
+        ]);
+    }
+
     public function resetPassword(Siswa $siswa): RedirectResponse
     {
         $this->authorize('update', $siswa);

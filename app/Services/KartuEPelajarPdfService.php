@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Madrasah;
 use App\Models\Siswa;
+use BaconQrCode\Common\ErrorCorrectionLevel;
 use BaconQrCode\Renderer\GDLibRenderer;
 use BaconQrCode\Writer;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -124,7 +125,9 @@ class KartuEPelajarPdfService
 
     private function qrDataUri(string $content): string
     {
-        $png = (new Writer(new GDLibRenderer(100)))->writeString($content);
+        // Resolusi tinggi + quiet zone (margin) agar modul tidak “menyatu” saat dicetak kecil.
+        $png = (new Writer(new GDLibRenderer(size: 280, margin: 2)))
+            ->writeString($content, ecLevel: ErrorCorrectionLevel::L());
 
         return 'data:image/png;base64,'.base64_encode($png);
     }

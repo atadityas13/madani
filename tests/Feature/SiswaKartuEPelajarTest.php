@@ -11,6 +11,7 @@ use App\Models\SiswaPernyataan;
 use App\Models\TahunAjaran;
 use App\Models\User;
 use App\Services\KartuEPelajarPdfService;
+use App\Services\KartuEPelajarService;
 use App\Support\PernyataanSiswa;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -83,6 +84,28 @@ class SiswaKartuEPelajarTest extends TestCase
             ->assertSee('Kartu E-Pelajar Terverifikasi')
             ->assertSee($siswa->nama)
             ->assertSee($siswa->nisn);
+    }
+
+    public function test_short_kartu_qr_url_is_compact_and_verifiable(): void
+    {
+        Storage::fake('r2');
+        $this->seed();
+        [, $siswa] = $this->siswaWithKartuData(denganPernyataan: true, lengkap: true);
+
+        $kartu = app(KartuEPelajarService::class);
+        $short = $kartu->verifyUrl($siswa);
+        $signed = URL::signedRoute('kartu-e-pelajar.cek', ['siswa' => $siswa->id]);
+
+        $this->assertLessThan(strlen($signed) / 2, strlen($short));
+        $this->assertStringContainsString('/k/'.$siswa->id.'/', $short);
+
+        $this->get($short)
+            ->assertOk()
+            ->assertSee('Kartu E-Pelajar Terverifikasi')
+            ->assertSee($siswa->nama);
+
+        $this->get(url('/k/'.$siswa->id.'/deadbeefdead'))
+            ->assertForbidden();
     }
 
     public function test_unsigned_kartu_verification_is_forbidden(): void

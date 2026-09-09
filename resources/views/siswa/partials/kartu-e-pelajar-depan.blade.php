@@ -75,7 +75,7 @@
                         </td>
                         <td class="top-qr">
                             @if ($qrDataUri ?? null)
-                                <img src="{{ $qrDataUri }}" width="32" height="32" alt="QR">
+                                <img src="{{ $qrDataUri }}" width="42" height="42" alt="QR">
                             @endif
                         </td>
                     </tr>

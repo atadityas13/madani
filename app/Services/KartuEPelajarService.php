@@ -6,7 +6,6 @@ use App\Models\Madrasah;
 use App\Models\Siswa;
 use App\Models\SiswaPeriodik;
 use App\Support\R2Url;
-use Illuminate\Support\Facades\URL;
 
 class KartuEPelajarService
 {
@@ -47,7 +46,7 @@ class KartuEPelajarService
             'jenis_kelamin_label' => $this->formatJenisKelamin($siswa->jenis_kelamin),
             'alamat' => $this->formatAlamatKartu($periodik) ?: '—',
             'foto_url' => R2Url::readable($siswa->foto),
-            'verify_url' => URL::signedRoute('kartu-e-pelajar.cek', ['siswa' => $siswa->id]),
+            'verify_url' => $this->verifyUrl($siswa),
             'madrasah' => [
                 'nama' => $madrasah->namaKop(),
                 'nama_singkat' => (string) $madrasah->nama,
@@ -59,6 +58,25 @@ class KartuEPelajarService
                 'logo_kemenag_url' => asset('img/logo-kemenag.png'),
             ],
         ];
+    }
+
+    /**
+     * URL pendek untuk QR kartu (tanpa query signature panjang).
+     * Signed URL Laravel terlalu panjang → QR padat → sulit discan di ukuran ID-1.
+     */
+    public function verifyUrl(Siswa $siswa): string
+    {
+        return url('/k/'.$siswa->id.'/'.$this->verifySignature((string) $siswa->id));
+    }
+
+    public function verifySignature(string $siswaId): string
+    {
+        return substr(hash_hmac('sha256', 'kartu-e-pelajar:'.$siswaId, (string) config('app.key')), 0, 12);
+    }
+
+    public function signatureValid(string $siswaId, string $signature): bool
+    {
+        return hash_equals($this->verifySignature($siswaId), $signature);
     }
 
     private function formatTtl(Siswa $siswa): string

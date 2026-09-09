@@ -79,16 +79,16 @@ table.top-row { width: 100%; border-collapse: collapse; }
 table.top-row > tbody > tr > td { vertical-align: top; padding: 0; }
 td.top-left { padding-right: 2pt !important; }
 td.top-qr {
-    width: 34pt;
+    width: 46pt;
     text-align: right;
     vertical-align: top !important;
     padding: 0 !important;
 }
 td.top-qr img {
-    width: 32pt;
-    height: 32pt;
-    border: 0.45pt solid #D1FAE5;
-    padding: 0.7pt;
+    width: 42pt;
+    height: 42pt;
+    border: none;
+    padding: 0;
     background: #ffffff;
     display: block;
 }

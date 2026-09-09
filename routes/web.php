@@ -57,6 +57,11 @@ Route::get('/kartu-e-pelajar/cek/{siswa}', [SiswaController::class, 'cekKartuEPe
     ->name('kartu-e-pelajar.cek')
     ->whereUuid('siswa');
 
+Route::get('/k/{siswa}/{sig}', [SiswaController::class, 'cekKartuEPelajarShort'])
+    ->name('kartu-e-pelajar.cek.short')
+    ->whereUuid('siswa')
+    ->where('sig', '[a-f0-9]{12}');
+
 Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')->name('logout');
 Route::post('/siswa/keluar', [SiswaAuthController::class, 'destroy'])->middleware('auth:siswa')->name('siswa.keluar');
 
