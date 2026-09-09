@@ -34,7 +34,10 @@ class VendorKartuTest extends TestCase
             ->get(route('vendor.dashboard'))
             ->assertOk()
             ->assertSee('Jumlah siswa')
-            ->assertSee('Panduan alur');
+            ->assertSee('Panduan alur')
+            ->assertSee('Setting printer (disarankan)', false)
+            ->assertSee('600 dpi', false)
+            ->assertSee('Actual size', false);
     }
 
     public function test_vendor_cannot_view_other_vendor_job(): void

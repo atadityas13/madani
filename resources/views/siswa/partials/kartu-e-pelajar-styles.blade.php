@@ -26,10 +26,10 @@ table.inner {
 }
 table.inner > tbody > tr > td { padding: 0; margin: 0; }
 
-/* ===== DEPAN: hdr 34 + bdy 93.5 + cap 10.5 + ftr 14.98 = 152.98 ===== */
+/* ===== DEPAN: hdr 35.5 + bdy 92 + cap 10.5 + ftr 14.98 = 152.98 ===== */
 td.hdr {
     background: #022C22;
-    height: 34pt;
+    height: 35.5pt;
     padding: 0 !important;
 }
 table.kop { width: 100%; border-collapse: collapse; }
@@ -63,14 +63,16 @@ td.kop-text {
 }
 .kop-l4, .kop-l5 {
     color: #ffffff;
-    font-size: 3.15pt;
-    margin-top: 0.2pt;
+    font-size: 3.9pt;
+    font-weight: bold;
+    margin-top: 0.25pt;
+    letter-spacing: 0.02pt;
     white-space: nowrap;
 }
 
 td.bdy {
     background: #ffffff;
-    height: 93.5pt;
+    height: 92pt;
     padding: 4.5pt 1.5pt 1pt 3pt !important;
     vertical-align: top !important;
 }

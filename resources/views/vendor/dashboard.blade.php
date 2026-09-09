@@ -51,10 +51,18 @@
     <ol class="mb-3 ps-3 text-secondary">
         <li class="mb-2">Buka <strong>Job saya</strong>, unggah foto satuan (drag-drop + crop 3:4) atau ZIP hotfolder <code>NISN.jpg</code> / <code>NISN.png</code>.</li>
         <li class="mb-2">Filter rombel / status foto untuk memastikan tidak ada yang terlewat.</li>
-        <li>Centang siswa, lalu <strong>Cetak massal</strong> (depan + belakang berdampingan).</li>
+        <li class="mb-2">Centang siswa, lalu <strong>Cetak massal</strong> (depan + belakang berdampingan).</li>
+        <li>Di dialog cetak PDF, pilih kualitas tinggi agar teks kecil (alamat kop, footer, QR) terbaca jelas.</li>
     </ol>
     <div class="small text-secondary border-top pt-3">
-        Spek foto: rasio <strong>3:4</strong>, maksimal <strong>500 KB</strong>, JPG/PNG. Lebar minimal 300 px.
+        <div class="mb-2">Spek foto: rasio <strong>3:4</strong>, maksimal <strong>500 KB</strong>, JPG/PNG. Lebar minimal 300 px.</div>
+        <div>
+            <strong>Setting printer (disarankan):</strong>
+            kualitas / print quality <strong>High</strong> atau <strong>Best</strong>,
+            resolusi minimal <strong>600 dpi</strong> (lebih baik 1200 dpi bila tersedia),
+            warna <strong>Color</strong>, skala <strong>100% / Actual size</strong> (jangan Fit to page),
+            dan kertas sesuai ukuran kartu (ID-1 / PVC bila memakai printer kartu).
+        </div>
     </div>
 </div>
 
