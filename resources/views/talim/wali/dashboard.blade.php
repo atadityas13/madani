@@ -88,6 +88,21 @@
                 <div class="text-secondary text-center py-3 small">Semua siswa sudah lengkap.</div>
             @endforelse
         </div>
+        @if ($belum_lengkap->hasPages())
+            <div class="talim-pager">
+                @if ($belum_lengkap->onFirstPage())
+                    <span class="talim-pager__btn is-disabled">Sebelumnya</span>
+                @else
+                    <a class="talim-pager__btn" href="{{ $belum_lengkap->previousPageUrl() }}">Sebelumnya</a>
+                @endif
+                <span class="talim-pager__meta">{{ $belum_lengkap->currentPage() }} / {{ $belum_lengkap->lastPage() }}</span>
+                @if ($belum_lengkap->hasMorePages())
+                    <a class="talim-pager__btn" href="{{ $belum_lengkap->nextPageUrl() }}">Berikutnya</a>
+                @else
+                    <span class="talim-pager__btn is-disabled">Berikutnya</span>
+                @endif
+            </div>
+        @endif
     </section>
 @endif
 @endsection

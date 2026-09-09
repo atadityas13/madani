@@ -82,7 +82,16 @@ class User extends Authenticatable
 
     public function adalahWali(): bool
     {
-        return $this->hasRole(Peran::WALI_KELAS) && ! $this->bisaKelola();
+        if ($this->bisaKelola()) {
+            return false;
+        }
+
+        // Peran Spatie atau penugasan rombel (gtk_id) — keduanya menandai wali.
+        if ($this->hasRole(Peran::WALI_KELAS)) {
+            return true;
+        }
+
+        return $this->rombelIdsAktif() !== [];
     }
 
     public function peranUtama(): string

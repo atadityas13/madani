@@ -20,7 +20,7 @@ class WaliKelasDashboardTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function buatWaliDenganRombel(): array
+    private function buatWaliDenganRombel(bool $denganPeranWali = true): array
     {
         $this->seed();
         Role::findOrCreate(Peran::WALI_KELAS);
@@ -39,7 +39,7 @@ class WaliKelasDashboardTest extends TestCase
             'gtk_id' => $gtk->id,
             'is_aktif' => true,
         ]);
-        $user->syncRoles([Peran::WALI_KELAS, Peran::GURU]);
+        $user->syncRoles($denganPeranWali ? [Peran::WALI_KELAS, Peran::GURU] : [Peran::GURU]);
 
         $tahun = TahunAjaran::aktif();
         $rombel = Rombel::query()->create([
@@ -105,10 +105,60 @@ class WaliKelasDashboardTest extends TestCase
             ->assertSee('5 login siswa terakhir', false)
             ->assertSee('Rabu, 09-09-2026 pukul 07:54:32', false)
             ->assertSee('Siswa belum lengkap', false)
-            ->assertSee('status_lengkap=belum_lengkap', false)
-            ->assertSee('jenis_kelamin=L', false)
+            ->assertSee('/talim/wali/siswa?status_lengkap=belum_lengkap', false)
+            ->assertSee('/talim/wali/siswa?jenis_kelamin=L', false)
+            ->assertSee('status_lengkap=belum_variabel', false)
             ->assertSee('belum%5B0%5D=login', false)
-            ->assertSee('status_lengkap=sudah_lengkap', false);
+            ->assertSee('/talim/wali/siswa?status_lengkap=sudah_lengkap', false);
+    }
+
+    public function test_klik_kartu_membuka_daftar_siswa_talim(): void
+    {
+        [$wali, $rombel] = $this->buatWaliDenganRombel(denganPeranWali: false);
+
+        $this->tambahSiswa($rombel, ['nama' => 'Siswa Laki', 'jenis_kelamin' => 'L']);
+        $this->tambahSiswa($rombel, ['nama' => 'Siswa Perempuan', 'jenis_kelamin' => 'P']);
+
+        $this->actingAs($wali)
+            ->get(route('talim.wali.siswa', ['jenis_kelamin' => 'L']))
+            ->assertOk()
+            ->assertSee('Siswa laki-laki', false)
+            ->assertSee('Siswa Laki', false)
+            ->assertDontSee('Siswa Perempuan', false)
+            ->assertDontSee('This action is unauthorized', false);
+    }
+
+    public function test_daftar_belum_lengkap_bisa_dipaginasi(): void
+    {
+        [$wali, $rombel] = $this->buatWaliDenganRombel(denganPeranWali: false);
+
+        for ($i = 1; $i <= 12; $i++) {
+            $this->tambahSiswa($rombel, [
+                'nama' => sprintf('Siswa Belum %02d', $i),
+                'jenis_kelamin' => 'L',
+            ]);
+        }
+
+        $this->actingAs($wali)
+            ->get(route('talim.wali'))
+            ->assertOk()
+            ->assertSee('Siswa Belum 01', false)
+            ->assertSee('Siswa Belum 10', false)
+            ->assertDontSee('Siswa Belum 11', false)
+            ->assertSee('Berikutnya', false);
+
+        $this->actingAs($wali)
+            ->get(route('talim.wali', ['page' => 2]))
+            ->assertOk()
+            ->assertSee('Siswa Belum 11', false)
+            ->assertSee('Siswa Belum 12', false)
+            ->assertDontSee('Siswa Belum 01', false);
+
+        $this->actingAs($wali)
+            ->get(route('talim.wali.siswa', ['status_lengkap' => 'belum_lengkap', 'page' => 2]))
+            ->assertOk()
+            ->assertSee('Siswa Belum 11', false)
+            ->assertSee('Siswa Belum 12', false);
     }
 
     public function test_guru_bukan_wali_melihat_pesan_akses_ditolak(): void
@@ -197,6 +247,8 @@ class WaliKelasDashboardTest extends TestCase
             ->assertSee('VIII-C', false)
             ->assertSee('Siswa Rombel C', false)
             ->assertDontSee('Anda tidak memiliki akses wali kelas', false);
+
+        $this->assertTrue($guru->fresh()->adalahWali());
     }
 
     public function test_empty_state_jika_belum_punya_rombel(): void

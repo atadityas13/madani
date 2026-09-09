@@ -8,10 +8,15 @@ use App\Models\TahunAjaran;
 use App\Models\User;
 use App\Support\KelengkapanSiswa;
 use Carbon\CarbonInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator as Paginator;
 use Illuminate\Support\Collection;
 
 class WaliKelasDashboardService
 {
+    private const PER_PAGE = 10;
+
     /** @var list<string> */
     private const LENGKAP_KEYS = [
         'login', 'data-siswa', 'orang-tua', 'alamat', 'rekam-didik', 'foto',
@@ -44,11 +49,11 @@ class WaliKelasDashboardService
      *     tahun_label: string|null,
      *     cards: list<array{key: string, label: string, value: int, tone: string, url: string|null}>,
      *     login_terakhir: list<array{nama: string, waktu: string, url: string|null}>,
-     *     belum_lengkap: list<array{nama: string, kekurangan: list<string>, url: string|null}>,
+     *     belum_lengkap: LengthAwarePaginator,
      *     belum_lengkap_url: string|null
      * }
      */
-    public function untuk(User $user): array
+    public function untuk(Request $request, User $user): array
     {
         $rombel = $this->rombelWali($user);
 
@@ -66,7 +71,7 @@ class WaliKelasDashboardService
                     'pengajuan_pending' => 0,
                 ]),
                 'login_terakhir' => [],
-                'belum_lengkap' => [],
+                'belum_lengkap' => $this->paginatorKosong($request),
                 'belum_lengkap_url' => null,
             ];
         }
@@ -95,24 +100,66 @@ class WaliKelasDashboardService
             ])
             ->all();
 
-        $belumLengkap = $rows
+        $belumLengkapRows = $rows
             ->filter(fn (array $row) => ! $row['lengkap_global'])
-            ->take(10)
             ->values()
             ->map(fn (array $row) => [
                 'nama' => $row['nama'],
                 'kekurangan' => $this->kekurangan($row['flags']),
                 'url' => $row['show_url'],
-            ])
-            ->all();
+            ]);
 
         return [
             'rombel' => $rombel,
             'tahun_label' => $rombel->tahunAjaran?->label() ?? TahunAjaran::aktif()?->label(),
             'cards' => $this->buatKartu($rombel, $counts),
             'login_terakhir' => $loginTerakhir,
-            'belum_lengkap' => $belumLengkap,
-            'belum_lengkap_url' => $this->monitoringUrl($rombel, ['status_lengkap' => 'belum_lengkap']),
+            'belum_lengkap' => $this->paginateCollection($belumLengkapRows, $request, 'page'),
+            'belum_lengkap_url' => $this->daftarUrl(['status_lengkap' => 'belum_lengkap']),
+        ];
+    }
+
+    /**
+     * @return array{
+     *     rombel: Rombel|null,
+     *     tahun_label: string|null,
+     *     judul: string,
+     *     rows: LengthAwarePaginator,
+     *     kembali_url: string
+     * }
+     */
+    public function daftar(Request $request, User $user): array
+    {
+        $rombel = $this->rombelWali($user);
+        $filters = $this->parseFilters($request);
+        $judul = $this->judulDaftar($filters);
+
+        if ($rombel === null) {
+            return [
+                'rombel' => null,
+                'tahun_label' => TahunAjaran::aktif()?->label(),
+                'judul' => $judul,
+                'rows' => $this->paginatorKosong($request),
+                'kembali_url' => route('talim.wali'),
+            ];
+        }
+
+        $rows = $this->terapkanFilter($this->rowsUntukRombel($rombel), $filters)
+            ->map(fn (array $row) => [
+                'nama' => $row['nama'],
+                'jenis_kelamin' => $row['jenis_kelamin'],
+                'kekurangan' => $row['lengkap_global'] ? [] : $this->kekurangan($row['flags']),
+                'lengkap' => $row['lengkap_global'],
+                'url' => $row['show_url'],
+            ])
+            ->values();
+
+        return [
+            'rombel' => $rombel,
+            'tahun_label' => $rombel->tahunAjaran?->label() ?? TahunAjaran::aktif()?->label(),
+            'judul' => $judul,
+            'rows' => $this->paginateCollection($rows, $request, 'page'),
+            'kembali_url' => route('talim.wali'),
         ];
     }
 
@@ -122,48 +169,60 @@ class WaliKelasDashboardService
      */
     private function buatKartu(?Rombel $rombel, array $counts): array
     {
+        if ($rombel === null) {
+            return [
+                ['key' => 'total', 'label' => 'Jumlah siswa', 'value' => 0, 'tone' => '', 'url' => null],
+                ['key' => 'laki', 'label' => 'Laki-laki', 'value' => 0, 'tone' => '', 'url' => null],
+                ['key' => 'perempuan', 'label' => 'Perempuan', 'value' => 0, 'tone' => '', 'url' => null],
+                ['key' => 'lengkap', 'label' => 'Data lengkap', 'value' => 0, 'tone' => 'is-ok', 'url' => null],
+                ['key' => 'belum_lengkap', 'label' => 'Belum lengkap', 'value' => 0, 'tone' => 'is-warn', 'url' => null],
+                ['key' => 'belum_login', 'label' => 'Belum pernah login', 'value' => 0, 'tone' => 'is-warn', 'url' => null],
+                ['key' => 'pengajuan_pending', 'label' => 'Pengajuan pending', 'value' => 0, 'tone' => '', 'url' => null],
+            ];
+        }
+
         return [
             [
                 'key' => 'total',
                 'label' => 'Jumlah siswa',
                 'value' => $counts['total'],
                 'tone' => '',
-                'url' => $this->monitoringUrl($rombel),
+                'url' => $this->daftarUrl(),
             ],
             [
                 'key' => 'laki',
                 'label' => 'Laki-laki',
                 'value' => $counts['laki'],
                 'tone' => '',
-                'url' => $this->monitoringUrl($rombel, ['jenis_kelamin' => 'L']),
+                'url' => $this->daftarUrl(['jenis_kelamin' => 'L']),
             ],
             [
                 'key' => 'perempuan',
                 'label' => 'Perempuan',
                 'value' => $counts['perempuan'],
                 'tone' => '',
-                'url' => $this->monitoringUrl($rombel, ['jenis_kelamin' => 'P']),
+                'url' => $this->daftarUrl(['jenis_kelamin' => 'P']),
             ],
             [
                 'key' => 'lengkap',
                 'label' => 'Data lengkap',
                 'value' => $counts['lengkap'],
                 'tone' => 'is-ok',
-                'url' => $this->monitoringUrl($rombel, ['status_lengkap' => 'sudah_lengkap']),
+                'url' => $this->daftarUrl(['status_lengkap' => 'sudah_lengkap']),
             ],
             [
                 'key' => 'belum_lengkap',
                 'label' => 'Belum lengkap',
                 'value' => $counts['belum_lengkap'],
                 'tone' => 'is-warn',
-                'url' => $this->monitoringUrl($rombel, ['status_lengkap' => 'belum_lengkap']),
+                'url' => $this->daftarUrl(['status_lengkap' => 'belum_lengkap']),
             ],
             [
                 'key' => 'belum_login',
                 'label' => 'Belum pernah login',
                 'value' => $counts['belum_login'],
                 'tone' => 'is-warn',
-                'url' => $this->monitoringUrl($rombel, [
+                'url' => $this->daftarUrl([
                     'status_lengkap' => 'belum_variabel',
                     'belum' => ['login'],
                 ]),
@@ -173,7 +232,7 @@ class WaliKelasDashboardService
                 'label' => 'Pengajuan pending',
                 'value' => $counts['pengajuan_pending'],
                 'tone' => $counts['pengajuan_pending'] > 0 ? 'is-warn' : '',
-                'url' => $this->monitoringUrl($rombel, [
+                'url' => $this->daftarUrl([
                     'status_lengkap' => 'belum_variabel',
                     'belum' => ['pengajuan_pending'],
                 ]),
@@ -184,15 +243,9 @@ class WaliKelasDashboardService
     /**
      * @param  array<string, mixed>  $extra
      */
-    private function monitoringUrl(?Rombel $rombel, array $extra = []): ?string
+    private function daftarUrl(array $extra = []): string
     {
-        if ($rombel === null) {
-            return null;
-        }
-
-        return route('siswa.monitoring', array_merge([
-            'rombel_id' => $rombel->id,
-        ], $extra));
+        return route('talim.wali.siswa', $extra);
     }
 
     public function rombelWali(User $user): ?Rombel
@@ -209,6 +262,112 @@ class WaliKelasDashboardService
             ->when($tahun, fn ($query) => $query->where('tahun_ajaran_id', $tahun->id))
             ->orderBy('id')
             ->first();
+    }
+
+    /**
+     * @return array{jenis_kelamin: string, status_lengkap: string, belum: list<string>}
+     */
+    private function parseFilters(Request $request): array
+    {
+        $jenisKelamin = strtoupper(trim((string) $request->query('jenis_kelamin', '')));
+        if (! in_array($jenisKelamin, ['L', 'P'], true)) {
+            $jenisKelamin = '';
+        }
+
+        $statusLengkap = trim((string) $request->query('status_lengkap', ''));
+        if (! in_array($statusLengkap, ['sudah_lengkap', 'belum_lengkap', 'belum_variabel'], true)) {
+            $statusLengkap = '';
+        }
+
+        $belumRaw = $request->query('belum', []);
+        if (! is_array($belumRaw)) {
+            $belumRaw = filled($belumRaw) ? [(string) $belumRaw] : [];
+        }
+        $belum = $statusLengkap === 'belum_variabel'
+            ? array_values(array_filter(
+                array_map('strval', $belumRaw),
+                fn (string $key) => in_array($key, [...self::LENGKAP_KEYS, 'pengajuan_pending'], true),
+            ))
+            : [];
+
+        return [
+            'jenis_kelamin' => $jenisKelamin,
+            'status_lengkap' => $statusLengkap,
+            'belum' => $belum,
+        ];
+    }
+
+    /**
+     * @param  array{jenis_kelamin: string, status_lengkap: string, belum: list<string>}  $filters
+     */
+    private function judulDaftar(array $filters): string
+    {
+        return match (true) {
+            $filters['jenis_kelamin'] === 'L' => 'Siswa laki-laki',
+            $filters['jenis_kelamin'] === 'P' => 'Siswa perempuan',
+            $filters['status_lengkap'] === 'sudah_lengkap' => 'Data lengkap',
+            $filters['status_lengkap'] === 'belum_lengkap' => 'Siswa belum lengkap',
+            $filters['status_lengkap'] === 'belum_variabel' && in_array('login', $filters['belum'], true) => 'Belum pernah login',
+            $filters['status_lengkap'] === 'belum_variabel' && in_array('pengajuan_pending', $filters['belum'], true) => 'Pengajuan pending',
+            default => 'Daftar siswa',
+        };
+    }
+
+    /**
+     * @param  Collection<int, array<string, mixed>>  $rows
+     * @param  array{jenis_kelamin: string, status_lengkap: string, belum: list<string>}  $filters
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function terapkanFilter(Collection $rows, array $filters): Collection
+    {
+        return $rows
+            ->when($filters['jenis_kelamin'] !== '', fn (Collection $items) => $items
+                ->filter(fn (array $row) => $row['jenis_kelamin'] === $filters['jenis_kelamin']))
+            ->when($filters['status_lengkap'] === 'sudah_lengkap', fn (Collection $items) => $items
+                ->filter(fn (array $row) => $row['lengkap_global']))
+            ->when($filters['status_lengkap'] === 'belum_lengkap', fn (Collection $items) => $items
+                ->filter(fn (array $row) => ! $row['lengkap_global']))
+            ->when($filters['status_lengkap'] === 'belum_variabel' && $filters['belum'] !== [], function (Collection $items) use ($filters) {
+                return $items->filter(function (array $row) use ($filters) {
+                    foreach ($filters['belum'] as $key) {
+                        if ($key === 'pengajuan_pending') {
+                            if (((int) $row['pengajuan_pending']) > 0) {
+                                return true;
+                            }
+
+                            continue;
+                        }
+
+                        if (! ($row['flags'][$key] ?? false)) {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                });
+            })
+            ->values();
+    }
+
+    /**
+     * @param  Collection<int, array<string, mixed>>  $items
+     */
+    private function paginateCollection(Collection $items, Request $request, string $pageName): LengthAwarePaginator
+    {
+        $page = max(1, (int) $request->query($pageName, 1));
+        $total = $items->count();
+        $slice = $items->slice(($page - 1) * self::PER_PAGE, self::PER_PAGE)->values();
+
+        return new Paginator($slice, $total, self::PER_PAGE, $page, [
+            'path' => $request->url(),
+            'query' => $request->query(),
+            'pageName' => $pageName,
+        ]);
+    }
+
+    private function paginatorKosong(Request $request): LengthAwarePaginator
+    {
+        return $this->paginateCollection(collect(), $request, 'page');
     }
 
     /**

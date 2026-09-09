@@ -102,6 +102,7 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('role:wali_kelas|guru|superadmin|admin')->group(function () {
         Route::get('/talim/wali', WaliKelasController::class)->name('talim.wali');
+        Route::get('/talim/wali/siswa', [WaliKelasController::class, 'siswa'])->name('talim.wali.siswa');
     });
 
     Route::middleware('role:superadmin|admin|operator|kamad')->group(function () {
