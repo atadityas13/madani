@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Rombel;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
+use App\Services\JurnalRankingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
+    public function __construct(private JurnalRankingService $jurnalRanking) {}
+
     public function __invoke(): View|RedirectResponse
     {
         $user = auth()->user();
@@ -35,6 +38,8 @@ class DashboardController extends Controller
             }
         }
 
+        $bisaKelola = (bool) $user?->bisaKelola();
+
         return view('dashboard', [
             'tahunAktif' => $tahunAktif,
             'jumlahSiswa' => (clone $siswaQuery)->count(),
@@ -43,6 +48,8 @@ class DashboardController extends Controller
                 ? 0
                 : Siswa::query()->where('status_keaktifan', 'aktif_tanpa_rombel')->count(),
             'jumlahRombel' => $rombelQuery->count(),
+            'jurnalRanking' => $bisaKelola ? $this->jurnalRanking->terbanyak() : collect(),
+            'tampilkanJurnalRanking' => $bisaKelola,
         ]);
     }
 }
