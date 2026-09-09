@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CalendarEventController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GtkController;
+use App\Http\Controllers\GtkMonitoringController;
 use App\Http\Controllers\KelembagaanController;
 use App\Http\Controllers\Manajemen\DatabaseController;
 use App\Http\Controllers\NotifikasiController;
@@ -75,6 +76,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('tahun-ajaran', TahunAjaranController::class)
             ->parameters(['tahun-ajaran' => 'tahunAjaran'])
             ->except(['show']);
+        Route::get('gtk/monitoring', [GtkMonitoringController::class, 'index'])->name('gtk.monitoring');
         Route::resource('gtk', GtkController::class)->except(['show']);
         Route::get('pengaturan/update-app', [AppUpdateController::class, 'index'])->name('app-updates.index');
         Route::post('pengaturan/update-app', [AppUpdateController::class, 'store'])->name('app-updates.store');

@@ -48,7 +48,8 @@ class Navigasi
                 'match' => 'gtk.*',
                 'roles' => [Peran::SUPERADMIN, Peran::ADMIN],
                 'children' => [
-                    ['label' => 'Data GTK', 'route' => 'gtk.index', 'match' => 'gtk.*', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN]],
+                    ['label' => 'Data GTK', 'route' => 'gtk.index', 'match' => ['gtk.index', 'gtk.create', 'gtk.store', 'gtk.edit', 'gtk.update', 'gtk.destroy', 'gtk.akun.*'], 'roles' => [Peran::SUPERADMIN, Peran::ADMIN]],
+                    ['label' => 'Monitoring', 'route' => 'gtk.monitoring', 'match' => 'gtk.monitoring*', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN]],
                 ],
             ],
             [

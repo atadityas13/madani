@@ -16,7 +16,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'username', 'email', 'password', 'must_change_password', 'is_aktif', 'gtk_id', 'foto'])]
+#[Fillable(['name', 'username', 'email', 'password', 'must_change_password', 'is_aktif', 'gtk_id', 'foto', 'first_login_at', 'last_login_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -30,7 +30,21 @@ class User extends Authenticatable
             'password' => 'hashed',
             'must_change_password' => 'boolean',
             'is_aktif' => 'boolean',
+            'first_login_at' => 'datetime',
+            'last_login_at' => 'datetime',
         ];
+    }
+
+    public function catatLogin(): void
+    {
+        $now = now();
+        $payload = ['last_login_at' => $now];
+
+        if ($this->first_login_at === null) {
+            $payload['first_login_at'] = $now;
+        }
+
+        $this->forceFill($payload)->save();
     }
 
     protected function name(): Attribute
@@ -44,6 +58,11 @@ class User extends Authenticatable
     public function gtk(): BelongsTo
     {
         return $this->belongsTo(Gtk::class);
+    }
+
+    public function jurnalPembelajarans(): HasMany
+    {
+        return $this->hasMany(JurnalPembelajaran::class);
     }
 
     public function bisaKelolaPengguna(): bool

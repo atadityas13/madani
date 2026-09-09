@@ -58,12 +58,13 @@ class GuruAuthController extends Controller
 
         $user->tokens()->where('name', 'talim-guru')->delete();
         $token = $user->createToken('talim-guru')->plainTextToken;
+        $user->catatLogin();
 
         return response()->json([
             'success' => true,
             'token' => $token,
             'token_type' => 'Bearer',
-            'user' => GuruApiPayload::user($user),
+            'user' => GuruApiPayload::user($user->fresh('gtk')),
             'requires_password_change' => (bool) $user->must_change_password,
         ]);
     }
