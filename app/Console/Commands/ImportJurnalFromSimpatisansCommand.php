@@ -35,6 +35,9 @@ class ImportJurnalFromSimpatisansCommand extends Command
         $this->info('Imported: '.$hasil['imported']);
         $this->info('Updated: '.$hasil['updated']);
         $this->info('Skipped: '.$hasil['skipped']);
+        if (isset($hasil['consolidated_groups'])) {
+            $this->info('Konsolidasi jam berurutan: '.$hasil['consolidated_groups'].' grup, hapus '.$hasil['consolidated_removed'].' baris');
+        }
 
         if (($hasil['skip_reasons'] ?? []) !== []) {
             $this->warn('Alasan dilewati:');
