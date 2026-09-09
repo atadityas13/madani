@@ -480,20 +480,10 @@ class JurnalSimpatisansImportService
     private function extractInsertRows(string $sql, string $table, ?array $fallbackColumns = null): array
     {
         $rows = [];
-        $pattern = '/INSERT INTO (?:`[^`]+`\.)?`'.preg_quote($table, '/').'`\s*(?:\(([^)]*)\))?\s*VALUES\s*(.+?);/is';
-        if (! preg_match_all($pattern, $sql, $matches, PREG_SET_ORDER)) {
-            return $rows;
-        }
+        foreach ($this->extractInsertStatements($sql, $table) as $statement) {
+            $columns = $statement['columns'] ?? $fallbackColumns;
 
-        foreach ($matches as $match) {
-            $columns = null;
-            if (! empty($match[1])) {
-                $columns = array_map(fn ($c) => trim($c, " `\n\r\t"), explode(',', $match[1]));
-            } elseif ($fallbackColumns !== null) {
-                $columns = $fallbackColumns;
-            }
-
-            foreach ($this->splitSqlTuples($match[2]) as $tuple) {
+            foreach ($this->splitSqlTuples($statement['values']) as $tuple) {
                 $vals = $this->splitSqlValues($tuple);
                 if ($columns !== null && count($columns) === count($vals)) {
                     $rows[] = array_combine($columns, $vals);
@@ -506,6 +496,210 @@ class JurnalSimpatisansImportService
         }
 
         return $rows;
+    }
+
+    /**
+     * Parse INSERT statements without stopping at semicolons inside quoted strings
+     * (materi/catatan sering berisi ";").
+     *
+     * @return list<array{columns: ?list<string>, values: string}>
+     */
+    private function extractInsertStatements(string $sql, string $table): array
+    {
+        $statements = [];
+        $len = strlen($sql);
+        $offset = 0;
+
+        while ($offset < $len) {
+            $pos = stripos($sql, 'INSERT INTO', $offset);
+            if ($pos === false) {
+                break;
+            }
+
+            $cursor = $pos + strlen('INSERT INTO');
+            while ($cursor < $len && ctype_space($sql[$cursor])) {
+                $cursor++;
+            }
+
+            // Optional `schema`.
+            if ($cursor < $len && $sql[$cursor] === '`') {
+                $close = strpos($sql, '`', $cursor + 1);
+                if ($close === false) {
+                    break;
+                }
+                $name = substr($sql, $cursor + 1, $close - $cursor - 1);
+                $cursor = $close + 1;
+                while ($cursor < $len && ctype_space($sql[$cursor])) {
+                    $cursor++;
+                }
+                if ($cursor < $len && $sql[$cursor] === '.') {
+                    $cursor++;
+                    while ($cursor < $len && ctype_space($sql[$cursor])) {
+                        $cursor++;
+                    }
+                    if ($cursor >= $len || $sql[$cursor] !== '`') {
+                        $offset = $cursor;
+
+                        continue;
+                    }
+                    $close = strpos($sql, '`', $cursor + 1);
+                    if ($close === false) {
+                        break;
+                    }
+                    $name = substr($sql, $cursor + 1, $close - $cursor - 1);
+                    $cursor = $close + 1;
+                }
+
+                if (strcasecmp($name, $table) !== 0) {
+                    $offset = $cursor;
+
+                    continue;
+                }
+            } else {
+                $offset = $cursor;
+
+                continue;
+            }
+
+            while ($cursor < $len && ctype_space($sql[$cursor])) {
+                $cursor++;
+            }
+
+            $columns = null;
+            if ($cursor < $len && $sql[$cursor] === '(') {
+                $colEnd = $this->findMatchingParen($sql, $cursor);
+                if ($colEnd === null) {
+                    $offset = $cursor + 1;
+
+                    continue;
+                }
+                $colBlob = substr($sql, $cursor + 1, $colEnd - $cursor - 1);
+                $columns = array_map(fn ($c) => trim($c, " `\n\r\t"), explode(',', $colBlob));
+                $cursor = $colEnd + 1;
+            }
+
+            while ($cursor < $len && ctype_space($sql[$cursor])) {
+                $cursor++;
+            }
+
+            if (strncasecmp(substr($sql, $cursor, 6), 'VALUES', 6) !== 0) {
+                $offset = $cursor;
+
+                continue;
+            }
+            $cursor += 6;
+            while ($cursor < $len && ctype_space($sql[$cursor])) {
+                $cursor++;
+            }
+
+            $valuesEnd = $this->findStatementEnd($sql, $cursor);
+            if ($valuesEnd === null) {
+                break;
+            }
+
+            $statements[] = [
+                'columns' => $columns,
+                'values' => substr($sql, $cursor, $valuesEnd - $cursor),
+            ];
+            $offset = $valuesEnd + 1;
+        }
+
+        return $statements;
+    }
+
+    private function findMatchingParen(string $sql, int $openPos): ?int
+    {
+        $len = strlen($sql);
+        $depth = 0;
+        $inStr = false;
+        $esc = false;
+
+        for ($i = $openPos; $i < $len; $i++) {
+            $ch = $sql[$i];
+            if ($inStr) {
+                if ($esc) {
+                    $esc = false;
+                } elseif ($ch === '\\') {
+                    $esc = true;
+                } elseif ($ch === "'") {
+                    if ($i + 1 < $len && $sql[$i + 1] === "'") {
+                        $i++;
+                    } else {
+                        $inStr = false;
+                    }
+                }
+
+                continue;
+            }
+            if ($ch === "'") {
+                $inStr = true;
+
+                continue;
+            }
+            if ($ch === '(') {
+                $depth++;
+
+                continue;
+            }
+            if ($ch === ')') {
+                $depth--;
+                if ($depth === 0) {
+                    return $i;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * End of INSERT values: first ";" outside quotes at parenthesis depth 0.
+     */
+    private function findStatementEnd(string $sql, int $start): ?int
+    {
+        $len = strlen($sql);
+        $depth = 0;
+        $inStr = false;
+        $esc = false;
+
+        for ($i = $start; $i < $len; $i++) {
+            $ch = $sql[$i];
+            if ($inStr) {
+                if ($esc) {
+                    $esc = false;
+                } elseif ($ch === '\\') {
+                    $esc = true;
+                } elseif ($ch === "'") {
+                    if ($i + 1 < $len && $sql[$i + 1] === "'") {
+                        $i++;
+                    } else {
+                        $inStr = false;
+                    }
+                }
+
+                continue;
+            }
+            if ($ch === "'") {
+                $inStr = true;
+
+                continue;
+            }
+            if ($ch === '(') {
+                $depth++;
+
+                continue;
+            }
+            if ($ch === ')') {
+                $depth = max(0, $depth - 1);
+
+                continue;
+            }
+            if ($ch === ';' && $depth === 0) {
+                return $i;
+            }
+        }
+
+        return null;
     }
 
     /**

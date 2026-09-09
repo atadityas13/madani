@@ -185,6 +185,45 @@ SQL);
         ]);
     }
 
+    public function test_import_tidak_putus_jika_materi_mengandung_titik_koma(): void
+    {
+        Role::findOrCreate(Peran::GURU);
+        $gtk = Gtk::query()->create([
+            'nama' => 'Rina',
+            'nip' => '198701012010012001',
+            'jenis' => 'guru',
+            'status' => 'aktif',
+        ]);
+        $user = User::factory()->create([
+            'username' => '198701012010012001',
+            'gtk_id' => $gtk->id,
+            'is_aktif' => true,
+        ]);
+        $user->syncRoles([Peran::GURU]);
+
+        $dump = sys_get_temp_dir().DIRECTORY_SEPARATOR.'jurnal_dump_semicolon.sql';
+        File::put($dump, <<<'SQL'
+INSERT INTO `gurus` (`id`, `username`, `nama_guru`) VALUES (9, '198701012010012001', 'Rina');
+INSERT INTO `jurnal_pembelajaran` (`id`, `guru_id`, `kelas_id`, `mapel_id`, `tanggal`, `jam_ke`, `materi_pokok`, `ketercapaian`) VALUES
+(301, 9, 1, 2, '2026-08-01', 1, 'Bab 1; pendahuluan', 'tercapai'),
+(302, 9, 1, 2, '2026-08-08', 1, 'Bab 2; lanjutan', 'tercapai');
+SQL);
+
+        $this->artisan('jurnal:import-from-simpatisans', [
+            'simpatisans' => $dump,
+        ])->assertSuccessful();
+
+        $this->assertDatabaseCount('jurnal_pembelajarans', 2);
+        $this->assertDatabaseHas('jurnal_pembelajarans', [
+            'source_simpatisans_id' => 301,
+            'materi_pokok' => 'Bab 1; pendahuluan',
+        ]);
+        $this->assertDatabaseHas('jurnal_pembelajarans', [
+            'source_simpatisans_id' => 302,
+            'materi_pokok' => 'Bab 2; lanjutan',
+        ]);
+    }
+
     public function test_import_matches_madani_user_by_gtk_nip(): void
     {
         Role::findOrCreate(Peran::GURU);
