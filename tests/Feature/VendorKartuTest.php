@@ -157,7 +157,8 @@ class VendorKartuTest extends TestCase
             ->get(route('vendor.jobs.show', $job))
             ->assertOk()
             ->assertSee('Cetak semua berfoto', false)
-            ->assertSee('Unggah foto dulu', false);
+            ->assertSee('Upload foto terlebih dahulu untuk cetak kartu.', false)
+            ->assertSee('Belum bisa dicetak', false);
 
         $this->actingAs($vendor)
             ->post(route('vendor.jobs.kartu.bulk', $job), [

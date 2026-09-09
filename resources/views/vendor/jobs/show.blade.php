@@ -165,9 +165,15 @@
                                         <i class="bi bi-credit-card-2-front"></i>
                                     </a>
                                 @else
-                                    <span class="emis-aksi-btn text-secondary" title="Unggah foto dulu untuk cetak/preview">
+                                    <button
+                                        type="button"
+                                        class="emis-aksi-btn"
+                                        style="color:#9ca3af;background:#f3f4f6;cursor:not-allowed;"
+                                        title="Upload foto terlebih dahulu"
+                                        onclick="window.madaniAlert ? window.madaniAlert.warning('Upload foto terlebih dahulu untuk cetak kartu.', 'Belum bisa dicetak') : alert('Upload foto terlebih dahulu untuk cetak kartu.')"
+                                    >
                                         <i class="bi bi-credit-card-2-front"></i>
-                                    </span>
+                                    </button>
                                 @endif
                             </div>
                         </td>
