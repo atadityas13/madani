@@ -149,6 +149,42 @@ class SptjmTpgPersuratanTest extends TestCase
         $this->assertSame('15 Agustus 2026', $data['tanggalSurat']);
     }
 
+    public function test_admin_bisa_cetak_pdf_sptjm_tpg(): void
+    {
+        $this->seed();
+        $admin = $this->admin();
+
+        $madrasah = Madrasah::saatIni();
+        $madrasah->update([
+            'nama' => 'MTsN 11 Majalengka',
+            'alamat' => 'Blok Sindanghurip',
+            'desa' => 'Maniis',
+            'kecamatan' => 'Cingambul',
+            'kota' => 'Majalengka',
+        ]);
+
+        $gtk = Gtk::query()->create([
+            'nama' => 'Budi Santoso',
+            'gelar_depan' => 'Drs.',
+            'gelar_belakang' => 'M.Pd.',
+            'nuptk' => '1234567890123456',
+            'nrg' => 'NRG998877',
+            'jenis' => 'guru',
+            'status' => 'aktif',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->post(route('persuratan.sptjm-tpg.generate'), [
+                'gtk_ids' => [$gtk->id],
+                'tanggal_surat' => '2026-08-15',
+                'mode' => 'print',
+            ]);
+
+        $response->assertOk();
+        $this->assertStringContainsString('application/pdf', (string) $response->headers->get('content-type'));
+        $this->assertStringStartsWith('%PDF', $response->getContent());
+    }
+
     public function test_guru_tidak_boleh_akses_persuratan(): void
     {
         $this->seed();

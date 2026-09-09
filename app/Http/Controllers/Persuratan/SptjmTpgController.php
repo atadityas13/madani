@@ -20,6 +20,7 @@ class SptjmTpgController extends Controller
             'gtk_ids' => ['required', 'array', 'min:1'],
             'gtk_ids.*' => ['integer', 'distinct', 'exists:gtks,id'],
             'tanggal_surat' => ['required', 'date'],
+            'mode' => ['nullable', 'string', 'in:download,print'],
         ], [
             'gtk_ids.required' => 'Pilih minimal satu guru.',
             'gtk_ids.min' => 'Pilih minimal satu guru.',
@@ -36,6 +37,12 @@ class SptjmTpgController extends Controller
         $tanggal = Carbon::parse($validated['tanggal_surat'])
             ->timezone(config('app.timezone'))
             ->locale('id');
+
+        $mode = $validated['mode'] ?? 'download';
+
+        if ($mode === 'print') {
+            return $pdf->streamMany($gtks, $tanggal);
+        }
 
         return $pdf->downloadMany($gtks, $tanggal);
     }

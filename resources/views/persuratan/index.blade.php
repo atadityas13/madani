@@ -166,7 +166,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="submit" class="btn btn-madani" data-submit-generate>Unduh PDF</button>
+                <button type="submit" class="btn btn-outline-secondary" name="mode" value="download" data-submit-generate>Unduh PDF</button>
+                <button type="submit" class="btn btn-madani" name="mode" value="print" formtarget="_blank">Cetak</button>
             </div>
         </form>
     </div>

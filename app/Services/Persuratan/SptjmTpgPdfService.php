@@ -31,6 +31,26 @@ class SptjmTpgPdfService
     }
 
     /**
+     * @param  Collection<int, Gtk>  $gtks
+     */
+    public function streamMany(Collection $gtks, CarbonInterface $tanggalSurat): Response
+    {
+        $madrasah = Madrasah::saatIni();
+        $halaman = $gtks->values()->map(fn (Gtk $gtk) => $this->viewData($gtk, $madrasah, $tanggalSurat))->all();
+
+        $filename = $gtks->count() === 1
+            ? $this->filename($gtks->first())
+            : 'SPTJM TPG - '.$gtks->count().' guru.pdf';
+
+        // Inline stream so browser shows preview and user can print normally.
+        return Pdf::loadView('persuratan.sptjm-tpg.pdf', [
+            'halaman' => $halaman,
+        ])
+            ->setPaper('a4', 'portrait')
+            ->stream($filename);
+    }
+
+    /**
      * @return array{
      *     namaLengkap: string,
      *     nuptk: string,

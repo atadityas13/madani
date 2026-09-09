@@ -4,102 +4,104 @@
     <meta charset="utf-8">
     <title>SPTJM TPG</title>
     <style>
-        @page { margin: 2cm 2.2cm 2cm 2.2cm; }
-        * { box-sizing: border-box; }
+        @page { margin: 1.7cm 2cm 1.6cm 2cm; }
+
         body {
             font-family: DejaVu Sans, Helvetica, Arial, sans-serif;
-            font-size: 10pt;
+            font-size: 11px;
             color: #000;
-            line-height: 1.28;
+            line-height: 1.22;
             margin: 0;
         }
-        .page {
-            page-break-after: always;
-        }
-        .page:last-child {
-            page-break-after: auto;
-        }
+
+        .page { page-break-after: always; }
+        .page:last-child { page-break-after: auto; }
+
         .surat-title {
+            width: 100%;
             text-align: center;
-            font-size: 12pt;
+            font-size: 14px;
             font-weight: bold;
             text-transform: uppercase;
-            margin: 0 0 14px;
+            margin: 0 0 10px;
             letter-spacing: 0.2px;
         }
-        p {
-            margin: 0 0 7px;
-            text-align: justify;
-        }
-        .intro, .penutup {
-            text-align: left;
-        }
+
+        .block { margin: 0 0 6px; }
+
         .identitas {
             width: 100%;
             border-collapse: collapse;
-            margin: 2px 0 10px;
+            margin: 0 0 8px;
         }
         .identitas td {
             vertical-align: top;
-            padding: 1px 0;
+            padding: 2px 0;
+        }
+        .identitas .label { width: 35%; }
+        .identitas .colon { width: 2%; }
+        .identitas .value { width: 63%; }
+
+        .point-intro {
+            margin: 0 0 6px;
+            text-align: justify;
+        }
+
+        .line {
+            margin: 0 0 3px;
             text-align: left;
         }
-        .identitas .label { width: 32%; }
-        .identitas .colon { width: 2%; text-align: left; }
-        .identitas .value { width: 66%; }
-        .poin {
-            margin: 0 0 5px;
-            padding-left: 18px;
-            text-indent: -18px;
-            text-align: justify;
+
+        .prefix {
+            display: inline-block;
+            width: 22px;
+            text-align: left;
         }
-        .poin-sub {
-            margin: 0 0 3px 18px;
-            padding-left: 18px;
-            text-indent: -18px;
-            text-align: justify;
+
+        .dash-line {
+            margin: 0 0 2px 18px;
+            text-align: left;
         }
-        .poin-bullet {
-            margin: 0 0 2px 36px;
-            padding-left: 12px;
-            text-indent: -12px;
-            text-align: justify;
-        }
-        .ttd-wrap {
+
+        .ttd-layout {
             width: 100%;
-            margin-top: 18px;
+            border-collapse: collapse;
+            margin-top: 10px;
         }
+
         .ttd-box {
-            width: 42%;
-            margin-left: auto;
+            width: 46%;
             text-align: left;
         }
-        .ttd-box .kota-tanggal,
-        .ttd-box .peran {
-            text-align: left;
-            margin: 0;
-        }
-        .materai-area {
-            height: 68px;
+
+        .ttd-date { margin: 0 0 4px; }
+        .ttd-peran { margin: 0 0 4px; }
+
+        .ttd-materai {
+            height: 42px;
+            line-height: 42px;
             text-align: center;
-            vertical-align: middle;
-            line-height: 68px;
-            font-size: 9.5pt;
+            margin: 0 0 4px;
         }
+
+        .ttd-line {
+            margin: 0 0 4px;
+            font-size: 10px;
+        }
+
         .ttd-nama {
-            text-align: left;
-            font-weight: normal;
-            text-decoration: none;
             margin: 0;
+            text-decoration: none;
+            font-weight: normal;
         }
     </style>
 </head>
 <body>
 @foreach ($halaman as $data)
 <div class="page">
-    <div class="surat-title">Surat Pernyataan Tanggung Jawab Mutlak</div>
+    <div class="surat-title">SURAT PERNYATAAN TANGGUNG JAWAB MUTLAK</div>
 
-    <p class="intro">Yang Bertanda tangan di bawah ini :</p>
+    <div class="block">Yang Bertanda tangan di bawah ini :</div>
 
     <table class="identitas">
         <tr>
@@ -129,40 +131,55 @@
         </tr>
     </table>
 
-    <p class="intro">Menyatakan dengan sesungguhnya bahwa :</p>
+    <div class="block">Menyatakan dengan sesungguhnya bahwa :</div>
 
-    <p class="poin">1. Saya guru sertifikasi pada Kantor Kementerian Agama Kabupaten Majalengka dan saya tidak terikat sebagai tenaga tetap selain instansi madrasah. Tenaga tetap dimaksud antara lain sbb :</p>
-    <p class="poin-sub">a. Penyuluh Agama;</p>
-    <p class="poin-sub">b. Dosen Perguruan Tinggi yang memiliki NIDN atau memiliki NIDN bagi Dokter pendidik klinis penuh waktu atau memiliki NIDK dosen paruh waktu;</p>
-    <p class="poin-sub">c. Tenaga Pendamping pada Program Pemerintah</p>
-    <p class="poin-bullet">- Tenaga Kesejahteraaan Sosial Kecamatan (TKSK)</p>
-    <p class="poin-bullet">- Program Nasional Pemberdayaan Masyarakat (PNPM)</p>
-    <p class="poin-bullet">- Pemberdayaan Masyarakat Usaha Tani (PMUT)</p>
-    <p class="poin-bullet">- Pendamping Korban Tindak Kekerasan dan Pekerja Migran (KTKPM)</p>
-    <p class="poin-bullet">- Pendamping Keluarga Harapan (PKH)</p>
-    <p class="poin-bullet">- Tenaga Pendamping Desa</p>
-    <p class="poin-bullet">- Pemberdayaan Masyarakat Pesisir (PMP)</p>
-    <p class="poin-sub">d. Pegawai Pemerintah dengan Perjanjian Kerja (P3K) atau Pegawai Pemerintah Non Pegawai Negeri (PPNPN) bukan Guru;</p>
-    <p class="poin-sub">e. Pengurus Komisi Pemilihan Umum (KPU), Badan Pengawas Pemilu (Bawaslu) dan Badan Amil Zakat Nasional (BAZNAS);</p>
-    <p class="poin-sub">f. Pengurus Partai Politik.</p>
-
-    <p class="poin">2. Tidak merangkap jabatan lembaga eksekutif, yudikatif atau legislatif yang meliputi :</p>
-    <p class="poin-sub">a. Perangkat Desa/Kelurahan, PNS dengan jabatan Non guru/Pengawas dan TNI/Polri;</p>
-    <p class="poin-sub">b. Anggota Mahkamah Agung, Mahkamah Konstitusi, Komisi Yudisial atau Ombudsman;</p>
-    <p class="poin-sub">c. Anggota Dewan Perwakilan Rakyat atau Dewan Perwakilan Daerah.</p>
-
-    <p class="poin">3. Apabila dikemudian hari ditemukan ketidaksesuaian dengan regulasi yang berlaku dan dengan Surat pernyataan yang saya buat maka saya siap menerima sanksi dan atau Pengembalian dana yang sudah saya terima ke Kas Negara.</p>
-
-    <p class="penutup">Demikian pernyataan ini kami buat dengan sebenar-benar dan tanpa paksaan dari pihak manapun.</p>
-
-    <div class="ttd-wrap">
-        <div class="ttd-box">
-            <p class="kota-tanggal">{{ $data['kotaTtd'] }}, {{ $data['tanggalSurat'] }}</p>
-            <p class="peran">Yang Membuat Pernyataan,</p>
-            <div class="materai-area">Materai 10.000</div>
-            <p class="ttd-nama">{{ $data['namaLengkap'] }}</p>
-        </div>
+    <div class="point-intro">
+        1. Saya guru sertifikasi pada Kantor Kementerian Agama Kabupaten Majalengka dan saya tidak terikat sebagai tenaga tetap selain instansi madrasah.
+        Tenaga tetap dimaksud antara lain sbb :
     </div>
+
+    <div class="line"><span class="prefix">a.</span>Penyuluh Agama;</div>
+    <div class="line"><span class="prefix">b.</span>Dosen Perguruan Tinggi yang memiliki NIDN atau memiliki NIDN bagi Dokter pendidik klinis penuh waktu atau memiliki NIDK dosen paruh waktu;</div>
+    <div class="line"><span class="prefix">c.</span>Tenaga Pendamping pada Program Pemerintah</div>
+
+    <div class="dash-line">- Tenaga Kesejahteraaan Sosial Kecamatan (TKSK)</div>
+    <div class="dash-line">- Program Nasional Pemberdayaan Masyarakat (PNPM)</div>
+    <div class="dash-line">- Pemberdayaan Masyarakat Usaha Tani (PMUT)</div>
+    <div class="dash-line">- Pendamping Korban Tindak Kekerasan dan Pekerja Migran (KTKPM)</div>
+    <div class="dash-line">- Pendamping Keluarga Harapan (PKH)</div>
+    <div class="dash-line">- Tenaga Pendamping Desa</div>
+    <div class="dash-line">- Pemberdayaan Masyarakat Pesisir (PMP)</div>
+
+    <div class="line"><span class="prefix">d.</span>Pegawai Pemerintah dengan Perjanjian Kerja (P3K) atau Pegawai Pemerintah Non Pegawai Negeri (PPNPN) bukan Guru;</div>
+    <div class="line"><span class="prefix">e.</span>Pengurus Komisi Pemilihan Umum (KPU), Badan Pengawas Pemilu (Bawaslu) dan Badan Amil Zakat Nasional (BAZNAS);</div>
+    <div class="line"><span class="prefix">f.</span>Pengurus Partai Politik.</div>
+
+    <div class="point-intro">
+        2. Tidak merangkap jabatan lembaga eksekutif, yudikatif atau legislatif yang meliputi :
+    </div>
+
+    <div class="line"><span class="prefix">a.</span>Perangkat Desa/Kelurahan, PNS dengan jabatan Non guru/Pengawas dan TNI/Polri;</div>
+    <div class="line"><span class="prefix">b.</span>Anggota Mahkamah Agung, Mahkamah Konstitusi, Komisi Yudisial atau Ombudsman;</div>
+    <div class="line"><span class="prefix">c.</span>Anggota Dewan Perwakilan Rakyat atau Dewan Perwakilan Daerah.</div>
+
+    <div class="point-intro">
+        3. Apabila dikemudian hari ditemukan ketidaksesuaian dengan regulasi yang berlaku dan dengan Surat pernyataan yang saya buat maka saya siap menerima sanksi dan atau Pengembalian dana yang sudah saya terima ke Kas Negara.
+    </div>
+
+    <div class="block">Demikian pernyataan ini kami buat dengan sebenar-benar dan tanpa paksaan dari pihak manapun.</div>
+
+    <table class="ttd-layout">
+        <tr>
+            <td style="width:54%"></td>
+            <td class="ttd-box">
+                <div class="ttd-date">{{ $data['kotaTtd'] }}, {{ $data['tanggalSurat'] }}</div>
+                <div class="ttd-peran">Yang Membuat Pernyataan,</div>
+                <div class="ttd-materai">Materai 10.000</div>
+                <div class="ttd-line">....................................................</div>
+                <div class="ttd-nama">{{ $data['namaLengkap'] }}</div>
+            </td>
+        </tr>
+    </table>
 </div>
 @endforeach
 </body>
