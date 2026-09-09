@@ -78,6 +78,24 @@ class SiswaPernyataanApiTest extends TestCase
             ->assertJsonPath('success', false);
     }
 
+    public function test_preview_pernyataan_defaults_jenis_when_omitted(): void
+    {
+        Storage::fake('r2');
+        $this->seed();
+        $siswa = $this->buatSiswaLengkap();
+        $token = $this->tokenSiswa($siswa);
+
+        $payload = $this->payloadPernyataan();
+        unset($payload['jenis']);
+
+        $preview = $this->withToken($token)
+            ->postJson('/api/v1/siswa/pernyataan/preview', $payload);
+
+        $preview->assertOk();
+        $this->assertStringContainsString('application/pdf', (string) $preview->headers->get('content-type'));
+        $this->assertStringStartsWith('%PDF', $preview->getContent());
+    }
+
     public function test_can_confirm_pernyataan_when_periode_closed(): void
     {
         Storage::fake('r2');

@@ -804,26 +804,37 @@ class SiswaBiodataService
 
         $ayahMeninggal = $request->input('ortu.ayah.status_hidup') === 'meninggal';
         $ibuMeninggal = $request->input('ortu.ibu.status_hidup') === 'meninggal';
-        if ($ayahMeninggal && $ibuMeninggal) {
-            $ortu = $request->input('ortu', []);
-            $ortu['wali'] = array_merge($ortu['wali'] ?? [], ['status' => 'Lainnya']);
-            $request->merge(['ortu' => $ortu]);
+        $ortu = $request->input('ortu', []);
+        $wali = is_array($ortu['wali'] ?? null) ? $ortu['wali'] : [];
+
+        // Alias lama dari form/app; harus dinormalisasi sebelum Rule::in(status_wali).
+        if (($wali['status'] ?? null) === 'Isi sendiri') {
+            $wali['status'] = 'Lainnya';
         }
 
-        $waliStatus = $request->input('ortu.wali.status');
-        $waliLainnya = in_array($waliStatus, ['Lainnya', 'Isi sendiri'], true);
+        if ($ayahMeninggal && $ibuMeninggal) {
+            $wali['status'] = 'Lainnya';
+        }
+
+        $waliStatus = $wali['status'] ?? null;
+        $waliLainnya = $waliStatus === 'Lainnya';
 
         if ($waliLainnya) {
-            $ortu = $request->input('ortu', []);
-            $ortu['wali'] = array_merge($ortu['wali'] ?? [], ['status_hidup' => 'hidup']);
-            $request->merge(['ortu' => $ortu]);
+            $wali['status_hidup'] = 'hidup';
         }
+
+        $ortu['wali'] = $wali;
+        $request->merge(['ortu' => $ortu]);
+
         $tidakPunyaKks = $request->boolean('tidak_punya_kks');
         $tidakPunyaPkh = $request->boolean('tidak_punya_pkh');
         $this->siapkanNomorOrtu($request);
         $noKks = $tidakPunyaKks ? null : $request->input('no_kks');
         $noPkh = $tidakPunyaPkh ? null : $request->input('no_pkh');
 
+        // Saat status mengikuti ayah/ibu, backend menyimpan hubungan sintetis
+        // "Ayah kandung"/"Ibu kandung" yang bukan opsi emis.hubungan_wali.
+        // Jangan terapkan Rule::in hubungan kecuali status Lainnya.
         $request->validate(array_merge(
             [
                 'ortu' => ['required', 'array'],
@@ -841,7 +852,12 @@ class SiswaBiodataService
                         }
                     },
                 ],
-                'ortu.wali.hubungan' => [Rule::requiredIf($waliLainnya), 'nullable', 'string', Rule::in(array_keys(config('emis.hubungan_wali')))],
+                'ortu.wali.hubungan' => [
+                    Rule::requiredIf($waliLainnya),
+                    'nullable',
+                    'string',
+                    Rule::when($waliLainnya, [Rule::in(array_keys(config('emis.hubungan_wali')))]),
+                ],
                 'penghasilan_gabungan' => ['required', 'string', Rule::in(array_keys(config('emis.penghasilan_gabungan')))],
                 'tidak_punya_kks' => ['sometimes', 'boolean'],
                 'tidak_punya_pkh' => ['sometimes', 'boolean'],
@@ -869,29 +885,39 @@ class SiswaBiodataService
             'ortu.ayah.nama.required' => 'Nama ayah wajib diisi',
             'ortu.ayah.nama.regex' => 'Nama ayah hanya dapat diisi huruf dan simbol -\'.,',
             'ortu.ayah.status_hidup.required' => 'Status ayah wajib dipilih',
+            'ortu.ayah.status_hidup.in' => 'Status ayah tidak valid',
             'ortu.ayah.nik.required' => 'NIK ayah wajib diisi',
             'ortu.ayah.nik.digits' => 'NIK ayah harus 16 digit angka',
             'ortu.ayah.tempat_lahir.required' => 'Tempat lahir ayah wajib diisi',
             'ortu.ayah.tanggal_lahir.required' => 'Tanggal lahir ayah wajib diisi',
             'ortu.ayah.pendidikan.required' => 'Pendidikan ayah wajib dipilih',
+            'ortu.ayah.pendidikan.in' => 'Pendidikan ayah tidak valid',
             'ortu.ayah.pekerjaan.required' => 'Pekerjaan ayah wajib dipilih',
+            'ortu.ayah.pekerjaan.in' => 'Pekerjaan ayah tidak valid',
             'ortu.ayah.penghasilan.required' => 'Penghasilan ayah wajib dipilih',
+            'ortu.ayah.penghasilan.in' => 'Penghasilan ayah tidak valid',
             'ortu.ayah.no_hp.required' => 'Nomor HP ayah wajib diisi',
             'ortu.ayah.no_hp.regex' => 'Nomor HP ayah harus diawali 62 diikuti 8 sampai 15 digit',
             'ortu.ibu.nama.required' => 'Nama ibu wajib diisi',
             'ortu.ibu.nama.regex' => 'Nama ibu hanya dapat diisi huruf dan simbol -\'.,',
             'ortu.ibu.status_hidup.required' => 'Status ibu wajib dipilih',
+            'ortu.ibu.status_hidup.in' => 'Status ibu tidak valid',
             'ortu.ibu.nik.required' => 'NIK ibu wajib diisi',
             'ortu.ibu.nik.digits' => 'NIK ibu harus 16 digit angka',
             'ortu.ibu.tempat_lahir.required' => 'Tempat lahir ibu wajib diisi',
             'ortu.ibu.tanggal_lahir.required' => 'Tanggal lahir ibu wajib diisi',
             'ortu.ibu.pendidikan.required' => 'Pendidikan ibu wajib dipilih',
+            'ortu.ibu.pendidikan.in' => 'Pendidikan ibu tidak valid',
             'ortu.ibu.pekerjaan.required' => 'Pekerjaan ibu wajib dipilih',
+            'ortu.ibu.pekerjaan.in' => 'Pekerjaan ibu tidak valid',
             'ortu.ibu.penghasilan.required' => 'Penghasilan ibu wajib dipilih',
+            'ortu.ibu.penghasilan.in' => 'Penghasilan ibu tidak valid',
             'ortu.ibu.no_hp.required' => 'Nomor HP ibu wajib diisi',
             'ortu.ibu.no_hp.regex' => 'Nomor HP ibu harus diawali 62 diikuti 8 sampai 15 digit',
             'ortu.wali.status.required' => 'Status wali wajib dipilih',
+            'ortu.wali.status.in' => 'Status wali tidak valid',
             'ortu.wali.hubungan.required' => 'Hubungan wali wajib dipilih',
+            'ortu.wali.hubungan.in' => 'Hubungan wali tidak valid',
             'ortu.wali.nama.required' => 'Nama wali wajib diisi',
             'ortu.wali.nama.regex' => 'Nama wali hanya dapat diisi huruf dan simbol -\'.,',
             'ortu.wali.nik.required' => 'NIK wali wajib diisi',
@@ -899,11 +925,15 @@ class SiswaBiodataService
             'ortu.wali.tempat_lahir.required' => 'Tempat lahir wali wajib diisi',
             'ortu.wali.tanggal_lahir.required' => 'Tanggal lahir wali wajib diisi',
             'ortu.wali.pendidikan.required' => 'Pendidikan wali wajib dipilih',
+            'ortu.wali.pendidikan.in' => 'Pendidikan wali tidak valid',
             'ortu.wali.pekerjaan.required' => 'Pekerjaan wali wajib dipilih',
+            'ortu.wali.pekerjaan.in' => 'Pekerjaan wali tidak valid',
             'ortu.wali.penghasilan.required' => 'Penghasilan wali wajib dipilih',
+            'ortu.wali.penghasilan.in' => 'Penghasilan wali tidak valid',
             'ortu.wali.no_hp.required' => 'Nomor HP wali wajib diisi',
             'ortu.wali.no_hp.regex' => 'Nomor HP wali harus diawali 62 diikuti 8 sampai 15 digit',
             'penghasilan_gabungan.required' => 'Penghasilan gabungan wajib dipilih',
+            'penghasilan_gabungan.in' => 'Penghasilan gabungan tidak valid',
             'no_kks.required' => 'Nomor KKS wajib diisi, atau centang tidak memiliki KKS',
             'no_pkh.required' => 'Nomor PKH wajib diisi, atau centang tidak memiliki PKH',
             'file_kks.required' => 'Unggah kartu KKS karena nomor KKS diisi',

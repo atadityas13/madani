@@ -376,6 +376,80 @@ class SiswaPortalTest extends TestCase
         $this->assertSame('Sama dengan ibu kandung', $siswa->fresh()->orangTuas->firstWhere('peran', 'wali')?->status);
     }
 
+    public function test_api_orang_tua_boleh_menyimpan_ulang_saat_ganti_wali_dengan_hubungan_sintetis(): void
+    {
+        $this->seed();
+        $siswa = $this->buatSiswa();
+        $token = $this->tokenSiswa($siswa);
+        $payload = $this->payloadOrangTua();
+        $payload['tidak_punya_kks'] = true;
+        $payload['tidak_punya_pkh'] = true;
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/orang-tua', $payload)
+            ->assertOk();
+
+        $this->assertSame('Ayah kandung', $siswa->fresh()->orangTuas->firstWhere('peran', 'wali')?->hubungan);
+
+        // App mengirim ulang hubungan sintetis dari DB saat ganti status wali.
+        $payload['ortu']['wali'] = [
+            'status' => 'Sama dengan ibu kandung',
+            'hubungan' => 'Ayah kandung',
+            'nama' => 'Wali Lama',
+            'status_hidup' => 'hidup',
+            'nik' => '3210010101600003',
+            'tempat_lahir' => 'Majalengka',
+            'tanggal_lahir' => '1960-01-01',
+            'pendidikan' => 'SMA/Sederajat',
+            'pekerjaan' => 'Wiraswasta',
+            'penghasilan' => '1.000.000 - 1.999.999',
+            'no_hp' => '628123456780',
+            'tidak_punya_hp' => false,
+        ];
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/orang-tua', $payload)
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $wali = $siswa->fresh()->orangTuas->firstWhere('peran', 'wali');
+        $this->assertSame('Sama dengan ibu kandung', $wali?->status);
+        $this->assertSame('Ibu kandung', $wali?->hubungan);
+        $this->assertSame('Ibu Contoh', $wali?->nama);
+    }
+
+    public function test_api_orang_tua_menormalisasi_status_isi_sendiri(): void
+    {
+        $this->seed();
+        $siswa = $this->buatSiswa();
+        $token = $this->tokenSiswa($siswa);
+        $payload = $this->payloadOrangTua();
+        $payload['tidak_punya_kks'] = true;
+        $payload['tidak_punya_pkh'] = true;
+        $payload['ortu']['wali'] = [
+            'status' => 'Isi sendiri',
+            'hubungan' => 'Kakek',
+            'nama' => 'Wali Contoh',
+            'status_hidup' => 'hidup',
+            'nik' => '3210010101600003',
+            'tempat_lahir' => 'Majalengka',
+            'tanggal_lahir' => '1960-01-01',
+            'pendidikan' => 'SMA/Sederajat',
+            'pekerjaan' => 'Wiraswasta',
+            'penghasilan' => '1.000.000 - 1.999.999',
+            'no_hp' => '628123456780',
+            'tidak_punya_hp' => false,
+        ];
+
+        $this->withToken($token)
+            ->putJson('/api/v1/siswa/orang-tua', $payload)
+            ->assertOk();
+
+        $wali = $siswa->fresh()->orangTuas->firstWhere('peran', 'wali');
+        $this->assertSame('Lainnya', $wali?->status);
+        $this->assertSame('Kakek', $wali?->hubungan);
+    }
+
     public function test_api_data_siswa_requires_kk_and_gates_pengajuan(): void
     {
         Storage::fake('r2');
