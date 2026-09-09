@@ -5,13 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\Rombel;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function __invoke(): View
+    public function __invoke(): View|RedirectResponse
     {
         $user = auth()->user();
+
+        if ($user?->adalahVendor()) {
+            return redirect()->route('vendor.dashboard');
+        }
         $tahunAktif = TahunAjaran::aktif();
         $siswaQuery = Siswa::query();
         $rombelQuery = Rombel::query()

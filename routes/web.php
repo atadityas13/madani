@@ -10,6 +10,7 @@ use App\Http\Controllers\GtkController;
 use App\Http\Controllers\GtkMonitoringController;
 use App\Http\Controllers\KelembagaanController;
 use App\Http\Controllers\Manajemen\DatabaseController;
+use App\Http\Controllers\Manajemen\VendorJobAdminController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\NotifikasiPembacaController;
 use App\Http\Controllers\NotifMediaController;
@@ -23,6 +24,9 @@ use App\Http\Controllers\SiswaMonitoringController;
 use App\Http\Controllers\TahunAjaranController;
 use App\Http\Controllers\Talim\WaliKelasController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\Vendor\VendorDashboardController;
+use App\Http\Controllers\Vendor\VendorJobController;
+use App\Http\Controllers\Vendor\VendorJobSiswaController;
 use App\Http\Controllers\WebviewEnterController;
 use Illuminate\Support\Facades\Route;
 
@@ -70,6 +74,26 @@ Route::middleware('auth:siswa')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+
+    Route::middleware('role:vendor')->prefix('vendor')->name('vendor.')->group(function () {
+        Route::get('/dashboard', [VendorDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/jobs', [VendorJobController::class, 'index'])->name('jobs.index');
+        Route::get('/jobs/{vendorJob}', [VendorJobController::class, 'show'])->name('jobs.show');
+        Route::post('/jobs/{vendorJob}/foto/{siswa}', [VendorJobSiswaController::class, 'uploadFoto'])
+            ->name('jobs.foto.upload')
+            ->whereUuid('siswa');
+        Route::post('/jobs/{vendorJob}/zip', [VendorJobSiswaController::class, 'imporZip'])->name('jobs.zip');
+        Route::get('/jobs/{vendorJob}/kartu/{siswa}/stream', [VendorJobSiswaController::class, 'kartuStream'])
+            ->name('jobs.kartu.stream')
+            ->whereUuid('siswa');
+        Route::post('/jobs/{vendorJob}/kartu/bulk', [VendorJobSiswaController::class, 'kartuBulk'])->name('jobs.kartu.bulk');
+    });
+
+    Route::middleware('role:superadmin|admin')->prefix('manajemen')->name('manajemen.')->group(function () {
+        Route::resource('vendor-jobs', VendorJobAdminController::class)
+            ->parameters(['vendor-jobs' => 'vendorJob'])
+            ->except(['show']);
+    });
 
     Route::middleware('role:wali_kelas|superadmin|admin')->group(function () {
         Route::get('/talim/wali', WaliKelasController::class)->name('talim.wali');

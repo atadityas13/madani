@@ -2069,3 +2069,42 @@ a.biodata-path-item:hover {
     padding: 1.25rem 1rem;
     text-align: center;
 }
+
+.vendor-stat {
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.vendor-stat:hover {
+    box-shadow: 0 0.35rem 1rem rgba(27, 122, 90, 0.12);
+    transform: translateY(-1px);
+}
+
+.vendor-dropzone {
+    border: 2px dashed var(--madani-line, #d8dee6);
+    border-radius: 0.75rem;
+    padding: 2rem 1rem;
+    text-align: center;
+    color: #6b7280;
+    cursor: pointer;
+    background: #fafafa;
+}
+
+.vendor-dropzone.is-dragover {
+    border-color: var(--madani-primary, #1b7a5a);
+    background: #f0faf6;
+    color: var(--madani-primary, #1b7a5a);
+}
+
+.vendor-cropper-wrap {
+    max-height: 420px;
+}
+
+.vendor-cropper-container {
+    max-height: 400px;
+    background: #111;
+}
+
+.vendor-cropper-container img {
+    display: block;
+    max-width: 100%;
+}

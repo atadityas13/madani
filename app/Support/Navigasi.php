@@ -15,6 +15,19 @@ class Navigasi
     {
         return [
             [
+                'label' => 'Dashboard vendor',
+                'icon' => 'bi-grid',
+                'route' => 'vendor.dashboard',
+                'roles' => [Peran::VENDOR],
+            ],
+            [
+                'label' => 'Job saya',
+                'icon' => 'bi-briefcase',
+                'route' => 'vendor.jobs.index',
+                'match' => 'vendor.jobs.*',
+                'roles' => [Peran::VENDOR],
+            ],
+            [
                 'label' => 'Ringkasan',
                 'icon' => 'bi-grid',
                 'route' => 'dashboard',
@@ -62,12 +75,13 @@ class Navigasi
             [
                 'label' => 'Manajemen',
                 'icon' => 'bi-sliders',
-                'match' => ['tahun-ajaran.*', 'pengguna.*', 'manajemen.database*'],
-                'roles' => [Peran::SUPERADMIN],
+                'match' => ['tahun-ajaran.*', 'pengguna.*', 'manajemen.database*', 'manajemen.vendor-jobs.*'],
+                'roles' => [Peran::SUPERADMIN, Peran::ADMIN],
                 'children' => [
                     ['label' => 'Tahun ajaran', 'route' => 'tahun-ajaran.index', 'match' => 'tahun-ajaran.*', 'roles' => [Peran::SUPERADMIN]],
                     ['label' => 'Pengguna', 'route' => 'pengguna.index', 'match' => 'pengguna.*', 'roles' => [Peran::SUPERADMIN]],
                     ['label' => 'Database', 'route' => 'manajemen.database', 'match' => 'manajemen.database*', 'roles' => [Peran::SUPERADMIN]],
+                    ['label' => 'Job Vendor', 'route' => 'manajemen.vendor-jobs.index', 'match' => 'manajemen.vendor-jobs.*', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN]],
                 ],
             ],
             [

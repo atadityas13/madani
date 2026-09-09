@@ -1,13 +1,16 @@
 import * as bootstrap from 'bootstrap';
+import Cropper from 'cropperjs/dist/cropper.esm.js';
 import L from 'leaflet';
 import Swal from 'sweetalert2';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import 'cropperjs/dist/cropper.css';
 import 'leaflet/dist/leaflet.css';
 import 'sweetalert2/dist/sweetalert2.min.css';
 
 window.bootstrap = bootstrap;
+window.Cropper = Cropper;
 
 const swalBase = {
     confirmButtonColor: '#1b7a5a',
@@ -1441,6 +1444,242 @@ function bindFormatInputs() {
     });
 }
 
+function bindVendorBulkChecks() {
+    const checkAll = document.getElementById('vendorCheckAll');
+    const selectAllBtn = document.getElementById('vendorSelectAllFoto');
+    const checks = [...document.querySelectorAll('.vendor-siswa-check')];
+    const bulkBtn = document.getElementById('vendorBulkBtn');
+
+    const sync = () => {
+        const selected = checks.filter((check) => check.checked);
+
+        if (bulkBtn) {
+            bulkBtn.disabled = selected.length === 0;
+        }
+
+        if (checkAll) {
+            checkAll.checked = checks.length > 0 && selected.length === checks.length;
+            checkAll.indeterminate = selected.length > 0 && selected.length < checks.length;
+        }
+    };
+
+    const setAll = (checked) => {
+        checks.forEach((check) => {
+            check.checked = checked;
+        });
+        sync();
+    };
+
+    checkAll?.addEventListener('change', () => setAll(checkAll.checked));
+    selectAllBtn?.addEventListener('click', () => setAll(true));
+    checks.forEach((check) => check.addEventListener('change', sync));
+    sync();
+}
+
+function bindVendorFotoModal() {
+    const modalEl = document.querySelector('[data-vendor-foto-modal]');
+
+    if (! modalEl || ! window.Cropper) {
+        return;
+    }
+
+    const modal = window.bootstrap.Modal.getOrCreateInstance(modalEl);
+    const dropzone = modalEl.querySelector('[data-vendor-dropzone]');
+    const fileInput = modalEl.querySelector('[data-vendor-file-input]');
+    const cropWrap = modalEl.querySelector('[data-vendor-cropper-wrap]');
+    const cropImage = modalEl.querySelector('[data-vendor-crop-image]');
+    const submitBtn = modalEl.querySelector('[data-vendor-foto-submit]');
+    const siswaLabel = modalEl.querySelector('[data-vendor-foto-siswa]');
+    let cropper = null;
+    let uploadUrl = '';
+    let objectUrl = null;
+    let replacing = false;
+
+    const csrfToken = () => document.querySelector('input[name="_token"]')?.value
+        || document.querySelector('meta[name="csrf-token"]')?.content
+        || '';
+
+    const reset = () => {
+        cropper?.destroy();
+        cropper = null;
+
+        if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+        }
+
+        if (cropImage instanceof HTMLImageElement) {
+            cropImage.src = '';
+        }
+
+        cropWrap?.classList.add('d-none');
+        dropzone?.classList.remove('d-none');
+
+        if (fileInput instanceof HTMLInputElement) {
+            fileInput.value = '';
+        }
+
+        if (submitBtn instanceof HTMLButtonElement) {
+            submitBtn.disabled = true;
+        }
+    };
+
+    modalEl.addEventListener('hidden.bs.modal', reset);
+
+    document.querySelectorAll('[data-vendor-foto-open]').forEach((button) => {
+        button.addEventListener('click', async () => {
+            replacing = button.getAttribute('data-has-foto') === '1';
+
+            if (replacing) {
+                const ok = await window.madaniAlert.confirm({
+                    title: 'Ganti foto?',
+                    text: 'Foto yang sudah ada akan diganti.',
+                    confirmButtonText: 'Lanjut',
+                    icon: 'warning',
+                });
+
+                if (! ok) {
+                    return;
+                }
+            }
+
+            uploadUrl = button.getAttribute('data-upload-url') || '';
+
+            if (siswaLabel) {
+                siswaLabel.textContent = button.getAttribute('data-siswa-nama') || '';
+            }
+
+            reset();
+            modal.show();
+        });
+    });
+
+    const loadFile = (file) => {
+        if (! (file instanceof File) || ! /^image\//.test(file.type)) {
+            window.madaniAlert.warning('Pilih file JPG atau PNG.');
+
+            return;
+        }
+
+        reset();
+        objectUrl = URL.createObjectURL(file);
+
+        if (! (cropImage instanceof HTMLImageElement)) {
+            return;
+        }
+
+        cropImage.src = objectUrl;
+        dropzone?.classList.add('d-none');
+        cropWrap?.classList.remove('d-none');
+
+        cropImage.onload = () => {
+            cropper = new window.Cropper(cropImage, {
+                aspectRatio: 3 / 4,
+                viewMode: 1,
+                autoCropArea: 1,
+                responsive: true,
+            });
+
+            if (submitBtn instanceof HTMLButtonElement) {
+                submitBtn.disabled = false;
+            }
+        };
+    };
+
+    dropzone?.addEventListener('click', () => fileInput?.click());
+    dropzone?.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        dropzone.classList.add('is-dragover');
+    });
+    dropzone?.addEventListener('dragleave', () => dropzone.classList.remove('is-dragover'));
+    dropzone?.addEventListener('drop', (event) => {
+        event.preventDefault();
+        dropzone.classList.remove('is-dragover');
+        loadFile(event.dataTransfer?.files?.[0]);
+    });
+    fileInput?.addEventListener('change', () => loadFile(fileInput.files?.[0]));
+
+    const exportBlob = () => new Promise((resolve, reject) => {
+        if (! cropper) {
+            reject(new Error('Cropper belum siap.'));
+
+            return;
+        }
+
+        const tryQuality = (quality) => {
+            const canvas = cropper.getCroppedCanvas({
+                width: 450,
+                height: 600,
+                imageSmoothingQuality: 'high',
+            });
+
+            if (! canvas) {
+                reject(new Error('Canvas crop gagal.'));
+
+                return;
+            }
+
+            canvas.toBlob((blob) => {
+                if (! blob) {
+                    reject(new Error('Blob gagal dibuat.'));
+
+                    return;
+                }
+
+                if (blob.size <= 500 * 1024 || quality <= 0.5) {
+                    resolve(blob);
+
+                    return;
+                }
+
+                tryQuality(Math.max(0.5, quality - 0.05));
+            }, 'image/jpeg', quality);
+        };
+
+        tryQuality(0.92);
+    });
+
+    submitBtn?.addEventListener('click', async () => {
+        if (! uploadUrl) {
+            return;
+        }
+
+        try {
+            window.madaniAlert.loading('Mengunggah foto…');
+            const blob = await exportBlob();
+            const formData = new FormData();
+            formData.append('foto', blob, 'foto.jpg');
+            formData.append('_token', csrfToken());
+
+            const response = await fetch(uploadUrl, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    Accept: 'text/html,application/json',
+                },
+            });
+
+            if (response.redirected) {
+                window.location.href = response.url;
+
+                return;
+            }
+
+            if (! response.ok) {
+                window.madaniAlert.closeLoading();
+                window.madaniAlert.error('Upload gagal. Periksa ukuran dan rasio foto.');
+
+                return;
+            }
+
+            window.location.reload();
+        } catch {
+            window.madaniAlert.closeLoading();
+            window.madaniAlert.error('Upload gagal.');
+        }
+    });
+}
+
 function bindDokumenBoxes() {
     const csrfToken = () => document.querySelector('input[name="_token"]')?.value
         || document.querySelector('meta[name="csrf-token"]')?.content
@@ -1538,6 +1777,8 @@ bindOpenModals();
 bindPeranUser();
 bindFormatInputs();
 bindDokumenBoxes();
+bindVendorBulkChecks();
+bindVendorFotoModal();
 bindConfirmForms();
 bindFormLoading();
 bindPasswordToggles();

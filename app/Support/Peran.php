@@ -14,6 +14,8 @@ class Peran
 
     public const GURU = 'guru';
 
+    public const VENDOR = 'vendor';
+
     /**
      * @return array<string, string>
      */
@@ -24,6 +26,7 @@ class Peran
             self::ADMIN => 'Admin',
             self::WALI_KELAS => 'Wali kelas',
             self::GURU => 'Guru (Ta\'lim)',
+            self::VENDOR => 'Vendor kartu',
         ];
     }
 
@@ -34,7 +37,7 @@ class Peran
      */
     public static function aksesWeb(): array
     {
-        return [self::SUPERADMIN, self::ADMIN];
+        return [self::SUPERADMIN, self::ADMIN, self::VENDOR];
     }
 
     /**

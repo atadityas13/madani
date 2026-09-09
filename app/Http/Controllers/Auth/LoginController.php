@@ -45,11 +45,15 @@ class LoginController extends Controller
             Auth::logout();
 
             return back()->withErrors([
-                'login' => 'Akses web MADANI hanya untuk Super Admin dan Admin. Guru dan siswa masuk lewat aplikasi Ta\'lim.',
+                'login' => 'Akses web MADANI hanya untuk Super Admin, Admin, dan Vendor. Guru dan siswa masuk lewat aplikasi Ta\'lim.',
             ])->onlyInput('login');
         }
 
         $request->session()->regenerate();
+
+        if ($user->hasRole(Peran::VENDOR) && ! $user->bisaKelola()) {
+            return redirect()->intended(route('vendor.dashboard'));
+        }
 
         return redirect()->intended(route('dashboard'));
     }

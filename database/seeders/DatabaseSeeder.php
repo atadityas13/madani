@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
     {
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        foreach (['superadmin', 'admin', 'wali_kelas', 'operator', 'kamad', 'guru'] as $role) {
+        foreach (['superadmin', 'admin', 'wali_kelas', 'operator', 'kamad', 'guru', 'vendor'] as $role) {
             Role::findOrCreate($role);
         }
 

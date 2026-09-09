@@ -103,7 +103,16 @@ class User extends Authenticatable
             return Peran::GURU;
         }
 
+        if ($this->hasRole(Peran::VENDOR)) {
+            return Peran::VENDOR;
+        }
+
         return Peran::ADMIN;
+    }
+
+    public function adalahVendor(): bool
+    {
+        return $this->hasRole(Peran::VENDOR) && ! $this->bisaKelola();
     }
 
     public function labelPeran(): string
