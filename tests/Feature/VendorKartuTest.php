@@ -36,6 +36,7 @@ class VendorKartuTest extends TestCase
             ->assertSee('Jumlah siswa')
             ->assertSee('Panduan alur')
             ->assertSee('Setting printer (disarankan)', false)
+            ->assertSee('disarankan per kelas/rombel saja', false)
             ->assertSee('600 dpi', false)
             ->assertSee('Actual size', false);
     }
@@ -90,15 +91,22 @@ class VendorKartuTest extends TestCase
 
         $vendor = $this->buatVendor();
         $tahun = TahunAjaran::aktif();
-        $rombel = Rombel::query()->create([
+        $rombelA = Rombel::query()->create([
+            'tahun_ajaran_id' => $tahun->id,
+            'tingkat' => 'VIII',
+            'nama' => 'A',
+        ]);
+        $rombelB = Rombel::query()->create([
             'tahun_ajaran_id' => $tahun->id,
             'tingkat' => 'VIII',
             'nama' => 'B',
         ]);
         $sudah = $this->buatSiswa(['nama' => 'Sudah Foto', 'nisn' => '2000000001', 'foto' => 'foto/x/profil.jpg']);
         $belum = $this->buatSiswa(['nama' => 'Belum Foto', 'nisn' => '2000000002']);
-        $rombel->siswas()->attach([$sudah->id, $belum->id], ['status' => 'aktif']);
-        $job = $this->buatJob($vendor, [$sudah->id, $belum->id]);
+        $siswaB = $this->buatSiswa(['nama' => 'Siswa Rombel B', 'nisn' => '2000000003']);
+        $rombelA->siswas()->attach([$sudah->id, $belum->id], ['status' => 'aktif']);
+        $rombelB->siswas()->attach($siswaB->id, ['status' => 'aktif']);
+        $job = $this->buatJob($vendor, [$sudah->id, $belum->id, $siswaB->id]);
 
         $this->actingAs($vendor)
             ->get(route('vendor.jobs.show', ['vendorJob' => $job, 'foto' => 'belum']))
@@ -107,10 +115,55 @@ class VendorKartuTest extends TestCase
             ->assertDontSee('Sudah Foto');
 
         $this->actingAs($vendor)
-            ->get(route('vendor.jobs.show', ['vendorJob' => $job, 'rombel_id' => $rombel->id]))
+            ->get(route('vendor.jobs.show', ['vendorJob' => $job, 'rombel_id' => $rombelA->id]))
             ->assertOk()
             ->assertSee('Sudah Foto')
-            ->assertSee('Belum Foto');
+            ->assertSee('Belum Foto')
+            ->assertDontSee('Siswa Rombel B')
+            ->assertSee('name="rombel_id"', false)
+            ->assertDontSee('name="rombel_id" value="'.$rombelA->id.'"', false);
+
+        $this->actingAs($vendor)
+            ->get(route('vendor.jobs.show', ['vendorJob' => $job, 'rombel_id' => $rombelB->id]))
+            ->assertOk()
+            ->assertSee('Siswa Rombel B')
+            ->assertDontSee('Sudah Foto')
+            ->assertDontSee('Belum Foto');
+    }
+
+    public function test_preview_dan_cetak_hanya_untuk_siswa_berfoto(): void
+    {
+        $this->seed();
+        Storage::fake('r2');
+
+        $vendor = $this->buatVendor();
+        $path = 'foto/s1/profil.jpg';
+        Storage::disk('r2')->put($path, 'fake');
+        $berfoto = $this->buatSiswa(['nama' => 'Ada Foto', 'nisn' => '6000000001', 'foto' => $path]);
+        $belum = $this->buatSiswa(['nama' => 'Tanpa Foto', 'nisn' => '6000000002']);
+        $job = $this->buatJob($vendor, [$berfoto->id, $belum->id]);
+
+        $this->actingAs($vendor)
+            ->get(route('vendor.jobs.kartu.stream', [$job, $belum]))
+            ->assertStatus(422);
+
+        $this->actingAs($vendor)
+            ->post(route('vendor.jobs.kartu.bulk', $job), [
+                'siswa_ids' => [$belum->id],
+            ])
+            ->assertStatus(422);
+
+        $this->actingAs($vendor)
+            ->get(route('vendor.jobs.show', $job))
+            ->assertOk()
+            ->assertSee('Cetak semua berfoto', false)
+            ->assertSee('Unggah foto dulu', false);
+
+        $this->actingAs($vendor)
+            ->post(route('vendor.jobs.kartu.bulk', $job), [
+                'semua_berfoto' => '1',
+            ])
+            ->assertOk();
     }
 
     public function test_vendor_upload_foto_validates_ratio_and_size(): void
@@ -197,7 +250,7 @@ class VendorKartuTest extends TestCase
 
         $response = $this->actingAs($vendor)
             ->post(route('vendor.jobs.kartu.bulk', $job), [
-                'semua' => '1',
+                'semua_berfoto' => '1',
             ]);
 
         $response->assertOk();

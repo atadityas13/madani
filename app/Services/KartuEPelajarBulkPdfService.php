@@ -46,8 +46,8 @@ class KartuEPelajarBulkPdfService
         }
 
         try {
-            // Sementara: tanpa filter foto agar layout bisa diverifikasi dengan placeholder.
             $rows = $siswas
+                ->filter(fn (Siswa $siswa) => filled($siswa->foto))
                 ->values()
                 ->map(fn (Siswa $siswa) => $this->kartuPdf->viewData($siswa));
 

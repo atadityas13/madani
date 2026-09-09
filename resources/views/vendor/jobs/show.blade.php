@@ -58,9 +58,6 @@
                 @if ($foto !== 'semua')
                     <input type="hidden" name="foto" value="{{ $foto }}">
                 @endif
-                @if ($rombelId)
-                    <input type="hidden" name="rombel_id" value="{{ $rombelId }}">
-                @endif
                 <button class="btn btn-outline-secondary" type="submit">Cari</button>
             </div>
         </div>
@@ -85,14 +82,14 @@
                 <i class="bi bi-printer"></i> Cetak terpilih
             </button>
         </form>
-        <form method="POST" action="{{ route('vendor.jobs.kartu.bulk', $job) }}" data-confirm="Cetak semua siswa di job ini?" data-confirm-title="Cetak semua" data-no-loading>
+        <form method="POST" action="{{ route('vendor.jobs.kartu.bulk', $job) }}" data-confirm="Cetak semua siswa yang sudah punya foto di job ini?" data-confirm-title="Cetak semua berfoto" data-no-loading>
             @csrf
-            <input type="hidden" name="semua" value="1">
-            <button class="btn btn-outline-secondary" type="submit" @disabled($total < 1)>
-                Cetak semua
+            <input type="hidden" name="semua_berfoto" value="1">
+            <button class="btn btn-outline-secondary" type="submit" @disabled($sudahFoto < 1)>
+                Cetak semua berfoto
             </button>
         </form>
-        <button type="button" class="btn btn-sm btn-link" id="vendorSelectAllFoto">Pilih semua</button>
+        <button type="button" class="btn btn-sm btn-link" id="vendorSelectAllFoto">Pilih semua berfoto</button>
     @endcan
 </div>
 
@@ -124,7 +121,11 @@
                     <tr>
                         @can('printKartu', $job)
                             <td>
-                                <input type="checkbox" class="form-check-input vendor-siswa-check" name="siswa_ids[]" value="{{ $siswa->id }}" form="vendorBulkForm">
+                                @if ($punyaFoto)
+                                    <input type="checkbox" class="form-check-input vendor-siswa-check" name="siswa_ids[]" value="{{ $siswa->id }}" form="vendorBulkForm">
+                                @else
+                                    <input type="checkbox" class="form-check-input" disabled title="Unggah foto dulu">
+                                @endif
                             </td>
                         @endcan
                         <td>
@@ -159,9 +160,15 @@
                                         {{ $punyaFoto ? 'Ganti' : 'Upload' }}
                                     </button>
                                 @endcan
-                                <a class="emis-aksi-btn" href="{{ route('vendor.jobs.kartu.stream', [$job, $siswa]) }}" target="_blank" rel="noopener" title="Preview kartu">
-                                    <i class="bi bi-credit-card-2-front"></i>
-                                </a>
+                                @if ($punyaFoto)
+                                    <a class="emis-aksi-btn" href="{{ route('vendor.jobs.kartu.stream', [$job, $siswa]) }}" target="_blank" rel="noopener" title="Preview kartu">
+                                        <i class="bi bi-credit-card-2-front"></i>
+                                    </a>
+                                @else
+                                    <span class="emis-aksi-btn text-secondary" title="Unggah foto dulu untuk cetak/preview">
+                                        <i class="bi bi-credit-card-2-front"></i>
+                                    </span>
+                                @endif
                             </div>
                         </td>
                     </tr>

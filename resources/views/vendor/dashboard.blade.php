@@ -51,7 +51,8 @@
     <ol class="mb-3 ps-3 text-secondary">
         <li class="mb-2">Buka <strong>Job saya</strong>, unggah foto satuan (drag-drop + crop 3:4) atau ZIP hotfolder <code>NISN.jpg</code> / <code>NISN.png</code>.</li>
         <li class="mb-2">Filter rombel / status foto untuk memastikan tidak ada yang terlewat.</li>
-        <li class="mb-2">Centang siswa, lalu <strong>Cetak massal</strong> (depan + belakang berdampingan).</li>
+        <li class="mb-2">Centang siswa yang sudah berfoto, lalu <strong>Cetak terpilih</strong> (depan + belakang berdampingan).</li>
+        <li class="mb-2">Untuk cetak massal, <strong>disarankan per kelas/rombel saja</strong> — filter rombel dulu, lalu cetak. Hindari <strong>Cetak semua berfoto</strong> sekaligus agar proses generate PDF tidak berat.</li>
         <li>Di dialog cetak PDF, pilih kualitas tinggi agar teks kecil (alamat kop, footer, QR) terbaca jelas.</li>
     </ol>
     <div class="small text-secondary border-top pt-3">
