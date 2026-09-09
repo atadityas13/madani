@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\PengajuanPerubahanSiswa;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
+use App\Services\Vendor\VendorFotoService;
 use App\Support\Wilayah;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -16,6 +17,10 @@ use Illuminate\Validation\ValidationException;
 class SiswaBiodataService
 {
     private const NAMA_ORANG = '/^[A-Za-zÀ-ÿ\-\'’`., ]+$/u';
+
+    public function __construct(
+        private VendorFotoService $vendorFoto,
+    ) {}
 
     public function create(Request $request): Siswa
     {
@@ -38,6 +43,7 @@ class SiswaBiodataService
             $this->simpanDokumen($request, $siswa, 'file_kk', 'kk');
             $this->simpanDokumen($request, $siswa, 'file_akta', 'akta_lahir');
             $this->simpanDokumen($request, $siswa, 'file_kip', 'kip');
+            $this->simpanFoto($request, $siswa);
 
             return $siswa;
         });
@@ -600,7 +606,7 @@ class SiswaBiodataService
                 'mimes:pdf,jpg,jpeg,png',
                 'max:1024',
             ],
-            'foto' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:1024'],
+            'foto' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:'.VendorFotoService::MAX_KB],
         ], [
             'nama.regex' => 'Nama lengkap hanya dapat diisi huruf dan simbol -\'.,',
             'angkatan.required' => 'Angkatan wajib dipilih',
@@ -631,6 +637,7 @@ class SiswaBiodataService
             'file_kk.required' => 'Unggah Kartu Keluarga',
             'file_akta.required' => 'Unggah Akta Kelahiran',
             'file_kip.required' => 'Unggah kartu KIP karena nomor KIP diisi',
+            'foto.max' => 'Ukuran foto maksimal '.VendorFotoService::MAX_KB.' KB.',
         ]);
     }
 
@@ -762,22 +769,22 @@ class SiswaBiodataService
         $dokumen->delete();
     }
 
+    public function hapusFoto(Siswa $siswa): void
+    {
+        if (filled($siswa->foto)) {
+            Storage::disk('r2')->delete((string) $siswa->foto);
+        }
+
+        $siswa->update(['foto' => null]);
+    }
+
     public function simpanFoto(Request $request, Siswa $siswa): void
     {
         if (! $request->hasFile('foto')) {
             return;
         }
 
-        $file = $request->file('foto');
-        $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
-        $ext = preg_replace('/[^a-z0-9]/', '', $ext) ?: 'jpg';
-        $lama = $siswa->foto;
-        $path = $file->storeAs("foto/{$siswa->id}", "profil.{$ext}", 'r2');
-        $siswa->update(['foto' => $path]);
-
-        if ($lama && $lama !== $path) {
-            Storage::disk('r2')->delete($lama);
-        }
+        $this->vendorFoto->simpanDariUpload($siswa, $request->file('foto'));
     }
 
     /**

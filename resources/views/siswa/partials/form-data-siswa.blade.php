@@ -313,4 +313,16 @@
             hint="Wajib jika nomor KIP diisi. Maks. 1MB · pdf / jpg / png"
         />
     </div>
+    @if (! ($portal ?? false))
+        <div class="col-md-6">
+            <x-dokumen-box
+                judul="Foto Siswa"
+                name="foto"
+                :path="$s?->foto"
+                :destroy-url="$s ? route('siswa.foto.destroy', $s) : null"
+                accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                hint="Opsional. Maks. 500KB · jpg / png · rasio 3:4 (contoh 300×400)"
+            />
+        </div>
+    @endif
 </div>

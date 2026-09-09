@@ -318,6 +318,17 @@ class SiswaController extends Controller
             ->with('status', 'Dokumen dihapus dari database dan storage.');
     }
 
+    public function destroyFoto(Siswa $siswa): RedirectResponse
+    {
+        $this->authorize('update', $siswa);
+
+        $this->biodata->hapusFoto($siswa);
+
+        return redirect()
+            ->route('siswa.edit', ['siswa' => $siswa, 'tab' => 'data-siswa'])
+            ->with('status', 'Foto dihapus dari database dan storage.');
+    }
+
     public function downloadDokumen(Siswa $siswa, string $jenis): StreamedResponse
     {
         $this->authorize('view', $siswa);

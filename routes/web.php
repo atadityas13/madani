@@ -228,6 +228,9 @@ Route::middleware('auth')->group(function () {
     Route::get('siswa/{siswa}/foto', [SiswaController::class, 'downloadFoto'])
         ->name('siswa.foto.download')
         ->whereUuid('siswa');
+    Route::delete('siswa/{siswa}/foto', [SiswaController::class, 'destroyFoto'])
+        ->name('siswa.foto.destroy')
+        ->whereUuid('siswa');
     Route::get('rombel', [RombelController::class, 'index'])->name('rombel.index');
     Route::get('rombel/{rombel}', [RombelController::class, 'show'])->name('rombel.show');
 });

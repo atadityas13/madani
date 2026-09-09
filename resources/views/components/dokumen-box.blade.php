@@ -1,22 +1,30 @@
 @props([
     'judul',
     'name',
-    'jenis',
+    'jenis' => null,
     'dokumen' => null,
     'siswa' => null,
+    'path' => null,
+    'destroyUrl' => null,
+    'accept' => '.pdf,.jpg,.jpeg,.png',
     'required' => false,
     'hint' => 'Maks. 1MB · pdf / jpg / png',
 ])
 
 @php
-    $path = $dokumen?->path;
-    $url = $path ? \App\Support\R2Url::temporary($path) : null;
-    $isPdf = $path && str_ends_with(strtolower($path), '.pdf');
-    $hasFile = filled($path);
+    $resolvedPath = $path ?? $dokumen?->path;
+    $url = $resolvedPath ? \App\Support\R2Url::temporary($resolvedPath) : null;
+    $isPdf = $resolvedPath && str_ends_with(strtolower((string) $resolvedPath), '.pdf');
+    $hasFile = filled($resolvedPath);
     $inputId = 'dokumen-input-'.str_replace(['[', ']'], '-', $name).'-'.uniqid();
-    $hapusUrl = ($siswa && $hasFile)
-        ? route('siswa.dokumen.destroy', [$siswa, $jenis])
-        : null;
+    $hapusUrl = null;
+    if ($hasFile) {
+        if (filled($destroyUrl)) {
+            $hapusUrl = $destroyUrl;
+        } elseif ($siswa && filled($jenis)) {
+            $hapusUrl = route('siswa.dokumen.destroy', [$siswa, $jenis]);
+        }
+    }
 @endphp
 
 <div
@@ -65,7 +73,7 @@
         class="dokumen-box__input"
         type="file"
         name="{{ $name }}"
-        accept=".pdf,.jpg,.jpeg,.png"
+        accept="{{ $accept }}"
         data-berkas
         data-dokumen-input
         @required($required && ! $hasFile)
