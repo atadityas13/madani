@@ -75,7 +75,7 @@ class DatabaseResetService
     }
 
     /**
-     * @return list<array{id: string, label: string, ringkasan: string, excel: bool, excel_ready: bool, confirm: string}>
+     * @return list<array{id: string, label: string, ringkasan: string, excel: bool, excel_ready: bool, sql_import?: bool, confirm: string}>
      */
     public function kartu(): array
     {
@@ -124,8 +124,9 @@ class DatabaseResetService
                 'id' => 'jurnal',
                 'label' => 'Jurnal pembelajaran',
                 'ringkasan' => number_format(JurnalPembelajaran::query()->count()).' jurnal',
-                'excel' => true,
+                'excel' => false,
                 'excel_ready' => false,
+                'sql_import' => true,
                 'confirm' => 'Hapus seluruh jurnal pembelajaran? Tindakan ini tidak bisa dibatalkan.',
             ],
             [

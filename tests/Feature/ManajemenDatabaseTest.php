@@ -13,6 +13,7 @@ use App\Models\TahunAjaran;
 use App\Models\User;
 use App\Support\Peran;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -215,5 +216,99 @@ class ManajemenDatabaseTest extends TestCase
             ->assertRedirect(route('manajemen.database'));
 
         $this->assertSame(0, JurnalPembelajaran::query()->count());
+    }
+
+    public function test_database_page_shows_jurnal_sql_import(): void
+    {
+        $this->seed();
+        $superadmin = User::query()->where('username', 'admin')->first();
+
+        $this->actingAs($superadmin)
+            ->get(route('manajemen.database'))
+            ->assertOk()
+            ->assertSee('Jurnal pembelajaran', false)
+            ->assertSee(route('manajemen.database.jurnal.impor'), false)
+            ->assertSee('Impor SQL', false);
+    }
+
+    public function test_impor_jurnal_from_sql_upload(): void
+    {
+        $this->seed();
+        Role::findOrCreate(Peran::GURU);
+
+        $gtk = Gtk::query()->create([
+            'nama' => 'Budi Import',
+            'nip' => '198001012005011001',
+            'jenis' => 'guru',
+            'status' => 'aktif',
+        ]);
+        $guruUser = User::factory()->create([
+            'username' => '198001012005011001',
+            'gtk_id' => $gtk->id,
+            'is_aktif' => true,
+        ]);
+        $guruUser->syncRoles([Peran::GURU]);
+
+        $sql = <<<'SQL'
+INSERT INTO `gurus` (`id`, `username`, `nama`) VALUES (3, '198001012005011001', 'Budi Import');
+INSERT INTO `kelas` (`id`, `nama_kelas`) VALUES (12, '9A');
+INSERT INTO `mapels` (`id`, `nama_mapel`) VALUES (3, 'Matematika');
+INSERT INTO `jurnal_pembelajaran` (`id`, `guru_id`, `kelas_id`, `mapel_id`, `tanggal`, `jam_ke`, `materi_pokok`, `ketercapaian`) VALUES
+(55, 3, 12, 3, '2026-08-01', 1, 'Materi Web', 'tercapai');
+SQL;
+
+        $superadmin = User::query()->where('username', 'admin')->first();
+
+        $this->actingAs($superadmin)
+            ->post(route('manajemen.database.jurnal.impor'), [
+                'file' => $this->buatSqlUpload($sql),
+            ])
+            ->assertRedirect(route('manajemen.database'))
+            ->assertSessionHas('impor_jurnal_hasil.imported', 1);
+
+        $this->assertDatabaseHas('jurnal_pembelajarans', [
+            'user_id' => $guruUser->id,
+            'source_simpatisans_id' => 55,
+            'nama_kelas' => '9A',
+            'nama_mapel' => 'Matematika',
+            'materi_pokok' => 'Materi Web',
+        ]);
+    }
+
+    public function test_impor_jurnal_rejects_dump_without_jurnal_table(): void
+    {
+        $this->seed();
+        $superadmin = User::query()->where('username', 'admin')->first();
+
+        $this->actingAs($superadmin)
+            ->post(route('manajemen.database.jurnal.impor'), [
+                'file' => $this->buatSqlUpload("INSERT INTO `gurus` (`id`, `username`) VALUES (1, 'x');\n"),
+            ])
+            ->assertRedirect(route('manajemen.database'))
+            ->assertSessionHasErrors('file');
+
+        $this->assertSame(0, JurnalPembelajaran::query()->count());
+    }
+
+    public function test_impor_jurnal_is_superadmin_only(): void
+    {
+        $this->seed();
+        Role::findOrCreate(Peran::ADMIN);
+        $admin = User::factory()->create(['is_aktif' => true]);
+        $admin->syncRoles([Peran::ADMIN]);
+
+        $this->actingAs($admin)
+            ->post(route('manajemen.database.jurnal.impor'), [
+                'file' => $this->buatSqlUpload("INSERT INTO `jurnal_pembelajaran` (`id`) VALUES (1);\n"),
+            ])
+            ->assertForbidden();
+    }
+
+    private function buatSqlUpload(string $sql): UploadedFile
+    {
+        $path = tempnam(sys_get_temp_dir(), 'jurnal-sql-').'.sql';
+        file_put_contents($path, $sql);
+
+        return new UploadedFile($path, 'simpatisans.sql', 'text/plain', null, true);
     }
 }

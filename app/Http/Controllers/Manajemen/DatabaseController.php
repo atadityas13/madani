@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Manajemen;
 
 use App\Http\Controllers\Controller;
 use App\Services\Manajemen\DatabaseResetService;
+use App\Services\Manajemen\JurnalSimpatisansImportService;
 use App\Services\Manajemen\SiswaExcelImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,7 @@ class DatabaseController extends Controller
     public function __construct(
         private DatabaseResetService $reset,
         private SiswaExcelImportService $siswaExcel,
+        private JurnalSimpatisansImportService $jurnalImport,
     ) {}
 
     public function index(): View
@@ -40,6 +42,7 @@ class DatabaseController extends Controller
             'kartu' => $this->reset->kartu(),
             'imporDuplikat' => $duplikat,
             'imporSuksesJumlah' => session('impor_siswa_sukses_jumlah'),
+            'imporJurnalHasil' => session('impor_jurnal_hasil'),
         ]);
     }
 
@@ -106,5 +109,32 @@ class DatabaseController extends Controller
         ]);
 
         return $this->siswaExcel->unduhDuplikat($request->string('token')->toString());
+    }
+
+    public function imporJurnal(Request $request): RedirectResponse
+    {
+        if (function_exists('set_time_limit')) {
+            set_time_limit(300);
+        }
+
+        $request->validate([
+            'file' => ['required', 'file', 'extensions:sql,txt', 'max:51200'],
+        ], [
+            'file.required' => 'Pilih file SQL Simpatisans terlebih dahulu.',
+            'file.extensions' => 'File harus berformat .sql.',
+            'file.max' => 'Ukuran file maksimal 50 MB.',
+        ]);
+
+        try {
+            $hasil = $this->jurnalImport->imporDariUpload($request->file('file'));
+        } catch (InvalidArgumentException $e) {
+            return redirect()
+                ->route('manajemen.database')
+                ->withErrors(['file' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('manajemen.database')
+            ->with('impor_jurnal_hasil', $hasil);
     }
 }

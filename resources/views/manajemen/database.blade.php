@@ -53,6 +53,57 @@
     </script>
 @endif
 
+@if (! empty($imporJurnalHasil))
+    <div
+        class="modal fade"
+        id="imporJurnalSuksesModal"
+        tabindex="-1"
+        aria-labelledby="imporJurnalSuksesModalLabel"
+        aria-hidden="true"
+        data-modal-open
+    >
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" id="imporJurnalSuksesModalLabel">Impor jurnal selesai</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <p class="mb-2">
+                        Baru: {{ number_format((int) $imporJurnalHasil['imported']) }} ·
+                        Diperbarui: {{ number_format((int) $imporJurnalHasil['updated']) }} ·
+                        Dilewati: {{ number_format((int) $imporJurnalHasil['skipped']) }}
+                    </p>
+                    <p class="mb-0 small text-secondary">
+                        Sumber: {{ $imporJurnalHasil['source_rows'] }} baris dari tabel {{ $imporJurnalHasil['table'] }}
+                    </p>
+                    @if (! empty($imporJurnalHasil['orphans']))
+                        <div class="mt-3 small text-secondary">
+                            <div class="fw-semibold mb-1">Contoh dilewati:</div>
+                            <ul class="mb-0 ps-3">
+                                @foreach (array_slice($imporJurnalHasil['orphans'], 0, 5) as $orphan)
+                                    <li>{{ $orphan }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-madani" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const modalEl = document.getElementById('imporJurnalSuksesModal');
+            if (modalEl && window.bootstrap) {
+                bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            }
+        });
+    </script>
+@endif
+
 <div class="row g-3">
     @foreach ($kartu as $item)
         <div class="col-md-6 col-xl-4">
@@ -81,6 +132,22 @@
                             <button class="btn btn-sm btn-outline-secondary" type="button" disabled title="Segera">Impor Excel</button>
                             <button class="btn btn-sm btn-outline-secondary" type="button" disabled title="Segera">Ekspor Excel</button>
                         </div>
+                    @endif
+                    @if ($item['sql_import'] ?? false)
+                        <div class="small text-secondary">
+                            Unggah dump SQL Simpatisans lengkap. Sistem hanya membaca data jurnal (plus guru/kelas/mapel terkait).
+                        </div>
+                        <form
+                            method="POST"
+                            action="{{ route('manajemen.database.jurnal.impor') }}"
+                            enctype="multipart/form-data"
+                            class="d-flex flex-wrap gap-2 align-items-center"
+                            data-loading-text="Mengimpor jurnal…"
+                        >
+                            @csrf
+                            <input class="form-control form-control-sm" type="file" name="file" accept=".sql,.txt" required>
+                            <button class="btn btn-sm btn-outline-primary" type="submit">Impor SQL</button>
+                        </form>
                     @endif
                     <form
                         method="POST"

@@ -140,6 +140,8 @@ Route::middleware('auth')->group(function () {
             ->name('manajemen.database.siswa.ekspor-duplikat');
         Route::post('manajemen/database/siswa/impor', [DatabaseController::class, 'imporSiswa'])
             ->name('manajemen.database.siswa.impor');
+        Route::post('manajemen/database/jurnal/impor', [DatabaseController::class, 'imporJurnal'])
+            ->name('manajemen.database.jurnal.impor');
         Route::post('manajemen/database/{modul}/kosongkan', [DatabaseController::class, 'kosongkan'])
             ->name('manajemen.database.kosongkan')
             ->where('modul', 'siswa|gtk|rombel|tahun-ajaran|periode-pendataan|jurnal|notifikasi|identitas|app-settings');
