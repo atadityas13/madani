@@ -120,9 +120,9 @@
         }
         .ttd-peran { margin-top: 2px; }
         .ttd-materai {
-            height: 48px;
-            line-height: 48px;
-            text-align: center;
+            height: 110px;
+            line-height: 110px;
+            text-align: left;
             margin: 0;
         }
         .ttd-nama { margin-top: 2px; }

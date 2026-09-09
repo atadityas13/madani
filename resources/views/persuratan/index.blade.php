@@ -8,12 +8,12 @@
 <style>
     .surat-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        gap: 1rem;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 0.75rem;
     }
     .surat-card {
         border: 1px solid rgba(15, 23, 42, 0.08);
-        border-radius: 14px;
+        border-radius: 10px;
         background: #fff;
         overflow: hidden;
         cursor: pointer;
@@ -23,14 +23,15 @@
         width: 100%;
     }
     .surat-card:hover {
-        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
-        transform: translateY(-2px);
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+        transform: translateY(-1px);
     }
     .surat-card__preview {
         aspect-ratio: 210 / 297;
         background: #f8fafc;
         border-bottom: 1px solid rgba(15, 23, 42, 0.06);
         overflow: hidden;
+        max-height: 180px;
     }
     .surat-card__preview img {
         width: 100%;
@@ -40,17 +41,20 @@
         display: block;
     }
     .surat-card__body {
-        padding: 0.9rem 1rem 1rem;
+        padding: 0.55rem 0.65rem 0.7rem;
     }
     .surat-card__title {
         font-weight: 700;
-        margin: 0 0 0.25rem;
+        font-size: 0.9rem;
+        margin: 0 0 0.15rem;
         color: #0f172a;
+        line-height: 1.25;
     }
     .surat-card__desc {
         margin: 0;
-        font-size: 0.875rem;
+        font-size: 0.75rem;
         color: #64748b;
+        line-height: 1.3;
     }
     .guru-dropdown {
         position: relative;
@@ -121,7 +125,7 @@
 
 <div class="modal fade" id="modalGenerateSurat" tabindex="-1" aria-labelledby="modalGenerateSuratLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <form class="modal-content" method="POST" id="formGenerateSurat">
+        <form class="modal-content" method="POST" id="formGenerateSurat" data-no-loading>
             @csrf
             <div class="modal-header">
                 <h5 class="modal-title" id="modalGenerateSuratLabel">Generate surat</h5>
@@ -166,7 +170,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="submit" class="btn btn-outline-secondary" name="mode" value="download" data-submit-generate>Unduh PDF</button>
+                <button type="button" class="btn btn-outline-secondary" id="btnUnduhSurat">Unduh PDF</button>
                 <button type="button" class="btn btn-madani" id="btnCetakSurat">Cetak</button>
             </div>
         </form>
@@ -184,6 +188,7 @@
     const countEl = document.querySelector('[data-guru-count]');
     const allBox = document.querySelector('[data-guru-all]');
     const btnCetak = document.getElementById('btnCetakSurat');
+    const btnUnduh = document.getElementById('btnUnduhSurat');
     const items = () => Array.from(document.querySelectorAll('[data-guru-item]'));
 
     function syncLabel() {
@@ -212,6 +217,74 @@
 
     function selectedCount() {
         return items().filter((el) => el.checked).length;
+    }
+
+    function closeModal() {
+        if (!modal || typeof bootstrap === 'undefined') {
+            return;
+        }
+        bootstrap.Modal.getOrCreateInstance(modal).hide();
+    }
+
+    function filenameFromDisposition(header, fallback) {
+        if (!header) {
+            return fallback;
+        }
+        const utf = header.match(/filename\*=UTF-8''([^;]+)/i);
+        if (utf?.[1]) {
+            try {
+                return decodeURIComponent(utf[1]);
+            } catch {
+                // keep fallback parsing below
+            }
+        }
+        const plain = header.match(/filename="?([^";]+)"?/i);
+        return plain?.[1]?.trim() || fallback;
+    }
+
+    function validateGenerate() {
+        if (!form) {
+            return false;
+        }
+        if (selectedCount() === 0) {
+            alert('Pilih minimal satu guru.');
+            return false;
+        }
+        const tanggal = form.querySelector('#tanggal_surat');
+        if (tanggal && !tanggal.value) {
+            alert('Tanggal surat wajib diisi.');
+            return false;
+        }
+        return true;
+    }
+
+    async function requestPdf(mode) {
+        const data = new FormData(form);
+        data.set('mode', mode);
+
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: data,
+            headers: {
+                'Accept': 'application/pdf',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+        });
+
+        if (!response.ok) {
+            throw new Error('Gagal membuat PDF.');
+        }
+
+        const buffer = await response.arrayBuffer();
+        const blob = new Blob([buffer], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const filename = filenameFromDisposition(
+            response.headers.get('content-disposition'),
+            'SPTJM TPG.pdf'
+        );
+
+        return { url, filename };
     }
 
     document.querySelectorAll('.surat-card').forEach((card) => {
@@ -244,29 +317,42 @@
     items().forEach((el) => el.addEventListener('change', syncLabel));
 
     form?.addEventListener('submit', (e) => {
-        if (selectedCount() === 0) {
-            e.preventDefault();
-            alert('Pilih minimal satu guru.');
+        e.preventDefault();
+    });
+
+    btnUnduh?.addEventListener('click', async () => {
+        if (!validateGenerate()) {
+            return;
+        }
+
+        btnUnduh.disabled = true;
+        btnCetak && (btnCetak.disabled = true);
+        const oldLabel = btnUnduh.textContent;
+        btnUnduh.textContent = 'Menyiapkan…';
+
+        try {
+            const { url, filename } = await requestPdf('download');
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 60_000);
+            closeModal();
+        } catch (err) {
+            alert(err?.message || 'Gagal mengunduh PDF.');
+        } finally {
+            btnUnduh.disabled = false;
+            btnCetak && (btnCetak.disabled = false);
+            btnUnduh.textContent = oldLabel || 'Unduh PDF';
         }
     });
 
     btnCetak?.addEventListener('click', async () => {
-        if (!form) {
+        if (!validateGenerate()) {
             return;
         }
-        if (selectedCount() === 0) {
-            alert('Pilih minimal satu guru.');
-            return;
-        }
-
-        const tanggal = form.querySelector('#tanggal_surat');
-        if (tanggal && !tanggal.value) {
-            alert('Tanggal surat wajib diisi.');
-            return;
-        }
-
-        const data = new FormData(form);
-        data.set('mode', 'print');
 
         // Buka tab dulu (sync) supaya tidak diblokir popup blocker setelah await.
         const preview = window.open('about:blank', '_blank');
@@ -277,34 +363,21 @@
         preview.document.write('<p style="font-family:sans-serif;padding:1rem">Menyiapkan PDF…</p>');
 
         btnCetak.disabled = true;
+        btnUnduh && (btnUnduh.disabled = true);
         const oldLabel = btnCetak.textContent;
         btnCetak.textContent = 'Menyiapkan…';
 
         try {
-            const response = await fetch(form.action, {
-                method: 'POST',
-                body: data,
-                headers: {
-                    'Accept': 'application/pdf',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                credentials: 'same-origin',
-            });
-
-            if (!response.ok) {
-                throw new Error('Gagal membuat PDF.');
-            }
-
-            const buffer = await response.arrayBuffer();
-            const blob = new Blob([buffer], { type: 'application/pdf' });
-            const url = URL.createObjectURL(blob);
+            const { url } = await requestPdf('print');
             preview.location.href = url;
             setTimeout(() => URL.revokeObjectURL(url), 60_000);
+            closeModal();
         } catch (err) {
             preview.close();
             alert(err?.message || 'Gagal membuka preview PDF.');
         } finally {
             btnCetak.disabled = false;
+            btnUnduh && (btnUnduh.disabled = false);
             btnCetak.textContent = oldLabel || 'Cetak';
         }
     });
