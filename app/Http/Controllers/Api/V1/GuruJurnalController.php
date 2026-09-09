@@ -76,15 +76,6 @@ class GuruJurnalController extends Controller
             ->orderByDesc('id')
             ->get();
 
-        $mapel = $entries
-            ->unique('mapel_id')
-            ->map(fn (JurnalPembelajaran $row) => [
-                'id' => (int) $row->mapel_id,
-                'nama' => $row->nama_mapel,
-            ])
-            ->values()
-            ->all();
-
         $namaKelas = $entries->first()?->nama_kelas;
 
         return response()->json([
@@ -94,7 +85,11 @@ class GuruJurnalController extends Controller
                 'id' => $kelasId,
                 'nama_kelas' => $namaKelas,
             ],
-            'mapel' => $mapel,
+            // Sengaja kosong: Ta'lim mengisi opsi mapel dari jadwal Simpatisans
+            // (listKelas), lalu memakai detail.mapel hanya jika tidak kosong
+            // (ifEmpty → fallback). Mengembalikan mapel dari entri jurnal saja
+            // akan menimpa daftar lengkap jadi hanya mapel yang sudah pernah diisi.
+            'mapel' => [],
             'data' => $entries->map(fn (JurnalPembelajaran $row) => $row->toApiArray())->values()->all(),
         ]);
     }

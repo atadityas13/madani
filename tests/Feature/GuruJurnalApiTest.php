@@ -74,7 +74,8 @@ class GuruJurnalApiTest extends TestCase
         $this->getJson('/api/v1/guru/jurnal/12')
             ->assertOk()
             ->assertJsonPath('data.0.materi_pokok', 'Aljabar dasar')
-            ->assertJsonPath('mapel.0.nama', 'Matematika');
+            // Opsi mapel diserahkan ke jadwal di klien (Ta'lim); API detail tidak menimpa.
+            ->assertJsonPath('mapel', []);
 
         $this->getJson('/api/v1/guru/jurnal/entries-by-tanggal?tanggal=2026-09-01')
             ->assertOk()
@@ -152,6 +153,37 @@ class GuruJurnalApiTest extends TestCase
         $this->deleteJson("/api/v1/guru/jurnal/{$entry->id}")->assertNotFound();
     }
 
+    public function test_kelas_detail_does_not_shrink_mapel_options_to_logged_entries_only(): void
+    {
+        $user = $this->buatAkunGuru();
+        Sanctum::actingAs($user);
+
+        JurnalPembelajaran::query()->create([
+            'user_id' => $user->id,
+            'kelas_id' => 12,
+            'nama_kelas' => '9A',
+            'mapel_id' => 3,
+            'nama_mapel' => 'Matematika',
+            'tanggal' => '2026-09-01',
+            'hari' => 'Senin',
+            'jam_ke' => 1,
+            'jam_list' => [1],
+            'materi_pokok' => 'Aljabar',
+            'ketercapaian' => 'tercapai',
+        ]);
+
+        // Index masih melaporkan mapel dari entri (untuk digabung dengan jadwal di klien).
+        $this->getJson('/api/v1/guru/jurnal')
+            ->assertOk()
+            ->assertJsonPath('data.0.mapel.0.nama', 'Matematika');
+
+        // Detail kelas tidak mengembalikan mapel agar Ta'lim tidak menimpa daftar lengkap dari jadwal.
+        $this->getJson('/api/v1/guru/jurnal/12')
+            ->assertOk()
+            ->assertJsonPath('mapel', [])
+            ->assertJsonPath('data.0.mapel', 'Matematika');
+    }
+
     public function test_cetak_html_matches_simpatisans_layout_hooks(): void
     {
         Gtk::query()->create([
@@ -191,7 +223,7 @@ class GuruJurnalApiTest extends TestCase
             ->assertSee('fitGuruApp', false)
             ->assertSee('logo-kemenag.png', false)
             ->assertSee('Kepala Contoh', false)
-            ->assertSee('MTsN 11 Majalengka', false);
+            ->assertSee('MAJALENGKA', false);
     }
 
     public function test_cetak_empty_returns_422(): void
