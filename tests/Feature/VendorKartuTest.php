@@ -194,7 +194,7 @@ class VendorKartuTest extends TestCase
 
         $response = $this->actingAs($vendor)
             ->post(route('vendor.jobs.kartu.bulk', $job), [
-                'semua_berfoto' => '1',
+                'semua' => '1',
             ]);
 
         $response->assertOk();

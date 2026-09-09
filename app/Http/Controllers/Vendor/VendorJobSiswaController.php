@@ -69,33 +69,33 @@ class VendorJobSiswaController extends Controller
     {
         $this->authorize('printKartu', $vendorJob);
         abort_unless($foto->jobMemilikiSiswa($vendorJob, $siswa), 404);
-        abort_unless(filled($siswa->foto), 422, 'Siswa belum punya foto.');
 
+        // Sementara: preview/cetak diizinkan tanpa foto (placeholder) untuk verifikasi layout.
         return $kartuPdf->stream($siswa);
     }
 
-    public function kartuBulk(Request $request, VendorJob $vendorJob, KartuEPelajarBulkPdfService $bulk, VendorFotoService $foto): Response
+    public function kartuBulk(Request $request, VendorJob $vendorJob, KartuEPelajarBulkPdfService $bulk): Response
     {
         $this->authorize('printKartu', $vendorJob);
 
         $data = $request->validate([
             'siswa_ids' => ['nullable', 'array'],
             'siswa_ids.*' => ['uuid'],
+            'semua' => ['nullable', 'boolean'],
             'semua_berfoto' => ['nullable', 'boolean'],
         ]);
 
-        $query = $vendorJob->siswas()
-            ->whereNotNull('foto')
-            ->where('foto', '!=', '');
+        // Sementara: cetak tidak mensyaratkan foto (untuk verifikasi tampilan kartu).
+        $query = $vendorJob->siswas();
 
-        if (! ($data['semua_berfoto'] ?? false)) {
+        if (! ($data['semua'] ?? false) && ! ($data['semua_berfoto'] ?? false)) {
             $ids = $data['siswa_ids'] ?? [];
-            abort_if($ids === [], 422, 'Pilih minimal satu siswa berfoto.');
+            abort_if($ids === [], 422, 'Pilih minimal satu siswa.');
             $query->whereIn('siswas.id', $ids);
         }
 
         $siswas = $query->orderBy('nama')->get();
-        abort_if($siswas->isEmpty(), 422, 'Tidak ada siswa berfoto untuk dicetak.');
+        abort_if($siswas->isEmpty(), 422, 'Tidak ada siswa untuk dicetak.');
 
         return $bulk->stream($siswas);
     }

@@ -49,10 +49,9 @@
 <div class="madani-card p-4 mb-4">
     <div class="stat-label mb-2">Panduan alur</div>
     <ol class="mb-3 ps-3 text-secondary">
-        <li class="mb-2">Admin membuat <strong>Job</strong> dan menugaskan siswa (via rombel) ke akun vendor Anda.</li>
         <li class="mb-2">Buka <strong>Job saya</strong>, unggah foto satuan (drag-drop + crop 3:4) atau ZIP hotfolder <code>NISN.jpg</code> / <code>NISN.png</code>.</li>
         <li class="mb-2">Filter rombel / status foto untuk memastikan tidak ada yang terlewat.</li>
-        <li>Centang siswa berfoto, lalu <strong>Cetak massal</strong> (depan + belakang berdampingan).</li>
+        <li>Centang siswa, lalu <strong>Cetak massal</strong> (depan + belakang berdampingan).</li>
     </ol>
     <div class="small text-secondary border-top pt-3">
         Spek foto: rasio <strong>3:4</strong>, maksimal <strong>500 KB</strong>, JPG/PNG. Lebar minimal 300 px.
