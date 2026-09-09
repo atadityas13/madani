@@ -5,32 +5,33 @@ namespace App\Services\Persuratan;
 use App\Models\Gtk;
 use App\Models\Madrasah;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\CarbonInterface;
+use Illuminate\Support\Collection;
 use Symfony\Component\HttpFoundation\Response;
 
 class SptjmTpgPdfService
 {
-    public function download(Gtk $gtk): Response
+    /**
+     * @param  Collection<int, Gtk>  $gtks
+     */
+    public function downloadMany(Collection $gtks, CarbonInterface $tanggalSurat): Response
     {
-        $data = $this->viewData($gtk);
-        $filename = $this->filename($gtk);
+        $madrasah = Madrasah::saatIni();
+        $halaman = $gtks->values()->map(fn (Gtk $gtk) => $this->viewData($gtk, $madrasah, $tanggalSurat))->all();
 
-        return Pdf::loadView('persuratan.sptjm-tpg.pdf', $data)
+        $filename = $gtks->count() === 1
+            ? $this->filename($gtks->first())
+            : 'SPTJM TPG - '.$gtks->count().' guru.pdf';
+
+        return Pdf::loadView('persuratan.sptjm-tpg.pdf', [
+            'halaman' => $halaman,
+        ])
             ->setPaper('a4', 'portrait')
             ->download($filename);
     }
 
-    public function stream(Gtk $gtk): Response
-    {
-        $data = $this->viewData($gtk);
-
-        return Pdf::loadView('persuratan.sptjm-tpg.pdf', $data)
-            ->setPaper('a4', 'portrait')
-            ->stream($this->filename($gtk));
-    }
-
     /**
      * @return array{
-     *     gtk: Gtk,
      *     namaLengkap: string,
      *     nuptk: string,
      *     nrg: string,
@@ -40,13 +41,12 @@ class SptjmTpgPdfService
      *     kotaTtd: string
      * }
      */
-    public function viewData(Gtk $gtk): array
+    public function viewData(Gtk $gtk, ?Madrasah $madrasah = null, ?CarbonInterface $tanggalSurat = null): array
     {
-        $madrasah = Madrasah::saatIni();
-        $tanggal = now()->timezone(config('app.timezone'))->locale('id');
+        $madrasah ??= Madrasah::saatIni();
+        $tanggal = ($tanggalSurat ?? now())->timezone(config('app.timezone'))->locale('id');
 
         return [
-            'gtk' => $gtk,
             'namaLengkap' => $gtk->nama_lengkap,
             'nuptk' => filled($gtk->nuptk) ? (string) $gtk->nuptk : '—',
             'nrg' => filled($gtk->nrg) ? (string) $gtk->nrg : '—',

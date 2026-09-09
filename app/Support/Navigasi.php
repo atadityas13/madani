@@ -68,11 +68,9 @@ class Navigasi
             [
                 'label' => 'Persuratan',
                 'icon' => 'bi-envelope-paper',
+                'route' => 'persuratan.index',
                 'match' => 'persuratan.*',
                 'roles' => [Peran::SUPERADMIN, Peran::ADMIN],
-                'children' => [
-                    ['label' => 'SPTJM TPG', 'route' => 'persuratan.sptjm-tpg.index', 'match' => 'persuratan.sptjm-tpg.*', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN]],
-                ],
             ],
             [
                 'label' => 'Rombongan Belajar',

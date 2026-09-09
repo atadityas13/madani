@@ -15,6 +15,7 @@ use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\NotifikasiPembacaController;
 use App\Http\Controllers\NotifMediaController;
 use App\Http\Controllers\PeriodePendataanController;
+use App\Http\Controllers\Persuratan\PersuratanController;
 use App\Http\Controllers\Persuratan\SptjmTpgController;
 use App\Http\Controllers\Portal\SiswaAuthController;
 use App\Http\Controllers\Portal\SiswaPortalController;
@@ -102,8 +103,8 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware('role:superadmin|admin')->prefix('persuratan')->name('persuratan.')->group(function () {
-        Route::get('sptjm-tpg', [SptjmTpgController::class, 'index'])->name('sptjm-tpg.index');
-        Route::get('sptjm-tpg/{gtk}/pdf', [SptjmTpgController::class, 'pdf'])->name('sptjm-tpg.pdf');
+        Route::get('/', [PersuratanController::class, 'index'])->name('index');
+        Route::post('sptjm-tpg/generate', [SptjmTpgController::class, 'generate'])->name('sptjm-tpg.generate');
     });
 
     Route::middleware('role:wali_kelas|guru|superadmin|admin')->group(function () {
