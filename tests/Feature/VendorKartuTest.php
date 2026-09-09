@@ -199,7 +199,7 @@ class VendorKartuTest extends TestCase
 
         $response->assertOk();
         $this->assertStringContainsString('application/pdf', (string) $response->headers->get('content-type'));
-        $this->assertSame(5, KartuEPelajarBulkPdfService::PER_HALAMAN);
+        $this->assertSame(4, KartuEPelajarBulkPdfService::PER_HALAMAN);
     }
 
     private function buatVendor(string $username = 'vendor1', string $name = 'Vendor Kartu'): User

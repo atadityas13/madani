@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Kartu E-Pelajar Massal</title>
     <style>
-        @page { margin: 28pt 20pt; }
+        @page { margin: 24pt 18pt; }
         @include('siswa.partials.kartu-e-pelajar-styles')
         .page-break { page-break-after: always; }
         .page-break:last-child { page-break-after: auto; }

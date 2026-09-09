@@ -9,8 +9,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class KartuEPelajarBulkPdfService
 {
-    /** Jumlah baris orang (depan|belakang) per halaman A4. */
-    public const PER_HALAMAN = 5;
+    /**
+     * Baris orang (depan|belakang) per halaman A4.
+     *
+     * ID-1 tinggi 152.98pt + jarak antar baris; margin @page 28pt → usable ≈786pt.
+     * 5 baris overflow (DomPDF pecah jadi 4+1 selang-seling); 4 baris muat penuh.
+     */
+    public const PER_HALAMAN = 4;
 
     public function __construct(private KartuEPelajarPdfService $kartuPdf) {}
 

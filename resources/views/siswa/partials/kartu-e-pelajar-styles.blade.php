@@ -9,7 +9,7 @@ body {
 .sheet { width: 100%; border-collapse: collapse; }
 .sheet > tbody > tr > td { vertical-align: top; width: 48%; }
 .sheet > tbody > tr > td.gap { width: 4%; }
-.person-row { page-break-inside: avoid; margin-bottom: 10pt; }
+.person-row { page-break-inside: avoid; margin-bottom: 8pt; }
 .person-row .sheet { margin-bottom: 0; }
 
 .card {
