@@ -111,7 +111,7 @@ class WaliKelasDashboardTest extends TestCase
             ->assertSee('status_lengkap=sudah_lengkap', false);
     }
 
-    public function test_guru_bukan_wali_dilarang_akses_halaman(): void
+    public function test_guru_bukan_wali_melihat_pesan_akses_ditolak(): void
     {
         $this->seed();
         Role::findOrCreate(Peran::GURU);
@@ -130,10 +130,12 @@ class WaliKelasDashboardTest extends TestCase
 
         $this->actingAs($guru)
             ->get(route('talim.wali'))
-            ->assertForbidden();
+            ->assertOk()
+            ->assertSee('Anda tidak memiliki akses wali kelas', false)
+            ->assertSee('Silahkan menghubungi Admin jika anda adalah wali kelas', false);
     }
 
-    public function test_menu_wali_hanya_untuk_peran_wali_kelas(): void
+    public function test_menu_wali_tampil_untuk_semua_guru(): void
     {
         config(['app.url' => 'https://madani.mtsn11majalengka.sch.id']);
         (new AppMenuSeeder)->run();
@@ -159,7 +161,7 @@ class WaliKelasDashboardTest extends TestCase
 
         Sanctum::actingAs($guru);
         $keysGuru = collect($this->getJson('/api/v1/menus')->json('data'))->pluck('key');
-        $this->assertFalse($keysGuru->contains(AppMenu::KEY_WALI_KELAS));
+        $this->assertTrue($keysGuru->contains(AppMenu::KEY_WALI_KELAS));
     }
 
     public function test_empty_state_jika_belum_punya_rombel(): void

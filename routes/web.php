@@ -100,7 +100,7 @@ Route::middleware('auth')->group(function () {
             ->except(['show']);
     });
 
-    Route::middleware('role:wali_kelas|superadmin|admin')->group(function () {
+    Route::middleware('role:wali_kelas|guru|superadmin|admin')->group(function () {
         Route::get('/talim/wali', WaliKelasController::class)->name('talim.wali');
     });
 
