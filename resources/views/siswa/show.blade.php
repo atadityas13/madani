@@ -20,8 +20,16 @@
 @section('subheading', 'MTsN 11 Majalengka')
 
 @section('content')
+@php
+    $fotoUrl = $fotoUrl ?? \App\Support\R2Url::readable($siswa->foto);
+@endphp
 <div class="emis-student-head mb-3">
-    <div class="emis-photo">{{ $inisialSiswa ?: 'SW' }}</div>
+    @include('siswa.partials.foto-slot', [
+        'siswa' => $siswa,
+        'portal' => $portal,
+        'fotoUrl' => $fotoUrl,
+        'inisial' => $inisialSiswa ?: 'SW',
+    ])
     <div>
         <div class="emis-student-name">{{ $siswa->nama }}</div>
         <div class="emis-student-meta">

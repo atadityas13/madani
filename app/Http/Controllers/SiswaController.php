@@ -13,6 +13,7 @@ use App\Services\PortofolioPdfService;
 use App\Services\SiswaBiodataService;
 use App\Services\SiswaNisGeneratorService;
 use App\Services\SiswaPernyataanService;
+use App\Services\Vendor\VendorFotoService;
 use App\Support\KelengkapanSiswa;
 use App\Support\R2Url;
 use Illuminate\Http\RedirectResponse;
@@ -325,8 +326,26 @@ class SiswaController extends Controller
         $this->biodata->hapusFoto($siswa);
 
         return redirect()
-            ->route('siswa.edit', ['siswa' => $siswa, 'tab' => 'data-siswa'])
+            ->back(fallback: route('siswa.edit', ['siswa' => $siswa, 'tab' => 'data-siswa']))
             ->with('status', 'Foto dihapus dari database dan storage.');
+    }
+
+    public function uploadFoto(Request $request, Siswa $siswa): RedirectResponse
+    {
+        $this->authorize('update', $siswa);
+
+        $request->validate([
+            'foto' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:'.VendorFotoService::MAX_KB],
+        ], [
+            'foto.required' => 'Pilih file foto terlebih dahulu.',
+            'foto.max' => 'Ukuran foto maksimal '.VendorFotoService::MAX_KB.' KB.',
+        ]);
+
+        $this->biodata->simpanFoto($request, $siswa);
+
+        return redirect()
+            ->back(fallback: route('siswa.edit', ['siswa' => $siswa, 'tab' => 'data-siswa']))
+            ->with('status', 'Foto disimpan.');
     }
 
     public function downloadDokumen(Siswa $siswa, string $jenis): StreamedResponse

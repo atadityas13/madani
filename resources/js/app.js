@@ -1766,6 +1766,99 @@ function bindDokumenBoxes() {
     });
 }
 
+function bindSiswaFotoSlots() {
+    const csrfToken = () => document.querySelector('input[name="_token"]')?.value
+        || document.querySelector('meta[name="csrf-token"]')?.content
+        || '';
+
+    document.querySelectorAll('[data-siswa-foto]').forEach((slot) => {
+        const input = slot.querySelector('[data-siswa-foto-input]');
+        const pick = slot.querySelector('[data-siswa-foto-pick]');
+        const preview = slot.querySelector('[data-siswa-foto-preview]');
+        const uploadForm = slot.querySelector('[data-siswa-foto-upload-form]');
+        const managed = slot.hasAttribute('data-siswa-foto-managed');
+        const hapus = slot.querySelector('[data-dokumen-hapus]');
+
+        const openPicker = () => input?.click();
+
+        pick?.addEventListener('click', openPicker);
+        preview?.addEventListener('click', openPicker);
+        preview?.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openPicker();
+            }
+        });
+
+        input?.addEventListener('change', () => {
+            const file = input.files?.[0];
+
+            if (! file) {
+                return;
+            }
+
+            if (preview && /^image\//.test(file.type)) {
+                let img = preview.querySelector('img');
+                if (! img) {
+                    preview.innerHTML = '';
+                    img = document.createElement('img');
+                    preview.appendChild(img);
+                }
+                img.alt = file.name;
+                img.src = URL.createObjectURL(file);
+            }
+
+            if (managed && uploadForm) {
+                window.madaniAlert?.loading?.('Menyimpan foto…');
+                uploadForm.requestSubmit();
+            }
+        });
+
+        hapus?.addEventListener('click', async () => {
+            const judul = hapus.getAttribute('data-judul') || 'foto';
+            const url = hapus.getAttribute('data-url');
+
+            if (! url) {
+                return;
+            }
+
+            const ok = await window.madaniAlert.confirm({
+                title: 'Hapus foto',
+                text: `Hapus ${judul} dari database dan storage?`,
+                confirmButtonText: 'Hapus',
+                icon: 'warning',
+            });
+
+            if (! ok) {
+                return;
+            }
+
+            window.madaniAlert.loading('Menghapus…');
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = url;
+            form.style.display = 'none';
+            form.setAttribute('data-no-loading', '1');
+
+            const token = document.createElement('input');
+            token.type = 'hidden';
+            token.name = '_token';
+            token.value = csrfToken();
+            form.appendChild(token);
+
+            const method = document.createElement('input');
+            method.type = 'hidden';
+            method.name = '_method';
+            method.value = 'DELETE';
+            form.appendChild(method);
+
+            document.body.appendChild(form);
+            form.submit();
+        });
+    });
+}
+
 document.querySelectorAll('[data-wilayah-root]').forEach(bindWilayahRoot);
 bindOrtuForm();
 bindAlamatOrtu();
@@ -1777,6 +1870,7 @@ bindOpenModals();
 bindPeranUser();
 bindFormatInputs();
 bindDokumenBoxes();
+bindSiswaFotoSlots();
 bindVendorBulkChecks();
 bindVendorFotoModal();
 bindConfirmForms();

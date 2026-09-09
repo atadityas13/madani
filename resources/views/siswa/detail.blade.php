@@ -167,11 +167,13 @@
 <div class="madani-card siswa-detail mb-3" data-siswa-detail>
     <div class="siswa-detail__grid">
         <aside class="siswa-detail__photo">
-            @if ($fotoUrl)
-                <img src="{{ $fotoUrl }}" alt="Foto {{ $siswa->nama }}">
-            @else
-                <div class="siswa-detail__photo-fallback" aria-hidden="true">{{ $inisial }}</div>
-            @endif
+            @include('siswa.partials.foto-slot', [
+                'siswa' => $siswa,
+                'portal' => false,
+                'fotoUrl' => $fotoUrl,
+                'inisial' => $inisial,
+                'ukuran' => 'detail',
+            ])
         </aside>
 
         <div class="siswa-detail__body">

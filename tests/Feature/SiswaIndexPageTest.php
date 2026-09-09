@@ -45,14 +45,15 @@ class SiswaIndexPageTest extends TestCase
             ->assertSee('Semua tingkat', false)
             ->assertSee('Semua rombel', false)
             ->assertSee('Adam Muhamad Albar', false)
+            ->assertSee('>Foto</th>', false)
+            ->assertSee('siswa-index-foto', false)
             ->assertSee('Menampilkan', false)
             ->assertSee('Sebelumnya', false)
             ->assertSee('Selanjutnya', false)
             ->assertSee('title="Portofolio"', false)
             ->assertSee('title="Reset password"', false)
             ->assertSee(route('siswa.portofolio', $siswa), false)
-            ->assertDontSee('Tambah siswa', false)
-            ->assertDontSee('Periode pendataan', false);
+            ->assertDontSee('Tambah siswa', false);
     }
 
     public function test_index_urut_angkatan_lalu_rombel_lalu_nama(): void

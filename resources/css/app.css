@@ -650,6 +650,115 @@ a:hover {
     flex-shrink: 0;
 }
 
+.siswa-foto-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.4rem;
+    flex-shrink: 0;
+    width: 72px;
+}
+
+.siswa-foto-slot--detail {
+    width: 100%;
+}
+
+.siswa-foto-slot__frame {
+    width: 72px;
+    height: 88px;
+    border: 1px dashed #c9cdd3;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #c2c2c2;
+    font-weight: 800;
+    background: #fafafa;
+    overflow: hidden;
+    padding: 0;
+}
+
+.siswa-foto-slot--detail .siswa-foto-slot__frame {
+    width: 100%;
+    height: auto;
+    min-height: 220px;
+    aspect-ratio: 3 / 4;
+    border: none;
+    border-radius: 14px;
+    background: #eef2f6;
+}
+
+.siswa-foto-slot__frame[data-siswa-foto-preview] {
+    cursor: pointer;
+}
+
+.siswa-foto-slot__frame img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.siswa-foto-slot__fallback {
+    letter-spacing: 0.04em;
+}
+
+.siswa-foto-slot--detail .siswa-foto-slot__fallback {
+    font-size: 2rem;
+    color: #9aa3af;
+}
+
+.siswa-foto-slot__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+}
+
+.siswa-foto-slot__upload {
+    margin: 0;
+}
+
+.siswa-foto-slot__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.siswa-foto-slot--head .siswa-foto-slot__actions .btn {
+    padding: 0.15rem 0.45rem;
+    font-size: 0.72rem;
+}
+
+.siswa-foto-slot__hint {
+    font-size: 0.68rem;
+    line-height: 1.25;
+    color: var(--emis-muted);
+}
+
+.siswa-index-foto {
+    width: 36px;
+    height: 48px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #94a3b8;
+}
+
+.siswa-index-foto img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
 .emis-student-name {
     font-size: 18px;
     font-weight: 800;
@@ -673,13 +782,11 @@ a:hover {
 }
 
 .siswa-detail__photo {
-    background: #eef2f6;
-    border-radius: 14px;
-    min-height: 220px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
+    background: transparent;
+    border-radius: 0;
+    min-height: 0;
+    display: block;
+    overflow: visible;
 }
 
 .siswa-detail__photo img {

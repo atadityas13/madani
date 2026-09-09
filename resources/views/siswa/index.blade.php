@@ -37,6 +37,7 @@
             <thead>
                 <tr>
                     <th style="width: 4rem;">No</th>
+                    <th style="width: 3.5rem;">Foto</th>
                     <th>Nama</th>
                     <th>NISN</th>
                     <th>
@@ -62,9 +63,24 @@
                     @php
                         $rombel = $siswa->rombels->first();
                         $rombelLabel = $rombel ? $rombel->label() : '—';
+                        $fotoUrl = \App\Support\R2Url::temporary($siswa->foto);
+                        $inisial = collect(preg_split('/\s+/', trim($siswa->nama)))
+                            ->filter()
+                            ->take(2)
+                            ->map(fn ($p) => strtoupper(substr($p, 0, 1)))
+                            ->implode('') ?: 'SW';
                     @endphp
                     <tr>
                         <td>{{ $siswas->firstItem() + $loop->index }}</td>
+                        <td>
+                            <div class="siswa-index-foto">
+                                @if ($fotoUrl)
+                                    <img src="{{ $fotoUrl }}" alt="Foto {{ $siswa->nama }}">
+                                @else
+                                    <span aria-hidden="true">{{ $inisial }}</span>
+                                @endif
+                            </div>
+                        </td>
                         <td>{{ $siswa->nama }}</td>
                         <td>{{ $siswa->nisn ?: '—' }}</td>
                         <td>{{ $siswa->nis ?: '—' }}</td>

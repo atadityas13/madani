@@ -15,7 +15,7 @@ class SiswaAdminFotoTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_halaman_edit_admin_menampilkan_unggah_foto_siswa(): void
+    public function test_halaman_edit_admin_menampilkan_unggah_foto_di_slot_foto(): void
     {
         $this->seed();
         $siswa = $this->buatSiswa();
@@ -24,12 +24,29 @@ class SiswaAdminFotoTest extends TestCase
         $this->actingAs($admin)
             ->get(route('siswa.edit', ['siswa' => $siswa, 'tab' => 'data-siswa']))
             ->assertOk()
-            ->assertSee('Foto Siswa', false)
-            ->assertSee('name="foto"', false)
+            ->assertSee('siswa-foto-slot', false)
+            ->assertSee(route('siswa.foto.upload', $siswa), false)
             ->assertSee('rasio 3:4', false);
     }
 
-    public function test_admin_bisa_upload_foto_siswa_saat_update(): void
+    public function test_halaman_index_menampilkan_kolom_foto(): void
+    {
+        Storage::fake('r2');
+        $this->seed();
+        $path = 'foto/siswa-index/profil.jpg';
+        Storage::disk('r2')->put($path, 'fake');
+        $this->buatSiswa(['foto' => $path, 'nama' => 'Siswa Index Foto']);
+        $admin = $this->admin();
+
+        $this->actingAs($admin)
+            ->get(route('siswa.index'))
+            ->assertOk()
+            ->assertSee('>Foto</th>', false)
+            ->assertSee('siswa-index-foto', false)
+            ->assertSee('Siswa Index Foto', false);
+    }
+
+    public function test_admin_bisa_upload_foto_siswa_via_endpoint_khusus(): void
     {
         Storage::fake('r2');
         $this->seed();
@@ -37,10 +54,10 @@ class SiswaAdminFotoTest extends TestCase
         $admin = $this->admin();
 
         $this->actingAs($admin)
-            ->put(route('siswa.update', $siswa), array_merge($this->payloadDataSiswa($siswa), [
-                'bagian' => 'data-siswa',
+            ->from(route('siswa.edit', ['siswa' => $siswa, 'tab' => 'data-siswa']))
+            ->post(route('siswa.foto.upload', $siswa), [
                 'foto' => UploadedFile::fake()->image('profil.jpg', 300, 400),
-            ]))
+            ])
             ->assertRedirect(route('siswa.edit', ['siswa' => $siswa, 'tab' => 'data-siswa']));
 
         $siswa->refresh();
@@ -57,10 +74,9 @@ class SiswaAdminFotoTest extends TestCase
 
         $this->actingAs($admin)
             ->from(route('siswa.edit', ['siswa' => $siswa, 'tab' => 'data-siswa']))
-            ->put(route('siswa.update', $siswa), array_merge($this->payloadDataSiswa($siswa), [
-                'bagian' => 'data-siswa',
+            ->post(route('siswa.foto.upload', $siswa), [
                 'foto' => UploadedFile::fake()->image('lebar.jpg', 400, 400),
-            ]))
+            ])
             ->assertRedirect(route('siswa.edit', ['siswa' => $siswa, 'tab' => 'data-siswa']))
             ->assertSessionHasErrors('foto');
 
@@ -77,6 +93,7 @@ class SiswaAdminFotoTest extends TestCase
         $admin = $this->admin();
 
         $this->actingAs($admin)
+            ->from(route('siswa.edit', ['siswa' => $siswa, 'tab' => 'data-siswa']))
             ->delete(route('siswa.foto.destroy', $siswa))
             ->assertRedirect(route('siswa.edit', ['siswa' => $siswa, 'tab' => 'data-siswa']))
             ->assertSessionHas('status');
@@ -132,35 +149,5 @@ class SiswaAdminFotoTest extends TestCase
             'agama' => 'Islam',
             'status_keaktifan' => 'aktif',
         ], $overrides));
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function payloadDataSiswa(Siswa $siswa): array
-    {
-        return [
-            'nama' => $siswa->nama,
-            'angkatan' => $siswa->angkatan ?: 'VII',
-            'nisn' => $siswa->nisn,
-            'nik' => $siswa->nik,
-            'tempat_lahir' => $siswa->tempat_lahir,
-            'tanggal_lahir' => optional($siswa->tanggal_lahir)->format('Y-m-d') ?: '2012-01-01',
-            'jenis_kelamin' => $siswa->jenis_kelamin ?: 'L',
-            'jumlah_saudara' => 1,
-            'anak_ke' => 1,
-            'agama' => 'Islam',
-            'cita_cita' => 'Guru',
-            'hobi' => 'Membaca',
-            'pembiaya' => 'Orang Tua',
-            'tidak_punya_hp' => true,
-            'tidak_punya_email' => true,
-            'tidak_punya_kip' => true,
-            'no_kk' => '3210010101120001',
-            'kepala_keluarga' => 'Ayah Contoh',
-            'kebutuhan_khusus' => 'Tidak Ada',
-            'file_kk' => UploadedFile::fake()->create('kk.pdf', 100, 'application/pdf'),
-            'file_akta' => UploadedFile::fake()->create('akta.pdf', 100, 'application/pdf'),
-        ];
     }
 }
