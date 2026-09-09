@@ -167,7 +167,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
                 <button type="submit" class="btn btn-outline-secondary" name="mode" value="download" data-submit-generate>Unduh PDF</button>
-                <button type="submit" class="btn btn-madani" name="mode" value="print" formtarget="_blank">Cetak</button>
+                <button type="button" class="btn btn-madani" id="btnCetakSurat">Cetak</button>
             </div>
         </form>
     </div>
@@ -183,6 +183,7 @@
     const label = document.querySelector('[data-guru-label]');
     const countEl = document.querySelector('[data-guru-count]');
     const allBox = document.querySelector('[data-guru-all]');
+    const btnCetak = document.getElementById('btnCetakSurat');
     const items = () => Array.from(document.querySelectorAll('[data-guru-item]'));
 
     function syncLabel() {
@@ -207,6 +208,10 @@
         } else {
             label.textContent = `${checked.length} guru dipilih`;
         }
+    }
+
+    function selectedCount() {
+        return items().filter((el) => el.checked).length;
     }
 
     document.querySelectorAll('.surat-card').forEach((card) => {
@@ -239,9 +244,68 @@
     items().forEach((el) => el.addEventListener('change', syncLabel));
 
     form?.addEventListener('submit', (e) => {
-        if (items().filter((el) => el.checked).length === 0) {
+        if (selectedCount() === 0) {
             e.preventDefault();
             alert('Pilih minimal satu guru.');
+        }
+    });
+
+    btnCetak?.addEventListener('click', async () => {
+        if (!form) {
+            return;
+        }
+        if (selectedCount() === 0) {
+            alert('Pilih minimal satu guru.');
+            return;
+        }
+
+        const tanggal = form.querySelector('#tanggal_surat');
+        if (tanggal && !tanggal.value) {
+            alert('Tanggal surat wajib diisi.');
+            return;
+        }
+
+        const data = new FormData(form);
+        data.set('mode', 'print');
+
+        // Buka tab dulu (sync) supaya tidak diblokir popup blocker setelah await.
+        const preview = window.open('about:blank', '_blank');
+        if (!preview) {
+            alert('Izinkan popup untuk membuka preview PDF.');
+            return;
+        }
+        preview.document.write('<p style="font-family:sans-serif;padding:1rem">Menyiapkan PDF…</p>');
+
+        btnCetak.disabled = true;
+        const oldLabel = btnCetak.textContent;
+        btnCetak.textContent = 'Menyiapkan…';
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: data,
+                headers: {
+                    'Accept': 'application/pdf',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+            });
+
+            if (!response.ok) {
+                throw new Error('Gagal membuat PDF.');
+            }
+
+            const buffer = await response.arrayBuffer();
+            const blob = new Blob([buffer], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            preview.location.href = url;
+            setTimeout(() => URL.revokeObjectURL(url), 60_000);
+        } catch (err) {
+            preview.close();
+            alert(err?.message || 'Gagal membuka preview PDF.');
+        } finally {
+            btnCetak.disabled = false;
+            btnCetak.textContent = oldLabel || 'Cetak';
         }
     });
 

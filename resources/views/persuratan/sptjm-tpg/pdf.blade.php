@@ -10,7 +10,7 @@
             font-family: DejaVu Sans, Helvetica, Arial, sans-serif;
             font-size: 11px;
             color: #000;
-            line-height: 1.22;
+            line-height: 1.25;
             margin: 0;
         }
 
@@ -23,7 +23,7 @@
             font-size: 14px;
             font-weight: bold;
             text-transform: uppercase;
-            margin: 0 0 10px;
+            margin: 0 0 28px;
             letter-spacing: 0.2px;
         }
 
@@ -42,58 +42,90 @@
         .identitas .colon { width: 2%; }
         .identitas .value { width: 63%; }
 
-        .point-intro {
+        /* DomPDF: hanging indent via 2-col table keeps wrap aligned under first word */
+        table.poin {
+            width: 100%;
+            border-collapse: collapse;
             margin: 0 0 6px;
+        }
+        table.poin td {
+            vertical-align: top;
+            padding: 0;
+        }
+        table.poin .num {
+            width: 18px;
+            white-space: nowrap;
+        }
+        table.poin .body {
             text-align: justify;
         }
 
-        .line {
+        table.sub {
+            width: 100%;
+            border-collapse: collapse;
             margin: 0 0 3px;
-            text-align: left;
+        }
+        table.sub td {
+            vertical-align: top;
+            padding: 0;
+        }
+        table.sub .spacer { width: 18px; }
+        table.sub .mark {
+            width: 18px;
+            white-space: nowrap;
+        }
+        table.sub .body {
+            text-align: justify;
         }
 
-        .prefix {
-            display: inline-block;
-            width: 22px;
-            text-align: left;
+        table.dash {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0 0 2px;
+        }
+        table.dash td {
+            vertical-align: top;
+            padding: 0;
+        }
+        table.dash .spacer { width: 36px; }
+        table.dash .mark {
+            width: 12px;
+            white-space: nowrap;
+        }
+        table.dash .body {
+            text-align: justify;
         }
 
-        .dash-line {
-            margin: 0 0 2px 18px;
-            text-align: left;
+        .ttd-spacer {
+            height: 28px;
         }
 
         .ttd-layout {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 0;
         }
-
+        .ttd-layout .pad { width: 70%; }
         .ttd-box {
-            width: 46%;
+            width: 30%;
             text-align: left;
         }
-
-        .ttd-date { margin: 0 0 4px; }
-        .ttd-peran { margin: 0 0 4px; }
-
-        .ttd-materai {
-            height: 42px;
-            line-height: 42px;
-            text-align: center;
-            margin: 0 0 4px;
-        }
-
-        .ttd-line {
-            margin: 0 0 4px;
-            font-size: 10px;
-        }
-
+        .ttd-date,
+        .ttd-peran,
         .ttd-nama {
             margin: 0;
-            text-decoration: none;
+            text-align: left;
             font-weight: normal;
+            text-decoration: none;
         }
+        .ttd-peran { margin-top: 2px; }
+        .ttd-materai {
+            height: 48px;
+            line-height: 48px;
+            text-align: center;
+            margin: 0;
+        }
+        .ttd-nama { margin-top: 2px; }
     </style>
 </head>
 <body>
@@ -133,49 +165,58 @@
 
     <div class="block">Menyatakan dengan sesungguhnya bahwa :</div>
 
-    <div class="point-intro">
-        1. Saya guru sertifikasi pada Kantor Kementerian Agama Kabupaten Majalengka dan saya tidak terikat sebagai tenaga tetap selain instansi madrasah.
-        Tenaga tetap dimaksud antara lain sbb :
-    </div>
+    <table class="poin">
+        <tr>
+            <td class="num">1.</td>
+            <td class="body">Saya guru sertifikasi pada Kantor Kementerian Agama Kabupaten Majalengka dan saya tidak terikat sebagai tenaga tetap selain instansi madrasah. Tenaga tetap dimaksud antara lain sbb :</td>
+        </tr>
+    </table>
 
-    <div class="line"><span class="prefix">a.</span>Penyuluh Agama;</div>
-    <div class="line"><span class="prefix">b.</span>Dosen Perguruan Tinggi yang memiliki NIDN atau memiliki NIDN bagi Dokter pendidik klinis penuh waktu atau memiliki NIDK dosen paruh waktu;</div>
-    <div class="line"><span class="prefix">c.</span>Tenaga Pendamping pada Program Pemerintah</div>
+    <table class="sub"><tr><td class="spacer"></td><td class="mark">a.</td><td class="body">Penyuluh Agama;</td></tr></table>
+    <table class="sub"><tr><td class="spacer"></td><td class="mark">b.</td><td class="body">Dosen Perguruan Tinggi yang memiliki NIDN atau memiliki NIDN bagi Dokter pendidik klinis penuh waktu atau memiliki NIDK dosen paruh waktu;</td></tr></table>
+    <table class="sub"><tr><td class="spacer"></td><td class="mark">c.</td><td class="body">Tenaga Pendamping pada Program Pemerintah</td></tr></table>
 
-    <div class="dash-line">- Tenaga Kesejahteraaan Sosial Kecamatan (TKSK)</div>
-    <div class="dash-line">- Program Nasional Pemberdayaan Masyarakat (PNPM)</div>
-    <div class="dash-line">- Pemberdayaan Masyarakat Usaha Tani (PMUT)</div>
-    <div class="dash-line">- Pendamping Korban Tindak Kekerasan dan Pekerja Migran (KTKPM)</div>
-    <div class="dash-line">- Pendamping Keluarga Harapan (PKH)</div>
-    <div class="dash-line">- Tenaga Pendamping Desa</div>
-    <div class="dash-line">- Pemberdayaan Masyarakat Pesisir (PMP)</div>
+    <table class="dash"><tr><td class="spacer"></td><td class="mark">-</td><td class="body">Tenaga Kesejahteraaan Sosial Kecamatan (TKSK)</td></tr></table>
+    <table class="dash"><tr><td class="spacer"></td><td class="mark">-</td><td class="body">Program Nasional Pemberdayaan Masyarakat (PNPM)</td></tr></table>
+    <table class="dash"><tr><td class="spacer"></td><td class="mark">-</td><td class="body">Pemberdayaan Masyarakat Usaha Tani (PMUT)</td></tr></table>
+    <table class="dash"><tr><td class="spacer"></td><td class="mark">-</td><td class="body">Pendamping Korban Tindak Kekerasan dan Pekerja Migran (KTKPM)</td></tr></table>
+    <table class="dash"><tr><td class="spacer"></td><td class="mark">-</td><td class="body">Pendamping Keluarga Harapan (PKH)</td></tr></table>
+    <table class="dash"><tr><td class="spacer"></td><td class="mark">-</td><td class="body">Tenaga Pendamping Desa</td></tr></table>
+    <table class="dash"><tr><td class="spacer"></td><td class="mark">-</td><td class="body">Pemberdayaan Masyarakat Pesisir (PMP)</td></tr></table>
 
-    <div class="line"><span class="prefix">d.</span>Pegawai Pemerintah dengan Perjanjian Kerja (P3K) atau Pegawai Pemerintah Non Pegawai Negeri (PPNPN) bukan Guru;</div>
-    <div class="line"><span class="prefix">e.</span>Pengurus Komisi Pemilihan Umum (KPU), Badan Pengawas Pemilu (Bawaslu) dan Badan Amil Zakat Nasional (BAZNAS);</div>
-    <div class="line"><span class="prefix">f.</span>Pengurus Partai Politik.</div>
+    <table class="sub"><tr><td class="spacer"></td><td class="mark">d.</td><td class="body">Pegawai Pemerintah dengan Perjanjian Kerja (P3K) atau Pegawai Pemerintah Non Pegawai Negeri (PPNPN) bukan Guru;</td></tr></table>
+    <table class="sub"><tr><td class="spacer"></td><td class="mark">e.</td><td class="body">Pengurus Komisi Pemilihan Umum (KPU), Badan Pengawas Pemilu (Bawaslu) dan Badan Amil Zakat Nasional (BAZNAS);</td></tr></table>
+    <table class="sub"><tr><td class="spacer"></td><td class="mark">f.</td><td class="body">Pengurus Partai Politik.</td></tr></table>
 
-    <div class="point-intro">
-        2. Tidak merangkap jabatan lembaga eksekutif, yudikatif atau legislatif yang meliputi :
-    </div>
+    <table class="poin">
+        <tr>
+            <td class="num">2.</td>
+            <td class="body">Tidak merangkap jabatan lembaga eksekutif, yudikatif atau legislatif yang meliputi :</td>
+        </tr>
+    </table>
 
-    <div class="line"><span class="prefix">a.</span>Perangkat Desa/Kelurahan, PNS dengan jabatan Non guru/Pengawas dan TNI/Polri;</div>
-    <div class="line"><span class="prefix">b.</span>Anggota Mahkamah Agung, Mahkamah Konstitusi, Komisi Yudisial atau Ombudsman;</div>
-    <div class="line"><span class="prefix">c.</span>Anggota Dewan Perwakilan Rakyat atau Dewan Perwakilan Daerah.</div>
+    <table class="sub"><tr><td class="spacer"></td><td class="mark">a.</td><td class="body">Perangkat Desa/Kelurahan, PNS dengan jabatan Non guru/Pengawas dan TNI/Polri;</td></tr></table>
+    <table class="sub"><tr><td class="spacer"></td><td class="mark">b.</td><td class="body">Anggota Mahkamah Agung, Mahkamah Konstitusi, Komisi Yudisial atau Ombudsman;</td></tr></table>
+    <table class="sub"><tr><td class="spacer"></td><td class="mark">c.</td><td class="body">Anggota Dewan Perwakilan Rakyat atau Dewan Perwakilan Daerah.</td></tr></table>
 
-    <div class="point-intro">
-        3. Apabila dikemudian hari ditemukan ketidaksesuaian dengan regulasi yang berlaku dan dengan Surat pernyataan yang saya buat maka saya siap menerima sanksi dan atau Pengembalian dana yang sudah saya terima ke Kas Negara.
-    </div>
+    <table class="poin">
+        <tr>
+            <td class="num">3.</td>
+            <td class="body">Apabila dikemudian hari ditemukan ketidaksesuaian dengan regulasi yang berlaku dan dengan Surat pernyataan yang saya buat maka saya siap menerima sanksi dan atau Pengembalian dana yang sudah saya terima ke Kas Negara.</td>
+        </tr>
+    </table>
 
     <div class="block">Demikian pernyataan ini kami buat dengan sebenar-benar dan tanpa paksaan dari pihak manapun.</div>
 
+    <div class="ttd-spacer"></div>
+
     <table class="ttd-layout">
         <tr>
-            <td style="width:54%"></td>
+            <td class="pad"></td>
             <td class="ttd-box">
                 <div class="ttd-date">{{ $data['kotaTtd'] }}, {{ $data['tanggalSurat'] }}</div>
                 <div class="ttd-peran">Yang Membuat Pernyataan,</div>
                 <div class="ttd-materai">Materai 10.000</div>
-                <div class="ttd-line">....................................................</div>
                 <div class="ttd-nama">{{ $data['namaLengkap'] }}</div>
             </td>
         </tr>

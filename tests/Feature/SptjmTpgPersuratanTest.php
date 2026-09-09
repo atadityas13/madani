@@ -183,6 +183,7 @@ class SptjmTpgPersuratanTest extends TestCase
         $response->assertOk();
         $this->assertStringContainsString('application/pdf', (string) $response->headers->get('content-type'));
         $this->assertStringStartsWith('%PDF', $response->getContent());
+        $this->assertStringContainsString('inline', (string) $response->headers->get('content-disposition'));
     }
 
     public function test_guru_tidak_boleh_akses_persuratan(): void

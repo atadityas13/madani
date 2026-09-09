@@ -43,11 +43,15 @@ class SptjmTpgPdfService
             : 'SPTJM TPG - '.$gtks->count().' guru.pdf';
 
         // Inline stream so browser shows preview and user can print normally.
-        return Pdf::loadView('persuratan.sptjm-tpg.pdf', [
+        $pdf = Pdf::loadView('persuratan.sptjm-tpg.pdf', [
             'halaman' => $halaman,
-        ])
-            ->setPaper('a4', 'portrait')
-            ->stream($filename);
+        ])->setPaper('a4', 'portrait');
+
+        return response($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
+            'Cache-Control' => 'private, max-age=0, must-revalidate',
+        ]);
     }
 
     /**
