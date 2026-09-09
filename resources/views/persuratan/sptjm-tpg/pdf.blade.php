@@ -119,13 +119,18 @@
             text-decoration: none;
         }
         .ttd-peran { margin-top: 2px; }
-        .ttd-materai {
-            height: 110px;
-            line-height: 110px;
-            text-align: left;
+        .ttd-materai-wrap {
+            width: 100%;
+            border-collapse: collapse;
             margin: 0;
         }
-        .ttd-nama { margin-top: 2px; }
+        .ttd-materai-wrap td {
+            height: 110px;
+            vertical-align: middle;
+            text-align: left;
+            padding: 0;
+        }
+        .ttd-nama { margin-top: 8px; }
     </style>
 </head>
 <body>
@@ -216,7 +221,11 @@
             <td class="ttd-box">
                 <div class="ttd-date">{{ $data['kotaTtd'] }}, {{ $data['tanggalSurat'] }}</div>
                 <div class="ttd-peran">Yang Membuat Pernyataan,</div>
-                <div class="ttd-materai">Materai 10.000</div>
+                <table class="ttd-materai-wrap">
+                    <tr>
+                        <td>Materai 10.000</td>
+                    </tr>
+                </table>
                 <div class="ttd-nama">{{ $data['namaLengkap'] }}</div>
             </td>
         </tr>
