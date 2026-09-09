@@ -161,7 +161,13 @@ CREATE TABLE `jurnal_pembelajaran` (
   `ketercapaian` varchar(20) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB;
+CREATE TABLE `kelas` (
+  `id` bigint unsigned NOT NULL,
+  `nama_kelas` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB;
 INSERT INTO `users` (`id`, `username`, `password`) VALUES (11, '198301012008011001', 'hash');
+INSERT INTO `kelas` VALUES (5, '9A');
 INSERT INTO `jurnal_pembelajaran` VALUES
 (101, 11, 5, 2, '2026-08-10', 1, NULL, 'tercapai');
 SQL);

@@ -217,7 +217,9 @@ class JurnalSimpatisansImportService
      */
     private function columnsFromCreateTable(string $sql, string $table): ?array
     {
-        $pattern = '/CREATE TABLE (?:IF NOT EXISTS )?(?:`[^`]+`\.)?`'.preg_quote($table, '/').'`\s*\((.*)\)\s*(?:ENGINE|DEFAULT|COLLATE|AUTO_INCREMENT|;)/is';
+        // Non-greedy: otherwise the capture swallows later CREATE TABLE blocks
+        // until the last ") ENGINE" in the dump and column mapping breaks.
+        $pattern = '/CREATE TABLE (?:IF NOT EXISTS )?(?:`[^`]+`\.)?`'.preg_quote($table, '/').'`\s*\((.*?)\)\s*(?:ENGINE|DEFAULT|COLLATE|AUTO_INCREMENT|;)/is';
         if (! preg_match($pattern, $sql, $match)) {
             return null;
         }
