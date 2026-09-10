@@ -24,6 +24,7 @@ use App\Http\Controllers\RombelController;
 use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\SiswaMonitoringController;
 use App\Http\Controllers\TahunAjaranController;
+use App\Http\Controllers\Talim\TunjanganController as TalimTunjanganController;
 use App\Http\Controllers\Talim\WaliKelasController;
 use App\Http\Controllers\Tunjangan\TunjanganController;
 use App\Http\Controllers\UserController;
@@ -134,6 +135,23 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:wali_kelas|guru|superadmin|admin')->group(function () {
         Route::get('/talim/wali', WaliKelasController::class)->name('talim.wali');
         Route::get('/talim/wali/siswa', [WaliKelasController::class, 'siswa'])->name('talim.wali.siswa');
+    });
+
+    Route::middleware('role:guru')->prefix('talim/tunjangan')->name('talim.tunjangan.')->group(function () {
+        Route::get('/', [TalimTunjanganController::class, 'index'])->name('index');
+        Route::post('sptjm/unduh', [TalimTunjanganController::class, 'sptjmDownload'])->name('sptjm');
+        Route::get('{jenis}', [TalimTunjanganController::class, 'show'])
+            ->name('show')
+            ->where('jenis', 'skmt|skbk|sptjm|skakpt');
+        Route::post('{jenis}/upload', [TalimTunjanganController::class, 'upload'])
+            ->name('upload')
+            ->where('jenis', 'skmt|skbk|skakpt');
+        Route::delete('{jenis}/dokumen/{dokumen}', [TalimTunjanganController::class, 'destroy'])
+            ->name('destroy')
+            ->where('jenis', 'skmt|skbk|skakpt');
+        Route::get('{jenis}/dokumen/{dokumen}/unduh', [TalimTunjanganController::class, 'download'])
+            ->name('download')
+            ->where('jenis', 'skmt|skbk|skakpt');
     });
 
     Route::middleware('role:superadmin|admin|operator|kamad')->group(function () {

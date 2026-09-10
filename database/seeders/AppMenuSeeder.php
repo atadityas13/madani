@@ -10,7 +10,7 @@ class AppMenuSeeder extends Seeder
     public function run(): void
     {
         foreach ($this->definitions() as $item) {
-            AppMenu::query()->updateOrCreate(
+            AppMenu::query()->firstOrCreate(
                 [
                     'audience' => $item['audience'],
                     'key' => $item['key'],
@@ -53,6 +53,15 @@ class AppMenuSeeder extends Seeder
                 'open_mode' => AppMenu::OPEN_WEBVIEW,
                 'requires_auth' => true,
                 'sort_order' => 45,
+            ],
+            [
+                'key' => AppMenu::KEY_TUNJANGAN,
+                'type' => AppMenu::TYPE_CUSTOM,
+                'judul' => 'Tunjangan',
+                'url' => rtrim((string) config('app.url'), '/').'/talim/tunjangan',
+                'open_mode' => AppMenu::OPEN_WEBVIEW,
+                'requires_auth' => true,
+                'sort_order' => 46,
             ],
             [
                 'key' => 'rdm',

@@ -197,4 +197,25 @@ class AppMenuApiTest extends TestCase
             ])
             ->assertSessionHasErrors('requires_auth');
     }
+
+    public function test_seeder_tidak_menimpa_menu_yang_sudah_ada(): void
+    {
+        $website = AppMenu::query()->where('key', 'website')->where('audience', 'guru')->firstOrFail();
+        $website->update([
+            'judul' => 'Website Kustom',
+            'sort_order' => 999,
+            'is_active' => false,
+        ]);
+
+        (new AppMenuSeeder)->run();
+
+        $website->refresh();
+        $this->assertSame('Website Kustom', $website->judul);
+        $this->assertSame(999, $website->sort_order);
+        $this->assertFalse($website->is_active);
+
+        $this->assertTrue(
+            AppMenu::query()->where('key', AppMenu::KEY_TUNJANGAN)->where('audience', 'guru')->exists()
+        );
+    }
 }

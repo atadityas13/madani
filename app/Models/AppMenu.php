@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Support\AppMenuHost;
 use App\Support\R2Url;
+use App\Support\TunjanganAkses;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -42,6 +43,8 @@ class AppMenu extends Model
 
     public const KEY_WALI_KELAS = 'wali_kelas';
 
+    public const KEY_TUNJANGAN = 'tunjangan';
+
     protected function casts(): array
     {
         return [
@@ -76,6 +79,10 @@ class AppMenu extends Model
 
     public function isVisibleToApiUser(mixed $user): bool
     {
+        if ($this->key === self::KEY_TUNJANGAN) {
+            return $user instanceof User && TunjanganAkses::guruSertifikasi($user);
+        }
+
         // Menu Wali Kelas ditampilkan ke semua guru; otorisasi halaman menolak non-wali.
         return true;
     }
