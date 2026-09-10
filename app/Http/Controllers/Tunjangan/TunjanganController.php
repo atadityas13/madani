@@ -36,7 +36,7 @@ class TunjanganController extends Controller
         ]);
     }
 
-    public function jenisIndex(string $jenis): View|RedirectResponse
+    public function jenisIndex(Request $request, string $jenis): View|RedirectResponse
     {
         $this->dokumen->assertJenisSemua($jenis);
         $this->authorize('aksesModul', TunjanganDokumen::class);
@@ -49,15 +49,32 @@ class TunjanganController extends Controller
             return redirect()->route('tunjangan.jenis.show', ['jenis' => $jenis, 'gtk' => $gtk]);
         }
 
-        return view('tunjangan.gtk-list', [
+        $tahunAjarans = TahunAjaran::query()->orderByDesc('tanggal_mulai')->get();
+        $tahunAktif = TahunAjaran::aktif();
+        $payload = [
             'jenis' => $jenis,
             'labelJenis' => $this->dokumen->labelJenis($jenis),
             'deskripsiJenis' => $this->dokumen->deskripsiJenis($jenis),
             'gtks' => $this->dokumen->gtkTersertifikasi(),
-            'tahunAjarans' => TahunAjaran::query()->orderByDesc('tanggal_mulai')->get(),
-            'tahunAktif' => TahunAjaran::aktif(),
+            'tahunAjarans' => $tahunAjarans,
+            'tahunAktif' => $tahunAktif,
             'bolehZip' => in_array($jenis, [TunjanganDokumen::JENIS_SKMT, TunjanganDokumen::JENIS_SKBK], true),
-        ]);
+            'skakptFilter' => null,
+        ];
+
+        if ($jenis === TunjanganDokumen::JENIS_SKAKPT) {
+            $status = $request->query('status');
+            $skakpt = $this->dokumen->daftarSkakptAdmin(
+                $request->integer('tahun_ajaran_id') ?: null,
+                $request->integer('bulan') ?: null,
+                is_string($status) ? $status : null,
+            );
+
+            $payload['gtks'] = $skakpt['gtks'];
+            $payload['skakptFilter'] = $skakpt;
+        }
+
+        return view('tunjangan.gtk-list', $payload);
     }
 
     public function show(Request $request, string $jenis, Gtk $gtk): View

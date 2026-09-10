@@ -257,6 +257,68 @@ class TunjanganModuleTest extends TestCase
         $this->assertTrue($matches[0]->is($gtk));
     }
 
+    public function test_admin_skakpt_default_filter_tahun_aktif_dan_bulan_berjalan(): void
+    {
+        Storage::fake('r2');
+        $this->seed();
+        $this->travelTo(now()->setDate(2027, 3, 15));
+
+        $ta = TahunAjaran::aktif();
+        $this->assertNotNull($ta);
+        $sudah = $this->buatGtk(['nama' => 'Guru Sudah', 'nrg' => 'NRG-S1', 'nuptk' => '1001']);
+        $belum = $this->buatGtk(['nama' => 'Guru Belum', 'nrg' => 'NRG-B1', 'nuptk' => '1002']);
+        $admin = $this->admin();
+
+        app(TunjanganDokumenService::class)->simpanPdf(
+            $sudah,
+            'skakpt',
+            3,
+            UploadedFile::fake()->create('maret.pdf', 100, 'application/pdf'),
+            null,
+            $ta,
+            enforcePeriodeLock: false,
+        );
+
+        $response = $this->actingAs($admin)
+            ->get(route('tunjangan.jenis.index', 'skakpt'))
+            ->assertOk()
+            ->assertSee('Sudah upload', false)
+            ->assertSee('Belum upload', false)
+            ->assertSee('Keterangan', false)
+            ->assertSee('Guru Sudah', false)
+            ->assertSee('Guru Belum', false);
+
+        $response->assertViewHas('skakptFilter', function (array $filter) use ($ta): bool {
+            return (int) $filter['tahun_ajaran']->id === (int) $ta->id
+                && (int) $filter['bulan'] === 3
+                && $filter['status_upload'] === null
+                && (int) $filter['jumlah_sudah'] === 1
+                && (int) $filter['jumlah_belum'] >= 1;
+        });
+
+        $this->actingAs($admin)
+            ->get(route('tunjangan.jenis.index', [
+                'jenis' => 'skakpt',
+                'tahun_ajaran_id' => $ta->id,
+                'bulan' => 3,
+                'status' => 'sudah',
+            ]))
+            ->assertOk()
+            ->assertSee('Guru Sudah', false)
+            ->assertDontSee('Guru Belum', false);
+
+        $this->actingAs($admin)
+            ->get(route('tunjangan.jenis.index', [
+                'jenis' => 'skakpt',
+                'tahun_ajaran_id' => $ta->id,
+                'bulan' => 3,
+                'status' => 'belum',
+            ]))
+            ->assertOk()
+            ->assertSee('Guru Belum', false)
+            ->assertDontSee('Guru Sudah', false);
+    }
+
     private function admin(): User
     {
         return User::query()->where('username', 'admin')->firstOrFail();

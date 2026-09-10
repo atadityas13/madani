@@ -310,6 +310,77 @@ class TunjanganDokumenService
             ->get();
     }
 
+    /**
+     * Daftar admin SKAKPT: filter TA + bulan (default aktif & bulan berjalan),
+     * hitungan sudah/belum upload, dan filter status upload.
+     *
+     * @return array{
+     *     tahun_ajaran: TahunAjaran,
+     *     bulan: int,
+     *     status_upload: string|null,
+     *     gtks: Collection<int, Gtk>,
+     *     jumlah_sudah: int,
+     *     jumlah_belum: int,
+     *     jumlah_total: int
+     * }
+     */
+    public function daftarSkakptAdmin(?int $tahunAjaranId, ?int $bulan, ?string $statusUpload): array
+    {
+        $tahunAjaran = $tahunAjaranId
+            ? TahunAjaran::query()->find($tahunAjaranId)
+            : TahunAjaran::aktif();
+
+        abort_unless($tahunAjaran, 404, 'Tahun ajaran belum tersedia.');
+
+        $bulan = $bulan && $bulan >= 1 && $bulan <= 12
+            ? $bulan
+            : (int) now()->month;
+
+        $statusUpload = in_array($statusUpload, ['sudah', 'belum'], true)
+            ? $statusUpload
+            : null;
+
+        $gtks = $this->gtkTersertifikasi();
+        $gtkIds = $gtks->pluck('id');
+
+        $sudahIds = TunjanganDokumen::query()
+            ->where('jenis', TunjanganDokumen::JENIS_SKAKPT)
+            ->where('tahun_ajaran_id', $tahunAjaran->id)
+            ->where('periode', $bulan)
+            ->whereNotNull('path')
+            ->where('path', '!=', '')
+            ->whereIn('gtk_id', $gtkIds)
+            ->pluck('gtk_id')
+            ->unique()
+            ->flip();
+
+        $gtks = $gtks->map(function (Gtk $gtk) use ($sudahIds) {
+            $gtk->setAttribute('skakpt_sudah_upload', $sudahIds->has($gtk->id));
+
+            return $gtk;
+        });
+
+        $jumlahSudah = $sudahIds->count();
+        $jumlahTotal = $gtks->count();
+        $jumlahBelum = $jumlahTotal - $jumlahSudah;
+
+        if ($statusUpload === 'sudah') {
+            $gtks = $gtks->filter(fn (Gtk $gtk) => (bool) $gtk->skakpt_sudah_upload)->values();
+        } elseif ($statusUpload === 'belum') {
+            $gtks = $gtks->filter(fn (Gtk $gtk) => ! $gtk->skakpt_sudah_upload)->values();
+        }
+
+        return [
+            'tahun_ajaran' => $tahunAjaran,
+            'bulan' => $bulan,
+            'status_upload' => $statusUpload,
+            'gtks' => $gtks,
+            'jumlah_sudah' => $jumlahSudah,
+            'jumlah_belum' => $jumlahBelum,
+            'jumlah_total' => $jumlahTotal,
+        ];
+    }
+
     public function cariGtkByNamaKey(string $namaKey): array
     {
         if ($namaKey === '') {
