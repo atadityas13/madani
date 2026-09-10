@@ -135,6 +135,36 @@ class TunjanganController extends Controller
         return $this->fileResponse($request, $jenis, $dokumen, inline: true);
     }
 
+    public function preview(Request $request, string $jenis, TunjanganDokumen $dokumen): View
+    {
+        $this->dokumen->assertJenisUpload($jenis);
+        $gtk = $this->gtkSendiri($request);
+        abort_unless((int) $dokumen->gtk_id === (int) $gtk->id && $dokumen->jenis === $jenis, 404);
+        $this->authorize('viewGtk', $gtk);
+        abort_unless(filled($dokumen->path), 404);
+
+        $periodeLabel = $dokumen->nama_asli ?: $this->dokumen->labelJenis($jenis);
+
+        if ($jenis === TunjanganDokumen::JENIS_SKAKPT) {
+            $bulan = TunjanganDokumenService::namaBulan()[$dokumen->periode] ?? ('Bulan '.$dokumen->periode);
+            $periodeLabel = $bulan;
+        } elseif (in_array($jenis, [TunjanganDokumen::JENIS_SKMT, TunjanganDokumen::JENIS_SKBK], true)) {
+            $periodeLabel = $dokumen->periode === 2 ? 'Semester II' : 'Semester I';
+        }
+
+        return view('talim.tunjangan.preview', [
+            'jenis' => $jenis,
+            'labelJenis' => $this->dokumen->labelJenis($jenis),
+            'periodeLabel' => $periodeLabel,
+            'dokumen' => $dokumen,
+            'streamUrl' => route('talim.tunjangan.stream', [$jenis, $dokumen]),
+            'downloadUrl' => route('talim.tunjangan.download', [$jenis, $dokumen]),
+            'kembaliUrl' => route('talim.tunjangan.show', $jenis).(
+                $dokumen->tahun_ajaran_id ? '?tahun_ajaran_id='.$dokumen->tahun_ajaran_id : ''
+            ),
+        ]);
+    }
+
     public function download(Request $request, string $jenis, TunjanganDokumen $dokumen): StreamedResponse
     {
         return $this->fileResponse($request, $jenis, $dokumen, inline: false);

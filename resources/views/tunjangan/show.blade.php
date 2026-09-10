@@ -83,9 +83,7 @@
                                     @if ($row['dokumen'])
                                         <button
                                             type="button"
-                                            class="btn btn-link p-0 text-start"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#modalPreviewPdf"
+                                            class="btn btn-link p-0 text-start js-open-preview"
                                             data-preview-title="{{ $row['label'] }}"
                                             data-preview-url="{{ route('tunjangan.jenis.stream', [$jenis, $gtk, $row['dokumen']]) }}"
                                             data-download-url="{{ route('tunjangan.jenis.download', [$jenis, $gtk, $row['dokumen']]) }}"
@@ -101,9 +99,7 @@
                                         @if ($row['dokumen'])
                                             <button
                                                 type="button"
-                                                class="btn btn-sm btn-outline-secondary"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#modalPreviewPdf"
+                                                class="btn btn-sm btn-outline-secondary js-open-preview"
                                                 data-preview-title="{{ $row['label'] }}"
                                                 data-preview-url="{{ route('tunjangan.jenis.stream', [$jenis, $gtk, $row['dokumen']]) }}"
                                                 data-download-url="{{ route('tunjangan.jenis.download', [$jenis, $gtk, $row['dokumen']]) }}"
@@ -112,9 +108,7 @@
                                         @if ($row['boleh_upload'])
                                             <button
                                                 type="button"
-                                                class="btn btn-sm btn-madani"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#modalUploadPdf"
+                                                class="btn btn-sm btn-madani js-open-upload"
                                                 data-upload-periode="{{ $row['periode'] }}"
                                                 data-upload-label="{{ $row['label'] }}"
                                                 data-upload-mode="{{ $row['dokumen'] ? 'Ganti' : 'Unggah' }}"
@@ -145,7 +139,7 @@
                 <div class="modal-body">
                     <p class="small text-secondary mb-2" id="uploadPeriodeLabel"></p>
                     <label class="form-label" for="uploadFile">File PDF (maks. 2 MB)</label>
-                    <input class="form-control" type="file" name="file" id="uploadFile" accept=".pdf,application/pdf" required>
+                    <input class="form-control" type="file" name="file" id="uploadFile" accept="application/pdf,.pdf" required>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
@@ -157,48 +151,99 @@
 
     <div class="modal fade" id="modalPreviewPdf" tabindex="-1" aria-labelledby="modalPreviewPdfLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered modal-fullscreen-lg-down">
-            <div class="modal-content" style="min-height: 80vh;">
+            <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalPreviewPdfLabel">Preview PDF</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
-                <div class="modal-body p-0" style="height: 70vh;">
-                    <iframe id="previewPdfFrame" title="Preview PDF" src="about:blank" style="width:100%;height:100%;border:0;"></iframe>
+                <div class="modal-body" style="max-height: 75vh; overflow: auto; background: #e2e8f0;">
+                    <div id="previewPdfStatus" class="text-center text-secondary py-5">Memuat PDF…</div>
+                    <div id="previewPdfPages" class="d-flex flex-column align-items-center gap-3"></div>
                 </div>
                 <div class="modal-footer">
-                    <a class="btn btn-outline-secondary" id="previewDownloadBtn" href="#" download>Unduh</a>
+                    <a class="btn btn-outline-secondary" id="previewDownloadBtn" href="#">Unduh</a>
                     <button type="button" class="btn btn-madani" data-bs-dismiss="modal">Tutup</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
         (() => {
-            const uploadModal = document.getElementById('modalUploadPdf');
-            uploadModal?.addEventListener('show.bs.modal', (event) => {
-                const btn = event.relatedTarget;
-                if (!btn) return;
-                document.getElementById('uploadPeriode').value = btn.getAttribute('data-upload-periode') || '';
-                document.getElementById('uploadPeriodeLabel').textContent = btn.getAttribute('data-upload-label') || '';
-                document.getElementById('uploadSubmitBtn').textContent = btn.getAttribute('data-upload-mode') || 'Unggah';
-                document.getElementById('modalUploadPdfLabel').textContent = (btn.getAttribute('data-upload-mode') || 'Unggah') + ' PDF';
-                const file = document.getElementById('uploadFile');
-                if (file) file.value = '';
+            const uploadModalEl = document.getElementById('modalUploadPdf');
+            const previewModalEl = document.getElementById('modalPreviewPdf');
+            const statusEl = document.getElementById('previewPdfStatus');
+            const pagesEl = document.getElementById('previewPdfPages');
+            const downloadBtn = document.getElementById('previewDownloadBtn');
+
+            const openModal = (el) => {
+                if (window.bootstrap && window.bootstrap.Modal) {
+                    window.bootstrap.Modal.getOrCreateInstance(el).show();
+                    return;
+                }
+                el.classList.add('show');
+                el.style.display = 'block';
+            };
+
+            document.querySelectorAll('.js-open-upload').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    document.getElementById('uploadPeriode').value = btn.getAttribute('data-upload-periode') || '';
+                    document.getElementById('uploadPeriodeLabel').textContent = btn.getAttribute('data-upload-label') || '';
+                    const mode = btn.getAttribute('data-upload-mode') || 'Unggah';
+                    document.getElementById('uploadSubmitBtn').textContent = mode;
+                    document.getElementById('modalUploadPdfLabel').textContent = mode + ' PDF';
+                    document.getElementById('uploadFile').value = '';
+                    openModal(uploadModalEl);
+                });
             });
 
-            const previewModal = document.getElementById('modalPreviewPdf');
-            const frame = document.getElementById('previewPdfFrame');
-            const downloadBtn = document.getElementById('previewDownloadBtn');
-            previewModal?.addEventListener('show.bs.modal', (event) => {
-                const btn = event.relatedTarget;
-                if (!btn) return;
-                document.getElementById('modalPreviewPdfLabel').textContent = btn.getAttribute('data-preview-title') || 'Preview PDF';
-                frame.src = btn.getAttribute('data-preview-url') || 'about:blank';
-                downloadBtn.href = btn.getAttribute('data-download-url') || '#';
+            const renderPreview = async (url) => {
+                statusEl.hidden = false;
+                statusEl.textContent = 'Memuat PDF…';
+                pagesEl.innerHTML = '';
+                if (! window['pdfjsLib']) {
+                    statusEl.textContent = 'Viewer PDF gagal dimuat.';
+                    return;
+                }
+                window['pdfjsLib'].GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                try {
+                    const res = await fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/pdf' } });
+                    if (! res.ok) throw new Error('HTTP ' + res.status);
+                    const data = await res.arrayBuffer();
+                    const pdf = await window['pdfjsLib'].getDocument({ data }).promise;
+                    statusEl.hidden = true;
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const viewport = page.getViewport({ scale: 1.2 });
+                        const canvas = document.createElement('canvas');
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
+                        canvas.style.maxWidth = '100%';
+                        canvas.style.height = 'auto';
+                        canvas.style.background = '#fff';
+                        pagesEl.appendChild(canvas);
+                        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+                    }
+                } catch (err) {
+                    statusEl.hidden = false;
+                    statusEl.textContent = 'PDF tidak bisa ditampilkan. Gunakan Unduh. (' + (err.message || 'error') + ')';
+                }
+            };
+
+            document.querySelectorAll('.js-open-preview').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    document.getElementById('modalPreviewPdfLabel').textContent = btn.getAttribute('data-preview-title') || 'Preview PDF';
+                    downloadBtn.href = btn.getAttribute('data-download-url') || '#';
+                    openModal(previewModalEl);
+                    renderPreview(btn.getAttribute('data-preview-url') || '');
+                });
             });
-            previewModal?.addEventListener('hidden.bs.modal', () => {
-                frame.src = 'about:blank';
+
+            previewModalEl?.addEventListener('hidden.bs.modal', () => {
+                pagesEl.innerHTML = '';
+                statusEl.hidden = false;
+                statusEl.textContent = 'Memuat PDF…';
             });
         })();
     </script>

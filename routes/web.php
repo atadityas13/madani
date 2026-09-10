@@ -146,6 +146,9 @@ Route::middleware('auth')->group(function () {
         Route::post('{jenis}/upload', [TalimTunjanganController::class, 'upload'])
             ->name('upload')
             ->where('jenis', 'skmt|skbk|skakpt');
+        Route::get('{jenis}/dokumen/{dokumen}/preview', [TalimTunjanganController::class, 'preview'])
+            ->name('preview')
+            ->where('jenis', 'skmt|skbk|skakpt');
         Route::get('{jenis}/dokumen/{dokumen}/stream', [TalimTunjanganController::class, 'stream'])
             ->name('stream')
             ->where('jenis', 'skmt|skbk|skakpt');

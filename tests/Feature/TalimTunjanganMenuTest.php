@@ -6,6 +6,7 @@ use App\Models\AppMenu;
 use App\Models\Gtk;
 use App\Models\TahunAjaran;
 use App\Models\User;
+use App\Services\Tunjangan\TunjanganDokumenService;
 use App\Support\Peran;
 use Database\Seeders\AppMenuSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -117,6 +118,34 @@ class TalimTunjanganMenuTest extends TestCase
             'periode' => 2,
             'tahun_ajaran_id' => $ta->id,
         ]);
+    }
+
+    public function test_preview_halaman_talim_membuka_viewer(): void
+    {
+        Storage::fake('r2');
+        $this->seed();
+        $this->travelTo(now()->setDate(2027, 3, 15));
+        $ta = TahunAjaran::aktif();
+        $guru = $this->buatGuru(nrg: 'NRG-33');
+
+        $dokumen = app(TunjanganDokumenService::class)->simpanPdf(
+            $guru->gtk,
+            'skakpt',
+            2,
+            UploadedFile::fake()->create('lihat.pdf', 100, 'application/pdf'),
+            null,
+            $ta,
+        );
+
+        $response = $this->actingAs($guru)
+            ->get(route('talim.tunjangan.preview', ['jenis' => 'skakpt', 'dokumen' => $dokumen]))
+            ->assertOk()
+            ->assertSee('Memuat PDF', false);
+
+        $this->assertStringContainsString(
+            'dokumen\\/'.$dokumen->id.'\\/stream',
+            $response->getContent()
+        );
     }
 
     public function test_sptjm_unduh_dari_talim(): void
