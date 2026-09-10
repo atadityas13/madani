@@ -218,4 +218,18 @@ class AppMenuApiTest extends TestCase
             AppMenu::query()->where('key', AppMenu::KEY_TUNJANGAN)->where('audience', 'guru')->exists()
         );
     }
+
+    public function test_seeder_memindahkan_tunjangan_ke_chrome_tab_untuk_file_picker(): void
+    {
+        $menu = AppMenu::query()
+            ->where('key', AppMenu::KEY_TUNJANGAN)
+            ->where('audience', AppMenu::AUDIENCE_GURU)
+            ->firstOrFail();
+        $menu->update(['open_mode' => AppMenu::OPEN_WEBVIEW]);
+
+        (new AppMenuSeeder)->run();
+
+        $menu->refresh();
+        $this->assertSame(AppMenu::OPEN_CHROME_TAB, $menu->open_mode);
+    }
 }
