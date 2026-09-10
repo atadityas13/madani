@@ -73,6 +73,14 @@ class Navigasi
                 'roles' => [Peran::SUPERADMIN, Peran::ADMIN],
             ],
             [
+                'label' => 'Tunjangan',
+                'icon' => 'bi-cash-coin',
+                'route' => 'tunjangan.index',
+                'match' => 'tunjangan.*',
+                'roles' => [Peran::SUPERADMIN, Peran::ADMIN, Peran::GURU],
+                'sertifikasi_only' => true,
+            ],
+            [
                 'label' => 'Rombongan Belajar',
                 'icon' => 'bi-person-video2',
                 'route' => 'rombel.index',
@@ -142,6 +150,14 @@ class Navigasi
             ->map(function (array $item) use ($user) {
                 if (! Peran::cocok($user, $item['roles'] ?? array_keys(Peran::labels()))) {
                     return null;
+                }
+
+                if (! empty($item['sertifikasi_only'])) {
+                    if (Peran::cocok($user, Peran::pengelola())) {
+                        // admin selalu boleh
+                    } elseif (! TunjanganAkses::guruSertifikasi($user)) {
+                        return null;
+                    }
                 }
 
                 if (! empty($item['children'])) {

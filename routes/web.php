@@ -25,6 +25,7 @@ use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\SiswaMonitoringController;
 use App\Http\Controllers\TahunAjaranController;
 use App\Http\Controllers\Talim\WaliKelasController;
+use App\Http\Controllers\Tunjangan\TunjanganController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\Vendor\VendorDashboardController;
 use App\Http\Controllers\Vendor\VendorJobController;
@@ -105,6 +106,29 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:superadmin|admin')->prefix('persuratan')->name('persuratan.')->group(function () {
         Route::get('/', [PersuratanController::class, 'index'])->name('index');
         Route::post('sptjm-tpg/generate', [SptjmTpgController::class, 'generate'])->name('sptjm-tpg.generate');
+    });
+
+    Route::middleware('role:superadmin|admin|guru')->prefix('tunjangan')->name('tunjangan.')->group(function () {
+        Route::get('/', [TunjanganController::class, 'index'])->name('index');
+        Route::post('sptjm/{gtk}/unduh', [TunjanganController::class, 'sptjmDownload'])->name('sptjm.download');
+        Route::get('{jenis}', [TunjanganController::class, 'jenisIndex'])
+            ->name('jenis.index')
+            ->where('jenis', 'skmt|skbk|sptjm|skakpt');
+        Route::post('{jenis}/zip', [TunjanganController::class, 'uploadZip'])
+            ->name('jenis.zip')
+            ->where('jenis', 'skmt|skbk');
+        Route::get('{jenis}/{gtk}', [TunjanganController::class, 'show'])
+            ->name('jenis.show')
+            ->where('jenis', 'skmt|skbk|sptjm|skakpt');
+        Route::post('{jenis}/{gtk}/upload', [TunjanganController::class, 'upload'])
+            ->name('jenis.upload')
+            ->where('jenis', 'skmt|skbk|skakpt');
+        Route::delete('{jenis}/{gtk}/dokumen/{dokumen}', [TunjanganController::class, 'destroy'])
+            ->name('jenis.destroy')
+            ->where('jenis', 'skmt|skbk|skakpt');
+        Route::get('{jenis}/{gtk}/dokumen/{dokumen}/unduh', [TunjanganController::class, 'download'])
+            ->name('jenis.download')
+            ->where('jenis', 'skmt|skbk|skakpt');
     });
 
     Route::middleware('role:wali_kelas|guru|superadmin|admin')->group(function () {

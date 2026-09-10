@@ -73,4 +73,32 @@ class WebLoginAccessTest extends TestCase
 
         $this->assertGuest();
     }
+
+    public function test_guru_tersertifikasi_bisa_login_ke_tunjangan(): void
+    {
+        Role::findOrCreate(Peran::GURU);
+
+        $gtk = Gtk::query()->create([
+            'nama' => 'Siti Sertifikasi',
+            'nip' => '198101012005012002',
+            'nrg' => 'NRG-123',
+            'jenis' => 'guru',
+            'status' => 'aktif',
+        ]);
+
+        $user = User::factory()->create([
+            'username' => $gtk->nip,
+            'password' => 'password123',
+            'is_aktif' => true,
+            'gtk_id' => $gtk->id,
+        ]);
+        $user->syncRoles([Peran::GURU]);
+
+        $this->post(route('login'), [
+            'login' => $gtk->nip,
+            'password' => 'password123',
+        ])->assertRedirect(route('tunjangan.index'));
+
+        $this->assertAuthenticatedAs($user);
+    }
 }

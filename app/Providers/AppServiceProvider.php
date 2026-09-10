@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
+use App\Policies\TunjanganDokumenPolicy;
 use App\Support\Navigasi;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -28,6 +30,10 @@ class AppServiceProvider extends ServiceProvider
         Siswa::creating(function (Siswa $siswa): void {
             $siswa->ensurePasswordAwal();
         });
+
+        // Ability berbasis Gtk (bukan instance TunjanganDokumen).
+        Gate::define('viewGtk', [TunjanganDokumenPolicy::class, 'viewGtk']);
+        Gate::define('upload', [TunjanganDokumenPolicy::class, 'upload']);
 
         View::composer('layouts.app', function ($view) {
             $view->with([

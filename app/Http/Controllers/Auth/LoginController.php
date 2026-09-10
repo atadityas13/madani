@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Support\Peran;
+use App\Support\TunjanganAkses;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -41,21 +41,17 @@ class LoginController extends Controller
             ])->onlyInput('login');
         }
 
-        if (! $user->hasAnyRole(Peran::aksesWeb())) {
+        if (! TunjanganAkses::bolehLoginWeb($user)) {
             Auth::logout();
 
             return back()->withErrors([
-                'login' => 'Akses web MADANI hanya untuk Super Admin, Admin, dan Vendor. Guru dan siswa masuk lewat aplikasi Ta\'lim.',
+                'login' => 'Akses web MADANI hanya untuk Super Admin, Admin, Vendor, dan Guru tersertifikasi (NRG).',
             ])->onlyInput('login');
         }
 
         $request->session()->regenerate();
 
-        if ($user->hasRole(Peran::VENDOR) && ! $user->bisaKelola()) {
-            return redirect()->intended(route('vendor.dashboard'));
-        }
-
-        return redirect()->intended(route('dashboard'));
+        return redirect()->intended(TunjanganAkses::homeRoute($user));
     }
 
     public function destroy(Request $request): RedirectResponse

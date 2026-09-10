@@ -1,0 +1,234 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Gtk;
+use App\Models\TahunAjaran;
+use App\Models\User;
+use App\Services\Tunjangan\TunjanganDokumenService;
+use App\Services\Tunjangan\TunjanganZipImportService;
+use App\Support\Peran;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\Models\Role;
+use Tests\TestCase;
+use ZipArchive;
+
+class TunjanganModuleTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_admin_bisa_membuka_hub_tunjangan(): void
+    {
+        $this->seed();
+        $admin = $this->admin();
+
+        $this->actingAs($admin)
+            ->get(route('tunjangan.index'))
+            ->assertOk()
+            ->assertSee('SKMT', false)
+            ->assertSee('SKBK', false)
+            ->assertSee('SPTJM', false)
+            ->assertSee('SKAKPT', false);
+    }
+
+    public function test_guru_tanpa_nrg_tidak_boleh_akses(): void
+    {
+        $this->seed();
+        $guru = $this->buatGuru(nrg: null);
+
+        $this->actingAs($guru)
+            ->get(route('tunjangan.index'))
+            ->assertForbidden();
+    }
+
+    public function test_guru_tersertifikasi_hanya_lihat_milik_sendiri(): void
+    {
+        $this->seed();
+        $milik = $this->buatGtk(['nama' => 'Guru Sendiri', 'nrg' => 'NRG1', 'nuptk' => '111']);
+        $lain = $this->buatGtk(['nama' => 'Guru Lain', 'nrg' => 'NRG2', 'nuptk' => '222']);
+        $guru = $this->buatGuru(nrg: 'NRG1', gtk: $milik);
+
+        $this->actingAs($guru)
+            ->get(route('tunjangan.jenis.show', ['jenis' => 'skakpt', 'gtk' => $milik]))
+            ->assertOk()
+            ->assertSee('Guru Sendiri', false);
+
+        $this->actingAs($guru)
+            ->get(route('tunjangan.jenis.show', ['jenis' => 'skakpt', 'gtk' => $lain]))
+            ->assertForbidden();
+    }
+
+    public function test_skakpt_bulan_belum_berlalu_terkunci(): void
+    {
+        Storage::fake('r2');
+        $this->seed();
+        $this->travelTo(now()->setDate(2026, 3, 15));
+
+        $gtk = $this->buatGtk(['nrg' => 'NRG9']);
+        $admin = $this->admin();
+
+        $this->actingAs($admin)
+            ->post(route('tunjangan.jenis.upload', ['jenis' => 'skakpt', 'gtk' => $gtk]), [
+                'periode' => 3,
+                'tahun_anggaran' => 2026,
+                'file' => UploadedFile::fake()->create('x.pdf', 100, 'application/pdf'),
+            ])
+            ->assertSessionHasErrors('file');
+
+        $this->actingAs($admin)
+            ->post(route('tunjangan.jenis.upload', ['jenis' => 'skakpt', 'gtk' => $gtk]), [
+                'periode' => 2,
+                'tahun_anggaran' => 2026,
+                'file' => UploadedFile::fake()->create('ok.pdf', 100, 'application/pdf'),
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('tunjangan_dokumens', [
+            'gtk_id' => $gtk->id,
+            'jenis' => 'skakpt',
+            'periode' => 2,
+            'tahun_anggaran' => 2026,
+        ]);
+    }
+
+    public function test_zip_skmt_memetakan_nama_file_ke_guru(): void
+    {
+        Storage::fake('r2');
+        $this->seed();
+
+        $ta = TahunAjaran::aktif();
+        $this->assertNotNull($ta);
+        $this->assertStringContainsString('2026', (string) $ta->nama);
+
+        $gtk = $this->buatGtk(['nama' => 'A. ABD. MANAN', 'nrg' => 'NRG77', 'nuptk' => '777']);
+        $admin = $this->admin();
+
+        $zipPath = sys_get_temp_dir().DIRECTORY_SEPARATOR.'skmt-'.uniqid().'.zip';
+        $zip = new ZipArchive;
+        $this->assertTrue($zip->open($zipPath, ZipArchive::CREATE));
+        $pdfPath = sys_get_temp_dir().DIRECTORY_SEPARATOR.'skmt-sample.pdf';
+        file_put_contents($pdfPath, '%PDF-1.4 sample');
+        $zip->addFile($pdfPath, 'Rekap_Penilaian_SKMT_A._ABD._MANAN_TA2026_Sem1.pdf');
+        $zip->close();
+        @unlink($pdfPath);
+
+        $this->actingAs($admin)
+            ->post(route('tunjangan.jenis.zip', 'skmt'), [
+                'zip' => new UploadedFile($zipPath, 'skmt.zip', 'application/zip', null, true),
+            ])
+            ->assertRedirect(route('tunjangan.jenis.index', 'skmt'))
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseHas('tunjangan_dokumens', [
+            'gtk_id' => $gtk->id,
+            'jenis' => 'skmt',
+            'periode' => 1,
+            'tahun_ajaran_id' => $ta->id,
+        ]);
+        @unlink($zipPath);
+    }
+
+    public function test_zip_skbk_wajib_tahun_ajaran_dan_semester(): void
+    {
+        Storage::fake('r2');
+        $this->seed();
+        $admin = $this->admin();
+
+        $zipPath = sys_get_temp_dir().DIRECTORY_SEPARATOR.'skbk-'.uniqid().'.zip';
+        $zip = new ZipArchive;
+        $this->assertTrue($zip->open($zipPath, ZipArchive::CREATE));
+        $pdfPath = sys_get_temp_dir().DIRECTORY_SEPARATOR.'skbk-sample.pdf';
+        file_put_contents($pdfPath, '%PDF-1.4 sample');
+        $zip->addFile($pdfPath, 'SKBK_A._ABD._MANAN.pdf');
+        $zip->close();
+        @unlink($pdfPath);
+
+        $this->actingAs($admin)
+            ->post(route('tunjangan.jenis.zip', 'skbk'), [
+                'zip' => new UploadedFile($zipPath, 'skbk.zip', 'application/zip', null, true),
+            ])
+            ->assertSessionHasErrors(['tahun_ajaran_id', 'semester']);
+
+        @unlink($zipPath);
+    }
+
+    public function test_parse_nama_file_skmt_dan_skbk(): void
+    {
+        $service = app(TunjanganZipImportService::class);
+
+        $skmt = $service->parseSkmt('Rekap_Penilaian_SKMT_A._ABD._MANAN_TA2026_Sem1.pdf');
+        $this->assertNotNull($skmt);
+        $this->assertSame('AABDMANAN', $skmt['nama_key']);
+        $this->assertSame(2026, $skmt['ta']);
+        $this->assertSame(1, $skmt['semester']);
+
+        $skbk = $service->parseSkbk('SKBK_A._ABD._MANAN.pdf');
+        $this->assertNotNull($skbk);
+        $this->assertSame('AABDMANAN', $skbk['nama_key']);
+    }
+
+    public function test_sptjm_unduh_personal(): void
+    {
+        $this->seed();
+        $gtk = $this->buatGtk(['nrg' => 'NRG88', 'nama' => 'Guru SPTJM']);
+        $admin = $this->admin();
+
+        $response = $this->actingAs($admin)
+            ->post(route('tunjangan.sptjm.download', $gtk), [
+                'tanggal_surat' => '2026-08-15',
+                'mode' => 'download',
+            ]);
+
+        $response->assertOk();
+        $this->assertStringContainsString('application/pdf', (string) $response->headers->get('content-type'));
+        $this->assertStringStartsWith('%PDF', $response->getContent());
+    }
+
+    public function test_normalize_nama_key(): void
+    {
+        $service = app(TunjanganDokumenService::class);
+        $this->assertSame('AABDMANAN', $service->normalizeNamaKey('A._ABD._MANAN'));
+        $this->assertSame('AABDMANAN', $service->normalizeNamaKey('A. ABD. MANAN'));
+    }
+
+    private function admin(): User
+    {
+        return User::query()->where('username', 'admin')->firstOrFail();
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     */
+    private function buatGtk(array $overrides = []): Gtk
+    {
+        return Gtk::query()->create(array_merge([
+            'nama' => 'Guru Tunjangan',
+            'nip' => '198001012005011001',
+            'nuptk' => (string) fake()->unique()->numerify('##############'),
+            'nrg' => 'NRG-TEST',
+            'golongan' => 'III/c',
+            'status_pegawai' => 'PNS',
+            'jenis' => 'guru',
+            'status' => 'aktif',
+        ], $overrides));
+    }
+
+    private function buatGuru(?string $nrg, ?Gtk $gtk = null): User
+    {
+        Role::findOrCreate(Peran::GURU);
+        $gtk ??= $this->buatGtk(['nrg' => $nrg, 'nuptk' => (string) fake()->unique()->numerify('##############')]);
+        if ($nrg === null) {
+            $gtk->update(['nrg' => null]);
+        }
+
+        $user = User::factory()->create([
+            'is_aktif' => true,
+            'gtk_id' => $gtk->id,
+        ]);
+        $user->syncRoles([Peran::GURU]);
+
+        return $user;
+    }
+}

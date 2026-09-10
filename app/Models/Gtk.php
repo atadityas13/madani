@@ -57,6 +57,11 @@ class Gtk extends Model
         return $this->hasOne(User::class);
     }
 
+    public function tunjanganDokumens(): HasMany
+    {
+        return $this->hasMany(TunjanganDokumen::class);
+    }
+
     public function isAktif(): bool
     {
         return $this->status === 'aktif';
