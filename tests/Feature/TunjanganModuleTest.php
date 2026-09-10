@@ -232,6 +232,29 @@ class TunjanganModuleTest extends TestCase
         $service = app(TunjanganDokumenService::class);
         $this->assertSame('AABDMANAN', $service->normalizeNamaKey('A._ABD._MANAN'));
         $this->assertSame('AABDMANAN', $service->normalizeNamaKey('A. ABD. MANAN'));
+        $this->assertSame('ABDULMANAN', $service->normalizeNamaKey('H. ABDUL MANAN'));
+        $this->assertSame('ABDULMANAN', $service->normalizeNamaKey('H._ABDUL_MANAN'));
+        $this->assertSame('ABDULMANAN', $service->normalizeNamaKey('H.ABDUL MANAN'));
+        $this->assertSame('SITIAMINAH', $service->normalizeNamaKey('Hj. SITI AMINAH'));
+        $this->assertSame('SITIAMINAH', $service->normalizeNamaKey('Hj._SITI_AMINAH'));
+        $this->assertSame('HASAN', $service->normalizeNamaKey('HASAN'));
+        $this->assertSame('HAJI', $service->normalizeNamaKey('HAJI'));
+        $this->assertSame('ABDULMANAN', $service->normalizeNamaKey('Haji Abdul Manan'));
+    }
+
+    public function test_cari_gtk_abaikan_prefix_haji_hj(): void
+    {
+        $this->seed();
+        $gtk = $this->buatGtk([
+            'nrg' => 'NRG-HAJI-1',
+            'nama' => 'H. ABDUL MANAN',
+        ]);
+
+        $service = app(TunjanganDokumenService::class);
+        $matches = $service->cariGtkByNamaKey($service->normalizeNamaKey('ABDUL_MANAN'));
+
+        $this->assertCount(1, $matches);
+        $this->assertTrue($matches[0]->is($gtk));
     }
 
     private function admin(): User

@@ -288,6 +288,12 @@ class TunjanganDokumenService
         $nama = str_replace('_', ' ', $nama);
         $nama = mb_strtoupper(trim(preg_replace('/\s+/', ' ', $nama) ?? ''));
 
+        // Gelar Haji/Hajah sering ada di Madani (H. / Hj.) tapi tidak di nama file ZIP.
+        // Hapus sebagai token depan saja agar "HASAN" tidak ikut terpotong.
+        $nama = preg_replace('/^(HAJJAH|HAJI|HJ|H)\.+/', '', $nama) ?? $nama;
+        $nama = preg_replace('/^(HAJJAH|HAJI|HJ|H)\s+/', '', $nama) ?? $nama;
+        $nama = trim($nama);
+
         return preg_replace('/[^A-Z0-9]/', '', $nama) ?: '';
     }
 
