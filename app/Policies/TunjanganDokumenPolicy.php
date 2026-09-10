@@ -57,6 +57,11 @@ class TunjanganDokumenPolicy
         return $this->kelolaSemua($user);
     }
 
+    public function unduhMassal(User $user): bool
+    {
+        return $this->kelolaSemua($user);
+    }
+
     public function gtkSertifikasi(User $user): ?Gtk
     {
         $gtk = $user->gtk;

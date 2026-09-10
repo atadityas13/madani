@@ -115,6 +115,9 @@ Route::middleware('auth')->group(function () {
         Route::get('{jenis}', [TunjanganController::class, 'jenisIndex'])
             ->name('jenis.index')
             ->where('jenis', 'skmt|skbk|sptjm|skakpt');
+        Route::get('{jenis}/unduh-massal', [TunjanganController::class, 'unduhMassalSkakpt'])
+            ->name('jenis.unduh-massal')
+            ->where('jenis', 'skakpt');
         Route::post('{jenis}/zip', [TunjanganController::class, 'uploadZip'])
             ->name('jenis.zip')
             ->where('jenis', 'skmt|skbk');

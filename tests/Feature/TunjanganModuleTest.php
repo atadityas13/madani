@@ -257,7 +257,7 @@ class TunjanganModuleTest extends TestCase
         $this->assertTrue($matches[0]->is($gtk));
     }
 
-    public function test_admin_skakpt_default_filter_tahun_aktif_dan_bulan_berjalan(): void
+    public function test_admin_skakpt_default_filter_tahun_aktif_dan_bulan_sebelumnya(): void
     {
         Storage::fake('r2');
         $this->seed();
@@ -265,15 +265,15 @@ class TunjanganModuleTest extends TestCase
 
         $ta = TahunAjaran::aktif();
         $this->assertNotNull($ta);
-        $sudah = $this->buatGtk(['nama' => 'Guru Sudah', 'nrg' => 'NRG-S1', 'nuptk' => '1001']);
-        $belum = $this->buatGtk(['nama' => 'Guru Belum', 'nrg' => 'NRG-B1', 'nuptk' => '1002']);
+        $sudah = $this->buatGtk(['nama' => 'Guru Sudah', 'nrg' => 'NRG-S1', 'nuptk' => '1001', 'duk' => '2']);
+        $belum = $this->buatGtk(['nama' => 'Guru Belum', 'nrg' => 'NRG-B1', 'nuptk' => '1002', 'duk' => '1']);
         $admin = $this->admin();
 
         app(TunjanganDokumenService::class)->simpanPdf(
             $sudah,
             'skakpt',
-            3,
-            UploadedFile::fake()->create('maret.pdf', 100, 'application/pdf'),
+            2,
+            UploadedFile::fake()->create('februari.pdf', 100, 'application/pdf'),
             null,
             $ta,
             enforcePeriodeLock: false,
@@ -285,12 +285,16 @@ class TunjanganModuleTest extends TestCase
             ->assertSee('Sudah upload', false)
             ->assertSee('Belum upload', false)
             ->assertSee('Keterangan', false)
+            ->assertSee('Unduh PDF', false)
+            ->assertDontSee('bulan berjalan', false)
+            ->assertDontSee('Klik untuk filter', false)
+            ->assertDontSee('Unduh ZIP', false)
             ->assertSee('Guru Sudah', false)
             ->assertSee('Guru Belum', false);
 
         $response->assertViewHas('skakptFilter', function (array $filter) use ($ta): bool {
             return (int) $filter['tahun_ajaran']->id === (int) $ta->id
-                && (int) $filter['bulan'] === 3
+                && (int) $filter['bulan'] === 2
                 && $filter['status_upload'] === null
                 && (int) $filter['jumlah_sudah'] === 1
                 && (int) $filter['jumlah_belum'] >= 1;
@@ -300,7 +304,7 @@ class TunjanganModuleTest extends TestCase
             ->get(route('tunjangan.jenis.index', [
                 'jenis' => 'skakpt',
                 'tahun_ajaran_id' => $ta->id,
-                'bulan' => 3,
+                'bulan' => 2,
                 'status' => 'sudah',
             ]))
             ->assertOk()
@@ -311,12 +315,69 @@ class TunjanganModuleTest extends TestCase
             ->get(route('tunjangan.jenis.index', [
                 'jenis' => 'skakpt',
                 'tahun_ajaran_id' => $ta->id,
-                'bulan' => 3,
+                'bulan' => 2,
                 'status' => 'belum',
             ]))
             ->assertOk()
             ->assertSee('Guru Belum', false)
             ->assertDontSee('Guru Sudah', false);
+    }
+
+    public function test_admin_unduh_massal_skakpt_satu_pdf_urut_duk(): void
+    {
+        Storage::fake('r2');
+        $this->seed();
+        $this->travelTo(now()->setDate(2027, 3, 15));
+
+        $ta = TahunAjaran::aktif();
+        $admin = $this->admin();
+        $dua = $this->buatGtk(['nama' => 'Guru Dua', 'nrg' => 'NRG-D2', 'nuptk' => '2002', 'duk' => '2']);
+        $satu = $this->buatGtk(['nama' => 'Guru Satu', 'nrg' => 'NRG-D1', 'nuptk' => '2001', 'duk' => '1']);
+
+        $service = app(TunjanganDokumenService::class);
+        foreach ([$dua, $satu] as $gtk) {
+            $tmp = tempnam(sys_get_temp_dir(), 'skakpt_pdf_');
+            $this->assertNotFalse($tmp);
+            file_put_contents($tmp, $this->minimalPdf());
+            $service->simpanPdf(
+                $gtk,
+                'skakpt',
+                2,
+                new UploadedFile($tmp, $gtk->nama.'.pdf', 'application/pdf', null, true),
+                null,
+                $ta,
+                enforcePeriodeLock: false,
+            );
+            @unlink($tmp);
+        }
+
+        $entries = $service->entriUnduhMassalSkakpt((int) $ta->id, 2, 'sudah');
+        $this->assertCount(2, $entries);
+        $this->assertSame($satu->id, $entries[0]['gtk']->id);
+        $this->assertSame($dua->id, $entries[1]['gtk']->id);
+
+        $response = $this->actingAs($admin)
+            ->get(route('tunjangan.jenis.unduh-massal', [
+                'jenis' => 'skakpt',
+                'tahun_ajaran_id' => $ta->id,
+                'bulan' => 2,
+                'status' => 'sudah',
+            ]));
+
+        $response->assertOk();
+        $this->assertStringContainsString('application/pdf', (string) $response->headers->get('content-type'));
+        $this->assertStringContainsString('attachment', (string) $response->headers->get('content-disposition'));
+        $this->assertStringStartsWith('%PDF', $response->getContent());
+    }
+
+    private function minimalPdf(): string
+    {
+        $pdf = new \FPDF;
+        $pdf->AddPage();
+        $pdf->SetFont('Helvetica', '', 12);
+        $pdf->Cell(40, 10, 'SKAKPT');
+
+        return $pdf->Output('S');
     }
 
     private function admin(): User

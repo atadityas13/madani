@@ -8,6 +8,9 @@
 @if (session('status'))
     <div class="alert alert-success">{{ session('status') }}</div>
 @endif
+@if (session('error'))
+    <div class="alert alert-danger">{{ session('error') }}</div>
+@endif
 
 @php $hasil = session('tunjangan_zip_hasil'); @endphp
 @if (is_array($hasil))
@@ -81,7 +84,6 @@
         $filterTa = $skakptFilter['tahun_ajaran'];
         $filterBulan = $skakptFilter['bulan'];
         $filterStatus = $skakptFilter['status_upload'];
-        $namaBulan = \App\Services\Tunjangan\TunjanganDokumenService::namaBulan();
         $queryBase = [
             'tahun_ajaran_id' => $filterTa->id,
             'bulan' => $filterBulan,
@@ -114,7 +116,10 @@
                 <input type="hidden" name="status" value="{{ $filterStatus }}">
             @endif
             <div class="col-md-3">
-                <div class="small text-secondary">Default: tahun aktif &amp; bulan berjalan ({{ $namaBulan[(int) now()->month] ?? now()->month }}).</div>
+                <a
+                    class="btn btn-madani w-100"
+                    href="{{ route('tunjangan.jenis.unduh-massal', ['jenis' => 'skakpt'] + $queryBase + array_filter(['status' => $filterStatus])) }}"
+                >Unduh PDF</a>
             </div>
         </form>
     </div>
@@ -125,7 +130,6 @@
                 <div class="madani-card p-3 vendor-stat h-100 {{ $filterStatus === null ? 'border border-success' : '' }}">
                     <div class="stat-label">Semua guru</div>
                     <div class="fs-2 fw-bold text-dark">{{ number_format($skakptFilter['jumlah_total']) }}</div>
-                    <div class="small text-secondary mt-1">{{ $namaBulan[$filterBulan] ?? $filterBulan }}</div>
                 </div>
             </a>
         </div>
@@ -134,7 +138,6 @@
                 <div class="madani-card p-3 vendor-stat h-100 {{ $filterStatus === 'sudah' ? 'border border-success' : '' }}">
                     <div class="stat-label">Sudah upload</div>
                     <div class="fs-2 fw-bold text-success">{{ number_format($skakptFilter['jumlah_sudah']) }}</div>
-                    <div class="small text-secondary mt-1">Klik untuk filter sudah upload</div>
                 </div>
             </a>
         </div>
@@ -143,7 +146,6 @@
                 <div class="madani-card p-3 vendor-stat h-100 {{ $filterStatus === 'belum' ? 'border border-danger' : '' }}">
                     <div class="stat-label">Belum upload</div>
                     <div class="fs-2 fw-bold text-danger">{{ number_format($skakptFilter['jumlah_belum']) }}</div>
-                    <div class="small text-secondary mt-1">Klik untuk filter belum upload</div>
                 </div>
             </a>
         </div>

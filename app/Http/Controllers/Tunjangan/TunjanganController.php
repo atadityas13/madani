@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -75,6 +76,54 @@ class TunjanganController extends Controller
         }
 
         return view('tunjangan.gtk-list', $payload);
+    }
+
+    public function unduhMassalSkakpt(Request $request): Response|RedirectResponse
+    {
+        $this->authorize('unduhMassal', TunjanganDokumen::class);
+
+        $status = $request->query('status');
+        $tahunAjaranId = $request->integer('tahun_ajaran_id') ?: null;
+        $bulan = $request->integer('bulan') ?: null;
+        $statusFilter = is_string($status) ? $status : null;
+
+        $entries = $this->dokumen->entriUnduhMassalSkakpt($tahunAjaranId, $bulan, $statusFilter);
+
+        if ($entries === []) {
+            return redirect()
+                ->route('tunjangan.jenis.index', [
+                    'jenis' => TunjanganDokumen::JENIS_SKAKPT,
+                    'tahun_ajaran_id' => $tahunAjaranId,
+                    'bulan' => $bulan,
+                    'status' => $statusFilter,
+                ])
+                ->with('error', 'Tidak ada berkas SKAKPT yang bisa diunduh pada filter ini.');
+        }
+
+        try {
+            $binary = $this->dokumen->gabungPdfSkakpt($entries);
+        } catch (ValidationException $e) {
+            $msg = collect($e->errors())->flatten()->first() ?: 'Gagal menggabungkan PDF.';
+
+            return redirect()
+                ->route('tunjangan.jenis.index', [
+                    'jenis' => TunjanganDokumen::JENIS_SKAKPT,
+                    'tahun_ajaran_id' => $tahunAjaranId,
+                    'bulan' => $bulan,
+                    'status' => $statusFilter,
+                ])
+                ->with('error', $msg);
+        }
+
+        $bulanNama = $bulan ?: $this->dokumen->bulanSkakptDefault();
+        $namaBulan = TunjanganDokumenService::namaBulan()[$bulanNama] ?? (string) $bulanNama;
+        $filename = 'SKAKPT_'.$namaBulan.'_'.now()->format('Ymd_His').'.pdf';
+
+        return response($binary, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            'Cache-Control' => 'private, max-age=0, must-revalidate',
+        ]);
     }
 
     public function show(Request $request, string $jenis, Gtk $gtk): View

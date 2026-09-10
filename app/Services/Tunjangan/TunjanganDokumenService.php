@@ -10,6 +10,8 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use setasign\Fpdi\Fpdi;
+use setasign\Fpdi\PdfParser\StreamReader;
 
 class TunjanganDokumenService
 {
@@ -311,8 +313,18 @@ class TunjanganDokumenService
     }
 
     /**
-     * Daftar admin SKAKPT: filter TA + bulan (default aktif & bulan berjalan),
-     * hitungan sudah/belum upload, dan filter status upload.
+     * Bulan default admin SKAKPT: bulan sebelum bulan berjalan.
+     */
+    public function bulanSkakptDefault(?CarbonInterface $sekarang = null): int
+    {
+        $sekarang ??= now();
+
+        return (int) $sekarang->copy()->subMonthNoOverflow()->month;
+    }
+
+    /**
+     * Daftar admin SKAKPT: filter TA + bulan (default aktif & bulan sebelumnya),
+     * hitungan sudah/belum upload, dan filter status upload. Urutan DUK.
      *
      * @return array{
      *     tahun_ajaran: TahunAjaran,
@@ -334,7 +346,7 @@ class TunjanganDokumenService
 
         $bulan = $bulan && $bulan >= 1 && $bulan <= 12
             ? $bulan
-            : (int) now()->month;
+            : $this->bulanSkakptDefault();
 
         $statusUpload = in_array($statusUpload, ['sudah', 'belum'], true)
             ? $statusUpload
@@ -370,6 +382,8 @@ class TunjanganDokumenService
             $gtks = $gtks->filter(fn (Gtk $gtk) => ! $gtk->skakpt_sudah_upload)->values();
         }
 
+        $gtks = $this->urutkanGtkByDuk($gtks);
+
         return [
             'tahun_ajaran' => $tahunAjaran,
             'bulan' => $bulan,
@@ -379,6 +393,101 @@ class TunjanganDokumenService
             'jumlah_belum' => $jumlahBelum,
             'jumlah_total' => $jumlahTotal,
         ];
+    }
+
+    /**
+     * @param  Collection<int, Gtk>  $gtks
+     * @return Collection<int, Gtk>
+     */
+    public function urutkanGtkByDuk(Collection $gtks): Collection
+    {
+        return $gtks
+            ->sortBy(function (Gtk $gtk) {
+                $duk = $gtk->duk;
+
+                return is_numeric($duk) ? (int) $duk : PHP_INT_MAX;
+            })
+            ->values();
+    }
+
+    /**
+     * Siapkan entri unduhan massal SKAKPT (hanya yang sudah upload), urut DUK.
+     *
+     * @return list<array{path: string, gtk: Gtk}>
+     */
+    public function entriUnduhMassalSkakpt(?int $tahunAjaranId, ?int $bulan, ?string $statusUpload): array
+    {
+        $ringkasan = $this->daftarSkakptAdmin($tahunAjaranId, $bulan, $statusUpload);
+        $tahunAjaran = $ringkasan['tahun_ajaran'];
+        $bulanTerpilih = $ringkasan['bulan'];
+
+        $gtks = $ringkasan['gtks']
+            ->filter(fn (Gtk $gtk) => (bool) $gtk->skakpt_sudah_upload)
+            ->values();
+
+        if ($gtks->isEmpty()) {
+            return [];
+        }
+
+        $dokumenByGtk = TunjanganDokumen::query()
+            ->where('jenis', TunjanganDokumen::JENIS_SKAKPT)
+            ->where('tahun_ajaran_id', $tahunAjaran->id)
+            ->where('periode', $bulanTerpilih)
+            ->whereIn('gtk_id', $gtks->pluck('id'))
+            ->whereNotNull('path')
+            ->where('path', '!=', '')
+            ->get()
+            ->keyBy('gtk_id');
+
+        $entries = [];
+        foreach ($gtks as $gtk) {
+            $dokumen = $dokumenByGtk->get($gtk->id);
+            if ($dokumen === null || ! filled($dokumen->path)) {
+                continue;
+            }
+
+            $entries[] = [
+                'path' => (string) $dokumen->path,
+                'gtk' => $gtk,
+            ];
+        }
+
+        return $entries;
+    }
+
+    /**
+     * Gabungkan PDF SKAKPT menjadi satu berkas (urutan entri = urutan DUK).
+     *
+     * @param  list<array{path: string, gtk: Gtk}>  $entries
+     */
+    public function gabungPdfSkakpt(array $entries): string
+    {
+        $pdf = new Fpdi;
+        $ditambah = 0;
+
+        foreach ($entries as $entry) {
+            $binary = Storage::disk('r2')->get($entry['path']);
+            if ($binary === null || $binary === '') {
+                continue;
+            }
+
+            $pageCount = $pdf->setSourceFile(StreamReader::createByString($binary));
+            for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                $templateId = $pdf->importPage($pageNo);
+                $size = $pdf->getTemplateSize($templateId);
+                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                $pdf->useTemplate($templateId);
+                $ditambah++;
+            }
+        }
+
+        if ($ditambah === 0) {
+            throw ValidationException::withMessages([
+                'unduh' => 'Tidak ada halaman PDF yang bisa digabung.',
+            ]);
+        }
+
+        return $pdf->Output('S');
     }
 
     public function cariGtkByNamaKey(string $namaKey): array
