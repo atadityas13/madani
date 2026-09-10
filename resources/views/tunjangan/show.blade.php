@@ -2,12 +2,15 @@
 
 @section('title', $labelJenis.' · '.$gtk->nama)
 @section('heading', $labelJenis)
-@section('subheading', $gtk->nama_lengkap)
+@section('subheading', $deskripsiJenis ?: $gtk->nama_lengkap)
 
 @section('content')
 @if (session('status'))
     <div class="alert alert-success">{{ session('status') }}</div>
 @endif
+@error('file')
+    <div class="alert alert-danger">{{ $message }}</div>
+@enderror
 
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <a class="btn btn-outline-secondary btn-sm" href="{{ $isAdmin ? route('tunjangan.jenis.index', $jenis) : route('tunjangan.index') }}">Kembali</a>
@@ -27,7 +30,7 @@
 
 @if ($jenis === 'sptjm')
     <div class="madani-card p-3">
-        <div class="stat-label mb-2">Unduh SPTJM TPG</div>
+        <div class="stat-label mb-2">Unduh SPTJM</div>
         <p class="small text-secondary mb-3">Surat dihasilkan otomatis dari data guru (bukan upload berkas).</p>
         <form class="row g-2 align-items-end" method="POST" action="{{ route('tunjangan.sptjm.download', $gtk) }}">
             @csrf
@@ -43,90 +46,161 @@
     </div>
 @else
     <div class="madani-card p-3 mb-3">
-        @if ($jenis === 'skakpt')
-            <form method="GET" class="row g-2 align-items-end mb-3">
-                <div class="col-md-3">
-                    <label class="form-label">Tahun anggaran</label>
-                    <select class="form-select" name="tahun" onchange="this.form.submit()">
-                        @foreach ($tahunAnggaranOptions as $tahun)
-                            <option value="{{ $tahun }}" @selected((int) $tahunAnggaran === (int) $tahun)>{{ $tahun }}</option>
-                        @endforeach
-                        @unless (in_array((int) $tahunAnggaran, $tahunAnggaranOptions, true))
-                            <option value="{{ $tahunAnggaran }}" selected>{{ $tahunAnggaran }}</option>
-                        @endunless
-                    </select>
-                </div>
-            </form>
-        @else
-            <form method="GET" class="row g-2 align-items-end mb-3">
-                <div class="col-md-4">
-                    <label class="form-label">Tahun ajaran</label>
-                    <select class="form-select" name="tahun_ajaran_id" onchange="this.form.submit()">
-                        @foreach ($tahunAjarans as $ta)
-                            <option value="{{ $ta->id }}" @selected((int) $tahunAjaran?->id === (int) $ta->id)>{{ $ta->nama }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </form>
-        @endif
+        <form method="GET" class="row g-2 align-items-end mb-3">
+            <div class="col-md-4">
+                <label class="form-label">Tahun pelajaran</label>
+                <select class="form-select" name="tahun_ajaran_id" onchange="this.form.submit()">
+                    @foreach ($tahunAjarans as $ta)
+                        <option value="{{ $ta->id }}" @selected((int) $tahunAjaran?->id === (int) $ta->id)>{{ $ta->nama }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </form>
 
         <div class="table-responsive">
             <table class="table align-middle mb-0">
                 <thead>
                     <tr>
-                        <th style="width: 4rem;">No</th>
+                        <th style="width: 3.5rem;">No</th>
                         <th>{{ $jenis === 'skakpt' ? 'Bulan' : 'Semester' }}</th>
                         <th>Berkas</th>
-                        <th class="text-end">Aksi</th>
+                        <th class="text-end" style="width: 12rem;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
+                    @php $no = 0; @endphp
                     @foreach ($rows as $row)
-                        <tr>
-                            <td>{{ $loop->iteration }}</td>
-                            <td>{{ $row['label'] }}</td>
-                            <td>
-                                @if ($row['dokumen'])
-                                    <a href="{{ route('tunjangan.jenis.download', [$jenis, $gtk, $row['dokumen']]) }}">
-                                        {{ $row['dokumen']->nama_asli ?: 'PDF tersimpan' }}
-                                    </a>
-                                @else
-                                    <span class="text-secondary">Belum ada</span>
-                                @endif
-                            </td>
-                            <td class="text-end">
-                                <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
+                        @if (($row['type'] ?? 'item') === 'header')
+                            <tr class="table-light">
+                                <td colspan="4" class="fw-semibold small text-secondary">{{ $row['label'] }}</td>
+                            </tr>
+                        @else
+                            @php $no++; @endphp
+                            <tr>
+                                <td>{{ $no }}</td>
+                                <td>{{ $row['label'] }}</td>
+                                <td>
                                     @if ($row['dokumen'])
-                                        <a class="btn btn-sm btn-outline-secondary" href="{{ route('tunjangan.jenis.download', [$jenis, $gtk, $row['dokumen']]) }}">Unduh</a>
-                                        <form method="POST" action="{{ route('tunjangan.jenis.destroy', [$jenis, $gtk, $row['dokumen']]) }}" data-confirm="Hapus PDF periode ini?" data-confirm-title="Hapus" data-loading-text="Menghapus…">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button class="btn btn-sm btn-outline-danger" type="submit">Hapus</button>
-                                        </form>
-                                    @endif
-                                    @if ($row['boleh_upload'])
-                                        <form method="POST" action="{{ route('tunjangan.jenis.upload', [$jenis, $gtk]) }}" enctype="multipart/form-data" class="d-inline-flex gap-1 align-items-center">
-                                            @csrf
-                                            <input type="hidden" name="periode" value="{{ $row['periode'] }}">
-                                            @if ($jenis === 'skakpt')
-                                                <input type="hidden" name="tahun_anggaran" value="{{ $tahunAnggaran }}">
-                                            @else
-                                                <input type="hidden" name="tahun_ajaran_id" value="{{ $tahunAjaran?->id }}">
-                                            @endif
-                                            <input class="form-control form-control-sm" type="file" name="file" accept=".pdf,application/pdf" required style="max-width: 11rem;">
-                                            <button class="btn btn-sm btn-madani" type="submit">{{ $row['dokumen'] ? 'Ganti' : 'Unggah' }}</button>
-                                        </form>
+                                        <button
+                                            type="button"
+                                            class="btn btn-link p-0 text-start"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modalPreviewPdf"
+                                            data-preview-title="{{ $row['label'] }}"
+                                            data-preview-url="{{ route('tunjangan.jenis.stream', [$jenis, $gtk, $row['dokumen']]) }}"
+                                            data-download-url="{{ route('tunjangan.jenis.download', [$jenis, $gtk, $row['dokumen']]) }}"
+                                        >
+                                            {{ $row['dokumen']->nama_asli ?: 'PDF tersimpan' }}
+                                        </button>
                                     @else
-                                        <span class="badge text-bg-light text-secondary">Terkunci</span>
+                                        <span class="text-secondary">Belum ada</span>
                                     @endif
-                                </div>
-                            </td>
-                        </tr>
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
+                                        @if ($row['dokumen'])
+                                            <button
+                                                type="button"
+                                                class="btn btn-sm btn-outline-secondary"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalPreviewPdf"
+                                                data-preview-title="{{ $row['label'] }}"
+                                                data-preview-url="{{ route('tunjangan.jenis.stream', [$jenis, $gtk, $row['dokumen']]) }}"
+                                                data-download-url="{{ route('tunjangan.jenis.download', [$jenis, $gtk, $row['dokumen']]) }}"
+                                            >Lihat</button>
+                                        @endif
+                                        @if ($row['boleh_upload'])
+                                            <button
+                                                type="button"
+                                                class="btn btn-sm btn-madani"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalUploadPdf"
+                                                data-upload-periode="{{ $row['periode'] }}"
+                                                data-upload-label="{{ $row['label'] }}"
+                                                data-upload-mode="{{ $row['dokumen'] ? 'Ganti' : 'Unggah' }}"
+                                            >{{ $row['dokumen'] ? 'Ganti' : 'Unggah' }}</button>
+                                        @else
+                                            <span class="badge text-bg-light text-secondary">Terkunci</span>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @endif
                     @endforeach
                 </tbody>
             </table>
         </div>
-        @error('file') <div class="text-danger small mt-2">{{ $message }}</div> @enderror
     </div>
+
+    <div class="modal fade" id="modalUploadPdf" tabindex="-1" aria-labelledby="modalUploadPdfLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" method="POST" action="{{ $uploadAction }}" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="periode" id="uploadPeriode">
+                <input type="hidden" name="tahun_ajaran_id" value="{{ $tahunAjaran?->id }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalUploadPdfLabel">Unggah PDF</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-secondary mb-2" id="uploadPeriodeLabel"></p>
+                    <label class="form-label" for="uploadFile">File PDF (maks. 2 MB)</label>
+                    <input class="form-control" type="file" name="file" id="uploadFile" accept=".pdf,application/pdf" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-madani" id="uploadSubmitBtn">Unggah</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalPreviewPdf" tabindex="-1" aria-labelledby="modalPreviewPdfLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-fullscreen-lg-down">
+            <div class="modal-content" style="min-height: 80vh;">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalPreviewPdfLabel">Preview PDF</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body p-0" style="height: 70vh;">
+                    <iframe id="previewPdfFrame" title="Preview PDF" src="about:blank" style="width:100%;height:100%;border:0;"></iframe>
+                </div>
+                <div class="modal-footer">
+                    <a class="btn btn-outline-secondary" id="previewDownloadBtn" href="#" download>Unduh</a>
+                    <button type="button" class="btn btn-madani" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            const uploadModal = document.getElementById('modalUploadPdf');
+            uploadModal?.addEventListener('show.bs.modal', (event) => {
+                const btn = event.relatedTarget;
+                if (!btn) return;
+                document.getElementById('uploadPeriode').value = btn.getAttribute('data-upload-periode') || '';
+                document.getElementById('uploadPeriodeLabel').textContent = btn.getAttribute('data-upload-label') || '';
+                document.getElementById('uploadSubmitBtn').textContent = btn.getAttribute('data-upload-mode') || 'Unggah';
+                document.getElementById('modalUploadPdfLabel').textContent = (btn.getAttribute('data-upload-mode') || 'Unggah') + ' PDF';
+                const file = document.getElementById('uploadFile');
+                if (file) file.value = '';
+            });
+
+            const previewModal = document.getElementById('modalPreviewPdf');
+            const frame = document.getElementById('previewPdfFrame');
+            const downloadBtn = document.getElementById('previewDownloadBtn');
+            previewModal?.addEventListener('show.bs.modal', (event) => {
+                const btn = event.relatedTarget;
+                if (!btn) return;
+                document.getElementById('modalPreviewPdfLabel').textContent = btn.getAttribute('data-preview-title') || 'Preview PDF';
+                frame.src = btn.getAttribute('data-preview-url') || 'about:blank';
+                downloadBtn.href = btn.getAttribute('data-download-url') || '#';
+            });
+            previewModal?.addEventListener('hidden.bs.modal', () => {
+                frame.src = 'about:blank';
+            });
+        })();
+    </script>
 @endif
 @endsection

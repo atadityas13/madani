@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Gtk;
 use App\Models\TahunAjaran;
+use App\Models\TunjanganDokumen;
 use App\Models\User;
 use App\Services\Tunjangan\TunjanganDokumenService;
 use App\Services\Tunjangan\TunjanganZipImportService;
@@ -28,9 +29,14 @@ class TunjanganModuleTest extends TestCase
             ->get(route('tunjangan.index'))
             ->assertOk()
             ->assertSee('SKMT', false)
+            ->assertSee('Surat Keterangan Melaksanakan Tugas', false)
             ->assertSee('SKBK', false)
+            ->assertSee('Surat Keterangan Beban Kerja', false)
             ->assertSee('SPTJM', false)
-            ->assertSee('SKAKPT', false);
+            ->assertSee('Surat Pertanggungjawaban Mutlak', false)
+            ->assertSee('SKAKPT', false)
+            ->assertDontSee('Upload per semester', false)
+            ->assertDontSee('Upload per bulan', false);
     }
 
     public function test_guru_tanpa_nrg_tidak_boleh_akses(): void
@@ -53,7 +59,10 @@ class TunjanganModuleTest extends TestCase
         $this->actingAs($guru)
             ->get(route('tunjangan.jenis.show', ['jenis' => 'skakpt', 'gtk' => $milik]))
             ->assertOk()
-            ->assertSee('Guru Sendiri', false);
+            ->assertSee('Guru Sendiri', false)
+            ->assertSee('Semester I (Juli–Desember)', false)
+            ->assertSee('Juli', false)
+            ->assertSee('Januari', false);
 
         $this->actingAs($guru)
             ->get(route('tunjangan.jenis.show', ['jenis' => 'skakpt', 'gtk' => $lain]))
@@ -64,15 +73,17 @@ class TunjanganModuleTest extends TestCase
     {
         Storage::fake('r2');
         $this->seed();
-        $this->travelTo(now()->setDate(2026, 3, 15));
+        $this->travelTo(now()->setDate(2027, 3, 15));
 
+        $ta = TahunAjaran::aktif();
+        $this->assertNotNull($ta);
         $gtk = $this->buatGtk(['nrg' => 'NRG9']);
         $admin = $this->admin();
 
         $this->actingAs($admin)
             ->post(route('tunjangan.jenis.upload', ['jenis' => 'skakpt', 'gtk' => $gtk]), [
                 'periode' => 3,
-                'tahun_anggaran' => 2026,
+                'tahun_ajaran_id' => $ta->id,
                 'file' => UploadedFile::fake()->create('x.pdf', 100, 'application/pdf'),
             ])
             ->assertSessionHasErrors('file');
@@ -80,7 +91,7 @@ class TunjanganModuleTest extends TestCase
         $this->actingAs($admin)
             ->post(route('tunjangan.jenis.upload', ['jenis' => 'skakpt', 'gtk' => $gtk]), [
                 'periode' => 2,
-                'tahun_anggaran' => 2026,
+                'tahun_ajaran_id' => $ta->id,
                 'file' => UploadedFile::fake()->create('ok.pdf', 100, 'application/pdf'),
             ])
             ->assertRedirect();
@@ -89,8 +100,38 @@ class TunjanganModuleTest extends TestCase
             'gtk_id' => $gtk->id,
             'jenis' => 'skakpt',
             'periode' => 2,
-            'tahun_anggaran' => 2026,
+            'tahun_ajaran_id' => $ta->id,
+            'slot_key' => TunjanganDokumen::slotKeySkakpt((int) $ta->id, 2),
         ]);
+    }
+
+    public function test_preview_stream_inline_bukan_attachment(): void
+    {
+        Storage::fake('r2');
+        $this->seed();
+        $this->travelTo(now()->setDate(2027, 3, 15));
+
+        $ta = TahunAjaran::aktif();
+        $gtk = $this->buatGtk(['nrg' => 'NRG12']);
+        $admin = $this->admin();
+
+        $dokumen = app(TunjanganDokumenService::class)->simpanPdf(
+            $gtk,
+            'skakpt',
+            2,
+            UploadedFile::fake()->create('preview.pdf', 100, 'application/pdf'),
+            null,
+            $ta,
+        );
+
+        $response = $this->actingAs($admin)
+            ->get(route('tunjangan.jenis.stream', ['jenis' => 'skakpt', 'gtk' => $gtk, 'dokumen' => $dokumen]));
+
+        $response->assertOk();
+        $this->assertStringContainsString('application/pdf', (string) $response->headers->get('content-type'));
+        $disposition = (string) $response->headers->get('content-disposition');
+        $this->assertStringContainsString('inline', $disposition);
+        $this->assertStringNotContainsString('attachment', $disposition);
     }
 
     public function test_zip_skmt_memetakan_nama_file_ke_guru(): void

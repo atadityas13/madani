@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\AppMenu;
 use App\Models\Gtk;
+use App\Models\TahunAjaran;
 use App\Models\User;
 use App\Support\Peran;
 use Database\Seeders\AppMenuSeeder;
@@ -89,13 +90,15 @@ class TalimTunjanganMenuTest extends TestCase
     public function test_upload_skakpt_bulan_terkunci_di_talim(): void
     {
         Storage::fake('r2');
-        $this->travelTo(now()->setDate(2026, 3, 15));
+        $this->seed();
+        $this->travelTo(now()->setDate(2027, 3, 15));
+        $ta = TahunAjaran::aktif();
         $guru = $this->buatGuru(nrg: 'NRG-55');
 
         $this->actingAs($guru)
             ->post(route('talim.tunjangan.upload', 'skakpt'), [
                 'periode' => 3,
-                'tahun_anggaran' => 2026,
+                'tahun_ajaran_id' => $ta->id,
                 'file' => UploadedFile::fake()->create('x.pdf', 100, 'application/pdf'),
             ])
             ->assertSessionHasErrors('file');
@@ -103,7 +106,7 @@ class TalimTunjanganMenuTest extends TestCase
         $this->actingAs($guru)
             ->post(route('talim.tunjangan.upload', 'skakpt'), [
                 'periode' => 2,
-                'tahun_anggaran' => 2026,
+                'tahun_ajaran_id' => $ta->id,
                 'file' => UploadedFile::fake()->create('ok.pdf', 100, 'application/pdf'),
             ])
             ->assertRedirect();
@@ -112,7 +115,7 @@ class TalimTunjanganMenuTest extends TestCase
             'gtk_id' => $guru->gtk_id,
             'jenis' => 'skakpt',
             'periode' => 2,
-            'tahun_anggaran' => 2026,
+            'tahun_ajaran_id' => $ta->id,
         ]);
     }
 

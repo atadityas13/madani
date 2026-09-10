@@ -52,9 +52,9 @@ class TunjanganDokumen extends Model
         return $this->belongsTo(TahunAjaran::class);
     }
 
-    public static function slotKeySkakpt(int $tahunAnggaran, int $bulan): string
+    public static function slotKeySkakpt(int $tahunAjaranId, int $bulan): string
     {
-        return sprintf('skakpt:%d:%d', $tahunAnggaran, $bulan);
+        return sprintf('skakpt:ta%d:%d', $tahunAjaranId, $bulan);
     }
 
     public static function slotKeySemester(string $jenis, int $tahunAjaranId, int $semester): string

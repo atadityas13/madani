@@ -16,7 +16,7 @@ class TunjanganDokumenService
     public const MAX_PDF_KB = 2048;
 
     /**
-     * @return list<string>
+     * @return array<int, string>
      */
     public static function namaBulan(): array
     {
@@ -33,6 +33,43 @@ class TunjanganDokumenService
             10 => 'Oktober',
             11 => 'November',
             12 => 'Desember',
+        ];
+    }
+
+    /**
+     * Urutan bulan tahun pelajaran: Sem I Juli–Des, Sem II Januari–Juni.
+     *
+     * @return list<array{semester: int, label: string, bulan: array<int, string>}>
+     */
+    public static function grupBulanSkakpt(): array
+    {
+        $nama = self::namaBulan();
+
+        return [
+            [
+                'semester' => 1,
+                'label' => 'Semester I (Juli–Desember)',
+                'bulan' => [
+                    7 => $nama[7],
+                    8 => $nama[8],
+                    9 => $nama[9],
+                    10 => $nama[10],
+                    11 => $nama[11],
+                    12 => $nama[12],
+                ],
+            ],
+            [
+                'semester' => 2,
+                'label' => 'Semester II (Januari–Juni)',
+                'bulan' => [
+                    1 => $nama[1],
+                    2 => $nama[2],
+                    3 => $nama[3],
+                    4 => $nama[4],
+                    5 => $nama[5],
+                    6 => $nama[6],
+                ],
+            ],
         ];
     }
 
@@ -61,21 +98,45 @@ class TunjanganDokumenService
         };
     }
 
-    public function bolehUploadSkakpt(int $tahunAnggaran, int $bulan, ?CarbonInterface $sekarang = null): bool
+    public function deskripsiJenis(string $jenis): ?string
     {
-        $sekarang ??= now();
-        $tahunSekarang = (int) $sekarang->year;
-        $bulanSekarang = (int) $sekarang->month;
+        return match ($jenis) {
+            TunjanganDokumen::JENIS_SKMT => 'Surat Keterangan Melaksanakan Tugas',
+            TunjanganDokumen::JENIS_SKBK => 'Surat Keterangan Beban Kerja',
+            TunjanganDokumen::JENIS_SPTJM => 'Surat Pertanggungjawaban Mutlak',
+            TunjanganDokumen::JENIS_SKAKPT => null,
+            default => null,
+        };
+    }
 
-        if ($tahunAnggaran > $tahunSekarang) {
+    /**
+     * @return list<array{kode: string, judul: string, deskripsi: ?string}>
+     */
+    public function hubJenisList(): array
+    {
+        $items = [];
+        foreach (TunjanganDokumen::semuaJenis() as $kode) {
+            $items[] = [
+                'kode' => $kode,
+                'judul' => $this->labelJenis($kode),
+                'deskripsi' => $this->deskripsiJenis($kode),
+            ];
+        }
+
+        return $items;
+    }
+
+    public function bolehUploadSkakpt(TahunAjaran $tahunAjaran, int $bulan, ?CarbonInterface $sekarang = null): bool
+    {
+        if ($bulan < 1 || $bulan > 12) {
             return false;
         }
 
-        if ($tahunAnggaran < $tahunSekarang) {
-            return $bulan >= 1 && $bulan <= 12;
-        }
+        $sekarang ??= now();
+        $tahunKalender = $this->tahunKalenderUntukBulanSkakpt($tahunAjaran, $bulan);
+        $akhirBulan = $sekarang->copy()->setDate($tahunKalender, $bulan, 1)->endOfMonth();
 
-        return $bulan >= 1 && $bulan < $bulanSekarang;
+        return $sekarang->greaterThan($akhirBulan);
     }
 
     public function bolehUploadSemester(TahunAjaran $tahunAjaran, int $semester, ?CarbonInterface $sekarang = null): bool
@@ -87,16 +148,27 @@ class TunjanganDokumenService
                 return true;
             }
 
-            // Semester II: buka sejak Januari tahun kedua TA (atau jika tanggal_selesai sudah lewat sebagian).
             $tahunKedua = $this->tahunKeduaAjaran($tahunAjaran);
 
             return $sekarang->year > $tahunKedua
                 || ($sekarang->year === $tahunKedua && $sekarang->month >= 1);
         }
 
-        // TA lampau: keduanya boleh; TA belum aktif: terkunci.
         return $tahunAjaran->status === TahunAjaran::STATUS_ARSIP
             || ($tahunAjaran->tanggal_selesai && $tahunAjaran->tanggal_selesai->lt($sekarang));
+    }
+
+    public function tahunPertamaAjaran(TahunAjaran $tahunAjaran): int
+    {
+        if (preg_match('/(\d{4})\s*\/\s*(\d{4})/', (string) $tahunAjaran->nama, $m)) {
+            return (int) $m[1];
+        }
+
+        if ($tahunAjaran->tanggal_mulai) {
+            return (int) $tahunAjaran->tanggal_mulai->year;
+        }
+
+        return (int) now()->year;
     }
 
     public function tahunKeduaAjaran(TahunAjaran $tahunAjaran): int
@@ -109,28 +181,14 @@ class TunjanganDokumenService
             return (int) $tahunAjaran->tanggal_selesai->year;
         }
 
-        return (int) now()->year;
+        return $this->tahunPertamaAjaran($tahunAjaran) + 1;
     }
 
-    /**
-     * @return list<int>
-     */
-    public function tahunAnggaranOptions(): array
+    public function tahunKalenderUntukBulanSkakpt(TahunAjaran $tahunAjaran, int $bulan): int
     {
-        $current = (int) now()->year;
-        $fromDb = TunjanganDokumen::query()
-            ->where('jenis', TunjanganDokumen::JENIS_SKAKPT)
-            ->whereNotNull('tahun_anggaran')
-            ->distinct()
-            ->orderByDesc('tahun_anggaran')
-            ->pluck('tahun_anggaran')
-            ->map(fn ($y) => (int) $y)
-            ->all();
-
-        $years = array_values(array_unique(array_merge([$current], $fromDb)));
-        rsort($years);
-
-        return $years;
+        return $bulan >= 7
+            ? $this->tahunPertamaAjaran($tahunAjaran)
+            : $this->tahunKeduaAjaran($tahunAjaran);
     }
 
     public function simpanPdf(
@@ -147,14 +205,15 @@ class TunjanganDokumenService
         $this->assertValidPdf($file);
 
         if ($jenis === TunjanganDokumen::JENIS_SKAKPT) {
-            if ($tahunAnggaran === null || $periode < 1 || $periode > 12) {
+            if ($tahunAjaran === null || $periode < 1 || $periode > 12) {
                 throw ValidationException::withMessages(['file' => 'Periode SKAKPT tidak valid.']);
             }
-            if ($enforcePeriodeLock && ! $this->bolehUploadSkakpt($tahunAnggaran, $periode)) {
+            if ($enforcePeriodeLock && ! $this->bolehUploadSkakpt($tahunAjaran, $periode)) {
                 throw ValidationException::withMessages(['file' => 'Upload hanya untuk bulan yang sudah berlalu.']);
             }
-            $slotKey = TunjanganDokumen::slotKeySkakpt($tahunAnggaran, $periode);
-            $folder = "tunjangan/{$gtk->id}/skakpt/{$tahunAnggaran}";
+            $slotKey = TunjanganDokumen::slotKeySkakpt((int) $tahunAjaran->id, $periode);
+            $folder = "tunjangan/{$gtk->id}/skakpt/ta{$tahunAjaran->id}";
+            $tahunAnggaran = null;
         } else {
             if ($tahunAjaran === null || ! in_array($periode, [1, 2], true)) {
                 throw ValidationException::withMessages(['file' => 'Periode semester tidak valid.']);
@@ -182,7 +241,7 @@ class TunjanganDokumenService
             [
                 'jenis' => $jenis,
                 'tahun_anggaran' => $tahunAnggaran,
-                'tahun_ajaran_id' => $tahunAjaran?->id,
+                'tahun_ajaran_id' => $tahunAjaran->id,
                 'periode' => $periode,
                 'path' => $path,
                 'nama_asli' => $namaAsli ?: $file->getClientOriginalName(),

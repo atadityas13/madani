@@ -9,10 +9,10 @@ use App\Models\TunjanganDokumen;
 use App\Services\Persuratan\SptjmTpgPdfService;
 use App\Services\Tunjangan\TunjanganDokumenService;
 use App\Services\Tunjangan\TunjanganZipImportService;
-use App\Support\R2Url;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
@@ -30,31 +30,8 @@ class TunjanganController extends Controller
     {
         $this->authorize('aksesModul', TunjanganDokumen::class);
 
-        $jenisList = [
-            [
-                'kode' => TunjanganDokumen::JENIS_SKMT,
-                'judul' => 'SKMT',
-                'deskripsi' => 'Surat Keterangan Melaksanakan Tugas — upload per semester',
-            ],
-            [
-                'kode' => TunjanganDokumen::JENIS_SKBK,
-                'judul' => 'SKBK',
-                'deskripsi' => 'Surat Keterangan Beban Kerja — upload per semester',
-            ],
-            [
-                'kode' => TunjanganDokumen::JENIS_SPTJM,
-                'judul' => 'SPTJM',
-                'deskripsi' => 'Surat Pernyataan Tanggung Jawab Mutlak — unduh PDF',
-            ],
-            [
-                'kode' => TunjanganDokumen::JENIS_SKAKPT,
-                'judul' => 'SKAKPT',
-                'deskripsi' => 'SKAKPT — upload PDF per bulan (tahun anggaran)',
-            ],
-        ];
-
         return view('tunjangan.index', [
-            'jenisList' => $jenisList,
+            'jenisList' => $this->dokumen->hubJenisList(),
             'isAdmin' => auth()->user()->can('kelolaSemua', TunjanganDokumen::class),
         ]);
     }
@@ -72,16 +49,13 @@ class TunjanganController extends Controller
             return redirect()->route('tunjangan.jenis.show', ['jenis' => $jenis, 'gtk' => $gtk]);
         }
 
-        $gtks = $this->dokumen->gtkTersertifikasi();
-        $tahunAjarans = TahunAjaran::query()->orderByDesc('tanggal_mulai')->get();
-        $tahunAktif = TahunAjaran::aktif();
-
         return view('tunjangan.gtk-list', [
             'jenis' => $jenis,
             'labelJenis' => $this->dokumen->labelJenis($jenis),
-            'gtks' => $gtks,
-            'tahunAjarans' => $tahunAjarans,
-            'tahunAktif' => $tahunAktif,
+            'deskripsiJenis' => $this->dokumen->deskripsiJenis($jenis),
+            'gtks' => $this->dokumen->gtkTersertifikasi(),
+            'tahunAjarans' => TahunAjaran::query()->orderByDesc('tanggal_mulai')->get(),
+            'tahunAktif' => TahunAjaran::aktif(),
             'bolehZip' => in_array($jenis, [TunjanganDokumen::JENIS_SKMT, TunjanganDokumen::JENIS_SKBK], true),
         ]);
     }
@@ -91,7 +65,6 @@ class TunjanganController extends Controller
         $this->dokumen->assertJenisSemua($jenis);
         $this->authorize('viewGtk', $gtk);
 
-        $tahunAnggaran = (int) $request->query('tahun', now()->year);
         $tahunAjaranId = $request->query('tahun_ajaran_id');
         $tahunAjaran = $tahunAjaranId
             ? TahunAjaran::query()->find($tahunAjaranId)
@@ -103,44 +76,18 @@ class TunjanganController extends Controller
             ->get()
             ->keyBy('slot_key');
 
-        $rows = [];
-        if ($jenis === TunjanganDokumen::JENIS_SKAKPT) {
-            foreach (TunjanganDokumenService::namaBulan() as $bulan => $nama) {
-                $slot = TunjanganDokumen::slotKeySkakpt($tahunAnggaran, $bulan);
-                $doc = $dokumens->get($slot);
-                $rows[] = [
-                    'periode' => $bulan,
-                    'label' => $nama,
-                    'dokumen' => $doc,
-                    'preview_url' => $doc ? R2Url::temporary($doc->path) : null,
-                    'boleh_upload' => $this->dokumen->bolehUploadSkakpt($tahunAnggaran, $bulan),
-                ];
-            }
-        } elseif (in_array($jenis, [TunjanganDokumen::JENIS_SKMT, TunjanganDokumen::JENIS_SKBK], true)) {
-            abort_unless($tahunAjaran, 404, 'Tahun ajaran belum tersedia.');
-            foreach ([1 => 'Semester I (Ganjil)', 2 => 'Semester II (Genap)'] as $sem => $label) {
-                $slot = TunjanganDokumen::slotKeySemester($jenis, (int) $tahunAjaran->id, $sem);
-                $doc = $dokumens->get($slot);
-                $rows[] = [
-                    'periode' => $sem,
-                    'label' => $label,
-                    'dokumen' => $doc,
-                    'preview_url' => $doc ? R2Url::temporary($doc->path) : null,
-                    'boleh_upload' => $this->dokumen->bolehUploadSemester($tahunAjaran, $sem),
-                ];
-            }
-        }
+        $rows = $this->buildRows($jenis, $tahunAjaran, $dokumens);
 
         return view('tunjangan.show', [
             'jenis' => $jenis,
             'labelJenis' => $this->dokumen->labelJenis($jenis),
+            'deskripsiJenis' => $this->dokumen->deskripsiJenis($jenis),
             'gtk' => $gtk,
             'rows' => $rows,
-            'tahunAnggaran' => $tahunAnggaran,
-            'tahunAnggaranOptions' => $this->dokumen->tahunAnggaranOptions(),
             'tahunAjaran' => $tahunAjaran,
             'tahunAjarans' => TahunAjaran::query()->orderByDesc('tanggal_mulai')->get(),
             'isAdmin' => auth()->user()->can('kelolaSemua', TunjanganDokumen::class),
+            'uploadAction' => route('tunjangan.jenis.upload', [$jenis, $gtk]),
         ]);
     }
 
@@ -151,48 +98,32 @@ class TunjanganController extends Controller
 
         $validated = $request->validate([
             'periode' => ['required', 'integer'],
-            'tahun_anggaran' => ['nullable', 'integer'],
-            'tahun_ajaran_id' => ['nullable', 'integer', 'exists:tahun_ajarans,id'],
+            'tahun_ajaran_id' => ['required', 'integer', 'exists:tahun_ajarans,id'],
             'file' => ['required', 'file', 'mimes:pdf', 'max:'.TunjanganDokumenService::MAX_PDF_KB],
         ]);
 
-        $tahunAjaran = isset($validated['tahun_ajaran_id'])
-            ? TahunAjaran::query()->find($validated['tahun_ajaran_id'])
-            : null;
+        $tahunAjaran = TahunAjaran::query()->findOrFail($validated['tahun_ajaran_id']);
 
         $this->dokumen->simpanPdf(
             $gtk,
             $jenis,
             (int) $validated['periode'],
             $request->file('file'),
-            isset($validated['tahun_anggaran']) ? (int) $validated['tahun_anggaran'] : null,
+            null,
             $tahunAjaran,
         );
 
         return back()->with('status', 'PDF berhasil diunggah.');
     }
 
-    public function destroy(string $jenis, Gtk $gtk, TunjanganDokumen $dokumen): RedirectResponse
+    public function stream(string $jenis, Gtk $gtk, TunjanganDokumen $dokumen): StreamedResponse
     {
-        $this->dokumen->assertJenisUpload($jenis);
-        abort_unless((int) $dokumen->gtk_id === (int) $gtk->id && $dokumen->jenis === $jenis, 404);
-        $this->authorize('hapus', $dokumen);
-
-        $this->dokumen->hapus($dokumen);
-
-        return back()->with('status', 'PDF dihapus dari database dan storage.');
+        return $this->fileResponse($jenis, $gtk, $dokumen, inline: true);
     }
 
     public function download(string $jenis, Gtk $gtk, TunjanganDokumen $dokumen): StreamedResponse
     {
-        $this->dokumen->assertJenisUpload($jenis);
-        abort_unless((int) $dokumen->gtk_id === (int) $gtk->id && $dokumen->jenis === $jenis, 404);
-        $this->authorize('viewGtk', $gtk);
-        abort_unless(filled($dokumen->path), 404);
-
-        $filename = $dokumen->nama_asli ?: ($this->dokumen->labelJenis($jenis).'.pdf');
-
-        return Storage::disk('r2')->download((string) $dokumen->path, $filename);
+        return $this->fileResponse($jenis, $gtk, $dokumen, inline: false);
     }
 
     public function uploadZip(Request $request, string $jenis): RedirectResponse
@@ -248,5 +179,71 @@ class TunjanganController extends Controller
         }
 
         return $this->sptjm->downloadMany($collection, $tanggal);
+    }
+
+    /**
+     * @param  Collection<string, TunjanganDokumen>  $dokumens
+     * @return list<array<string, mixed>>
+     */
+    private function buildRows(string $jenis, ?TahunAjaran $tahunAjaran, $dokumens): array
+    {
+        $rows = [];
+
+        if ($jenis === TunjanganDokumen::JENIS_SKAKPT) {
+            abort_unless($tahunAjaran, 404, 'Tahun ajaran belum tersedia.');
+            foreach (TunjanganDokumenService::grupBulanSkakpt() as $grup) {
+                $rows[] = [
+                    'type' => 'header',
+                    'label' => $grup['label'],
+                ];
+                foreach ($grup['bulan'] as $bulan => $nama) {
+                    $slot = TunjanganDokumen::slotKeySkakpt((int) $tahunAjaran->id, $bulan);
+                    $doc = $dokumens->get($slot);
+                    $rows[] = [
+                        'type' => 'item',
+                        'periode' => $bulan,
+                        'label' => $nama,
+                        'dokumen' => $doc,
+                        'boleh_upload' => $this->dokumen->bolehUploadSkakpt($tahunAjaran, $bulan),
+                    ];
+                }
+            }
+
+            return $rows;
+        }
+
+        if (in_array($jenis, [TunjanganDokumen::JENIS_SKMT, TunjanganDokumen::JENIS_SKBK], true)) {
+            abort_unless($tahunAjaran, 404, 'Tahun ajaran belum tersedia.');
+            foreach ([1 => 'Semester I (Ganjil)', 2 => 'Semester II (Genap)'] as $sem => $label) {
+                $slot = TunjanganDokumen::slotKeySemester($jenis, (int) $tahunAjaran->id, $sem);
+                $doc = $dokumens->get($slot);
+                $rows[] = [
+                    'type' => 'item',
+                    'periode' => $sem,
+                    'label' => $label,
+                    'dokumen' => $doc,
+                    'boleh_upload' => $this->dokumen->bolehUploadSemester($tahunAjaran, $sem),
+                ];
+            }
+        }
+
+        return $rows;
+    }
+
+    private function fileResponse(string $jenis, Gtk $gtk, TunjanganDokumen $dokumen, bool $inline): StreamedResponse
+    {
+        $this->dokumen->assertJenisUpload($jenis);
+        abort_unless((int) $dokumen->gtk_id === (int) $gtk->id && $dokumen->jenis === $jenis, 404);
+        $this->authorize('viewGtk', $gtk);
+        abort_unless(filled($dokumen->path), 404);
+
+        $filename = $dokumen->nama_asli ?: ($this->dokumen->labelJenis($jenis).'.pdf');
+
+        return Storage::disk('r2')->response(
+            (string) $dokumen->path,
+            $filename,
+            ['Content-Type' => 'application/pdf'],
+            $inline ? 'inline' : 'attachment',
+        );
     }
 }

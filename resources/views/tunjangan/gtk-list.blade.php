@@ -2,7 +2,7 @@
 
 @section('title', $labelJenis.' · Tunjangan')
 @section('heading', $labelJenis)
-@section('subheading', 'Guru tersertifikasi')
+@section('subheading', $deskripsiJenis ?: 'Guru tersertifikasi')
 
 @section('content')
 @if (session('status'))
