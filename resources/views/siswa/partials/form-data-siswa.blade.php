@@ -289,7 +289,7 @@
             :dokumen="$dokumenKk"
             :siswa="($portal ?? false) ? null : $s"
             :required="true"
-            hint="Wajib. Maks. 1MB · pdf / jpg / png"
+            hint="Wajib. Maks. 2MB · pdf / jpg / png"
         />
     </div>
     <div class="col-md-6">
@@ -300,7 +300,7 @@
             :dokumen="$dokumenAkta"
             :siswa="($portal ?? false) ? null : $s"
             :required="true"
-            hint="Wajib. Maks. 1MB · pdf / jpg / png"
+            hint="Wajib. Maks. 2MB · pdf / jpg / png"
         />
     </div>
     <div class="col-md-6" data-kip-upload @if (blank(old('no_kip', $p?->no_kip)) || old('tidak_punya_kip', $p?->tidak_punya_kip)) hidden @endif>
@@ -310,7 +310,7 @@
             jenis="kip"
             :dokumen="$dokumenKip"
             :siswa="($portal ?? false) ? null : $s"
-            hint="Wajib jika nomor KIP diisi. Maks. 1MB · pdf / jpg / png"
+            hint="Wajib jika nomor KIP diisi. Maks. 2MB · pdf / jpg / png"
         />
     </div>
 </div>

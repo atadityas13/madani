@@ -125,7 +125,7 @@ class SiswaController extends Controller
 
         $field = $map[$jenis];
         $request->validate([
-            $field => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
+            $field => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
         ]);
 
         $this->biodata->simpanDokumen($request, $siswa, $field, $jenis);

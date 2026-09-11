@@ -8,7 +8,7 @@
     'destroyUrl' => null,
     'accept' => '.pdf,.jpg,.jpeg,.png',
     'required' => false,
-    'hint' => 'Maks. 1MB · pdf / jpg / png',
+    'hint' => 'Maks. 2MB · pdf / jpg / png',
 ])
 
 @php

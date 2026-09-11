@@ -76,7 +76,7 @@
                 :dokumen="$ijazahSd"
                 :siswa="($portal ?? false) ? null : $siswa"
                 :required="! $ijazahSd"
-                hint="Maks. 1MB · pdf / jpg / png. Wajib diunggah."
+                hint="Maks. 2MB · pdf / jpg / png. Wajib diunggah."
             />
         </div>
     </div>

@@ -157,7 +157,7 @@
                                 jenis="kks"
                                 :dokumen="$siswa->dokumenJenis('kks')"
                                 :siswa="$portal ? null : $siswa"
-                                hint="Wajib jika nomor KKS diisi. Maks. 1MB · pdf / jpg / png"
+                                hint="Wajib jika nomor KKS diisi. Maks. 2MB · pdf / jpg / png"
                             />
                         </div>
                     </div>
@@ -177,7 +177,7 @@
                                 jenis="pkh"
                                 :dokumen="$siswa->dokumenJenis('pkh')"
                                 :siswa="$portal ? null : $siswa"
-                                hint="Wajib jika nomor PKH diisi. Maks. 1MB · pdf / jpg / png"
+                                hint="Wajib jika nomor PKH diisi. Maks. 2MB · pdf / jpg / png"
                             />
                         </div>
                     </div>

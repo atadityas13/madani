@@ -375,7 +375,7 @@ class SiswaBiodataService
             'kategori' => ['required', 'string', Rule::in(array_keys(config('emis.jenis_beasiswa')))],
             'nomor_rekening' => ['nullable', 'regex:/^[0-9]+$/', 'max:50'],
             'nominal' => ['nullable', 'integer', 'min:0'],
-            'bukti' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
+            'bukti' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
         ], [
             'nomor_rekening.regex' => 'Nomor rekening hanya boleh angka',
         ]);
@@ -403,7 +403,7 @@ class SiswaBiodataService
             'tingkat' => ['nullable', 'string', Rule::in(array_keys(config('emis.tingkat_prestasi')))],
             'tahun' => ['nullable', 'integer', 'min:2000', 'max:2100'],
             'penyelenggara' => ['nullable', 'string', 'max:255'],
-            'sertifikat' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:1024'],
+            'sertifikat' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
         ]);
 
         unset($data['sertifikat']);
@@ -442,7 +442,7 @@ class SiswaBiodataService
                 'nullable',
                 'file',
                 'mimes:pdf,jpg,jpeg,png',
-                'max:1024',
+                'max:2048',
             ],
         ], [
             'nama_sd.required' => 'Nama sekolah wajib diisi',
@@ -456,6 +456,7 @@ class SiswaBiodataService
             'nomor_seri_ijazah.required' => 'Nomor seri ijazah wajib diisi',
             'tanggal_terbit_ijazah.required' => 'Tanggal terbit ijazah wajib diisi',
             'file_ijazah.required' => 'Unggah ijazah wajib dilampirkan',
+            'file_ijazah.max' => 'Ukuran file ijazah maksimal 2MB',
         ]);
 
         $keys = ['nama', 'nisn', 'tempat_lahir', 'tanggal_lahir', 'jenis_kelamin', 'nama_ayah'];
@@ -590,21 +591,21 @@ class SiswaBiodataService
                 'nullable',
                 'file',
                 'mimes:pdf,jpg,jpeg,png',
-                'max:1024',
+                'max:2048',
             ],
             'file_akta' => [
                 Rule::requiredIf($siswa === null || $siswa->dokumenJenis('akta_lahir') === null),
                 'nullable',
                 'file',
                 'mimes:pdf,jpg,jpeg,png',
-                'max:1024',
+                'max:2048',
             ],
             'file_kip' => [
                 Rule::requiredIf(filled($noKip) && ($siswa === null || $siswa->dokumenJenis('kip') === null)),
                 'nullable',
                 'file',
                 'mimes:pdf,jpg,jpeg,png',
-                'max:1024',
+                'max:2048',
             ],
             'foto' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:'.VendorFotoService::MAX_KB],
         ], [
@@ -875,14 +876,14 @@ class SiswaBiodataService
                     'nullable',
                     'file',
                     'mimes:pdf,jpg,jpeg,png',
-                    'max:1024',
+                    'max:2048',
                 ],
                 'file_pkh' => [
                     Rule::requiredIf(filled($noPkh) && $siswa->dokumenJenis('pkh') === null),
                     'nullable',
                     'file',
                     'mimes:pdf,jpg,jpeg,png',
-                    'max:1024',
+                    'max:2048',
                 ],
             ],
             $this->aturanDataOrtu($request, 'ortu.ayah', true),
