@@ -146,7 +146,15 @@ class AppMenuApiTest extends TestCase
             ->assertRedirect('https://madani.mtsn11majalengka.sch.id/dashboard');
 
         $this->assertAuthenticatedAs($guru, 'web');
-        $this->assertFalse(Cache::has('app_menu_webview_ticket:'.$ticket));
+        $this->assertTrue(Cache::has('app_menu_webview_ticket:'.$ticket));
+
+        // Chrome Custom Tabs sering hit ulang: tiket masih valid dalam grace period.
+        $this->get('/webview/enter?ticket='.$ticket)
+            ->assertRedirect('https://madani.mtsn11majalengka.sch.id/dashboard');
+
+        $this->travel(121)->seconds();
+        $this->get('/webview/enter?ticket='.$ticket)
+            ->assertStatus(410);
     }
 
     public function test_menu_payload_includes_icon_url_for_stored_path(): void
@@ -219,17 +227,17 @@ class AppMenuApiTest extends TestCase
         );
     }
 
-    public function test_seeder_memindahkan_tunjangan_ke_chrome_tab_untuk_file_picker(): void
+    public function test_seeder_mengembalikan_tunjangan_ke_webview(): void
     {
         $menu = AppMenu::query()
             ->where('key', AppMenu::KEY_TUNJANGAN)
             ->where('audience', AppMenu::AUDIENCE_GURU)
             ->firstOrFail();
-        $menu->update(['open_mode' => AppMenu::OPEN_WEBVIEW]);
+        $menu->update(['open_mode' => AppMenu::OPEN_CHROME_TAB]);
 
         (new AppMenuSeeder)->run();
 
         $menu->refresh();
-        $this->assertSame(AppMenu::OPEN_CHROME_TAB, $menu->open_mode);
+        $this->assertSame(AppMenu::OPEN_WEBVIEW, $menu->open_mode);
     }
 }

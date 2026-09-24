@@ -30,14 +30,14 @@ class AppMenuSeeder extends Seeder
             );
         }
 
-        // Tunjangan butuh file picker PDF. WebView Ta'lim lama belum support
-        // onShowFileChooser — buka via Chrome Custom Tab agar explorer jalan
-        // tanpa menunggu update APK (customisasi lain menu tidak diubah).
+        // Tunjangan: pakai WebView in-app (SSO + cookie Madani stabil).
+        // File picker di Ta'lim memakai ACTION_OPEN_DOCUMENT; jangan Chrome Tab
+        // agar tidak kena 410 dari tiket SSO yang di-prefetch.
         AppMenu::query()
             ->where('audience', AppMenu::AUDIENCE_GURU)
             ->where('key', AppMenu::KEY_TUNJANGAN)
-            ->where('open_mode', AppMenu::OPEN_WEBVIEW)
-            ->update(['open_mode' => AppMenu::OPEN_CHROME_TAB]);
+            ->where('open_mode', AppMenu::OPEN_CHROME_TAB)
+            ->update(['open_mode' => AppMenu::OPEN_WEBVIEW]);
     }
 
     /**
@@ -68,7 +68,7 @@ class AppMenuSeeder extends Seeder
                 'type' => AppMenu::TYPE_CUSTOM,
                 'judul' => 'Tunjangan',
                 'url' => rtrim((string) config('app.url'), '/').'/talim/tunjangan',
-                'open_mode' => AppMenu::OPEN_CHROME_TAB,
+                'open_mode' => AppMenu::OPEN_WEBVIEW,
                 'requires_auth' => true,
                 'sort_order' => 46,
             ],

@@ -64,7 +64,13 @@ class TalimTunjanganMenuTest extends TestCase
             ->assertRedirect('https://madani.mtsn11majalengka.sch.id/talim/tunjangan');
 
         $this->assertAuthenticatedAs($guru, 'web');
-        $this->assertFalse(Cache::has('app_menu_webview_ticket:'.$ticket));
+        $this->assertTrue(Cache::has('app_menu_webview_ticket:'.$ticket));
+
+        $this->get('/webview/enter?ticket='.$ticket)
+            ->assertRedirect('https://madani.mtsn11majalengka.sch.id/talim/tunjangan');
+
+        $menu->refresh();
+        $this->assertSame(AppMenu::OPEN_WEBVIEW, $menu->open_mode);
     }
 
     public function test_guru_tersertifikasi_bisa_buka_hub_talim(): void

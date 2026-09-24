@@ -32,9 +32,11 @@
         top:0;
         width:100%;
         height:100%;
-        opacity:0.011;
+        /* opacity:0 di sebagian WebView tidak menerima tap; 0.01 tetap “tersembunyi” */
+        opacity:0.01;
         font-size:64px;
         cursor:pointer;
+        z-index:2;
     }
     .talim-upload-busy{
         position:fixed;
@@ -136,7 +138,7 @@
                                         <input
                                             type="file"
                                             name="file"
-                                            accept="application/pdf"
+                                            accept="application/pdf,.pdf"
                                             required
                                         >
                                     </label>
