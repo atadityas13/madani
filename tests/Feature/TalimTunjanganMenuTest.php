@@ -126,6 +126,30 @@ class TalimTunjanganMenuTest extends TestCase
         ]);
     }
 
+    public function test_wali_kelas_tersertifikasi_bisa_upload_skakpt_di_talim(): void
+    {
+        Storage::fake('r2');
+        $this->seed();
+        $this->travelTo(now()->setDate(2027, 3, 15));
+        $ta = TahunAjaran::aktif();
+        $wali = $this->buatGuru(nrg: 'NRG-WALI', role: Peran::WALI_KELAS);
+
+        $this->actingAs($wali)
+            ->post(route('talim.tunjangan.upload', 'skakpt'), [
+                'periode' => 2,
+                'tahun_ajaran_id' => $ta->id,
+                'file' => UploadedFile::fake()->create('wali.pdf', 100, 'application/pdf'),
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('tunjangan_dokumens', [
+            'gtk_id' => $wali->gtk_id,
+            'jenis' => 'skakpt',
+            'periode' => 2,
+            'tahun_ajaran_id' => $ta->id,
+        ]);
+    }
+
     public function test_preview_halaman_talim_membuka_viewer(): void
     {
         Storage::fake('r2');
@@ -170,9 +194,10 @@ class TalimTunjanganMenuTest extends TestCase
         $this->assertStringStartsWith('%PDF', $response->getContent());
     }
 
-    private function buatGuru(?string $nrg): User
+    private function buatGuru(?string $nrg, string $role = Peran::GURU): User
     {
         Role::findOrCreate(Peran::GURU);
+        Role::findOrCreate(Peran::WALI_KELAS);
         $gtk = Gtk::query()->create([
             'nama' => 'Guru Talim Tunjangan',
             'nip' => (string) fake()->unique()->numerify('##################'),
@@ -187,7 +212,7 @@ class TalimTunjanganMenuTest extends TestCase
             'gtk_id' => $gtk->id,
             'is_aktif' => true,
         ]);
-        $user->syncRoles([Peran::GURU]);
+        $user->syncRoles([$role]);
 
         return $user->fresh(['gtk']);
     }

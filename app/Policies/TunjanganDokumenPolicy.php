@@ -15,7 +15,9 @@ class TunjanganDokumenPolicy
             return true;
         }
 
-        return $user->hasRole(Peran::GURU) && $this->gtkSertifikasi($user) !== null;
+        // Menu Tunjangan di Talim hanya cek GTK aktif + NRG; role boleh guru atau wali_kelas.
+        return $user->hasAnyRole([Peran::GURU, Peran::WALI_KELAS])
+            && $this->gtkSertifikasi($user) !== null;
     }
 
     public function kelolaSemua(User $user): bool

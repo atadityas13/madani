@@ -143,7 +143,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/talim/wali/siswa', [WaliKelasController::class, 'siswa'])->name('talim.wali.siswa');
     });
 
-    Route::middleware('role:guru')->prefix('talim/tunjangan')->name('talim.tunjangan.')->group(function () {
+    // Samakan dengan API Talim: cukup akun GTK (role guru atau wali_kelas).
+    // Otorisasi sertifikasi (NRG) ada di controller/policy, bukan di middleware role.
+    Route::middleware('role:guru|wali_kelas')->prefix('talim/tunjangan')->name('talim.tunjangan.')->group(function () {
         Route::get('/', [TalimTunjanganController::class, 'index'])->name('index');
         Route::post('sptjm/unduh', [TalimTunjanganController::class, 'sptjmDownload'])->name('sptjm');
         Route::get('{jenis}', [TalimTunjanganController::class, 'show'])
