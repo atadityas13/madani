@@ -28,10 +28,13 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'status_pegawai',
     'kode_internal',
     'duk',
+    'mapel_ijazah',
+    'mapel_sertifikasi',
+    'status_sertifikasi',
+    'is_bk',
     'foto_url',
     'jenis',
     'status',
-    'meta',
 ])]
 class Gtk extends Model
 {
@@ -43,7 +46,8 @@ class Gtk extends Model
     {
         return [
             'tanggal_lahir' => 'date',
-            'meta' => 'array',
+            'status_sertifikasi' => 'boolean',
+            'is_bk' => 'boolean',
         ];
     }
 
@@ -124,18 +128,5 @@ class Gtk extends Model
 
             return $prefix.$nama.$suffix;
         });
-    }
-
-    public function metaGet(string $key, mixed $default = null): mixed
-    {
-        return data_get($this->meta ?? [], $key, $default);
-    }
-
-    /**
-     * @param  array<string, mixed>  $values
-     */
-    public function metaMerge(array $values): void
-    {
-        $this->meta = array_merge($this->meta ?? [], $values);
     }
 }

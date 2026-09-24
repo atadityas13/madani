@@ -111,7 +111,7 @@
             </div>
         </div>
 
-        <div class="row g-3 mb-4">
+        <div class="row g-3 mb-3">
             <div class="col-md-6">
                 <label class="form-label">Kode internal</label>
                 <input class="form-control" name="kode_internal" value="{{ old('kode_internal', $gtk->kode_internal) }}">
@@ -119,6 +119,46 @@
             <div class="col-md-6">
                 <label class="form-label">DUK</label>
                 <input class="form-control" name="duk" value="{{ old('duk', $gtk->duk) }}">
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Mapel ijazah</label>
+                <input class="form-control" name="mapel_ijazah" value="{{ old('mapel_ijazah', $gtk->mapel_ijazah) }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Mapel sertifikasi</label>
+                <input class="form-control" name="mapel_sertifikasi" value="{{ old('mapel_sertifikasi', $gtk->mapel_sertifikasi) }}">
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="form-check">
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        name="status_sertifikasi"
+                        id="status_sertifikasi"
+                        value="1"
+                        @checked(old('status_sertifikasi', $gtk->status_sertifikasi))
+                    >
+                    <label class="form-check-label" for="status_sertifikasi">Sudah sertifikasi</label>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-check">
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        name="is_bk"
+                        id="is_bk"
+                        value="1"
+                        @checked(old('is_bk', $gtk->is_bk))
+                    >
+                    <label class="form-check-label" for="is_bk">Guru BK</label>
+                </div>
             </div>
         </div>
 

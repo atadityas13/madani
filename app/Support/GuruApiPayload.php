@@ -24,6 +24,7 @@ class GuruApiPayload
             'role' => $user->peranUtama(),
             'foto' => self::fotoUrl($user, $gtk),
             'guru' => $gtk ? self::gtk($gtk) : null,
+            'kelengkapan' => KelengkapanGuru::ringkasan($user),
         ];
     }
 
@@ -35,11 +36,6 @@ class GuruApiPayload
         $duk = $gtk->duk;
         $dukInt = is_numeric($duk) ? (int) $duk : null;
 
-        $mapel = $gtk->metaGet('mapel', []);
-        if (! is_array($mapel)) {
-            $mapel = [];
-        }
-
         return [
             'id' => $gtk->id,
             'kode_guru' => $gtk->kode_internal,
@@ -49,8 +45,8 @@ class GuruApiPayload
             'nuptk' => $gtk->nuptk,
             'golongan' => $gtk->golongan,
             'status_pegawai' => $gtk->status_pegawai,
-            'status_sertifikasi' => (bool) $gtk->metaGet('status_sertifikasi', false),
-            'is_bk' => (bool) $gtk->metaGet('is_bk', false),
+            'status_sertifikasi' => (bool) $gtk->status_sertifikasi,
+            'is_bk' => (bool) $gtk->is_bk,
             'jenis_kelamin' => $gtk->jenis_kelamin,
             'tempat_lahir' => $gtk->tempat_lahir,
             'tanggal_lahir' => $gtk->tanggal_lahir?->format('Y-m-d'),
@@ -58,9 +54,10 @@ class GuruApiPayload
             'nomor_hp' => $gtk->nomor_hp,
             'email' => $gtk->email,
             'alamat' => $gtk->alamat,
-            'mapel_ijazah' => $gtk->metaGet('mapel_ijazah'),
-            'mapel_sertifikasi' => $gtk->metaGet('mapel_sertifikasi'),
-            'mapel' => array_values($mapel),
+            'mapel_ijazah' => $gtk->mapel_ijazah,
+            'mapel_sertifikasi' => $gtk->mapel_sertifikasi,
+            // Mapel diampu live dari jadwal Simpatisans di Talim, bukan snapshot Madani.
+            'mapel' => [],
         ];
     }
 

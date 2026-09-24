@@ -162,8 +162,9 @@ class ElapkinBridge
             'nama_penilai' => $kepala['nama'] ?? null,
             'jabatan_penilai' => $kepala['jabatan'] ?? 'Kepala Madrasah',
             'penilai_peran' => 'Kepala Madrasah',
-            'mapel' => array_values((array) $gtk?->metaGet('mapel', [])),
-            'tugas_tambahan' => array_values((array) $gtk?->metaGet('tugas_tambahan', [])),
+            // Mapel & tugas tambahan live di Simpatisans — tidak di-snapshot Madani.
+            'mapel' => [],
+            'tugas_tambahan' => [],
         ];
 
         $timestamp = time();

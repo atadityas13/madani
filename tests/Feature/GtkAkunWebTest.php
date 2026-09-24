@@ -68,4 +68,33 @@ class GtkAkunWebTest extends TestCase
             ->assertRedirect(route('gtk.index'))
             ->assertSessionHasErrors('nip');
     }
+
+    public function test_update_gtk_menyimpan_kolom_kompetensi(): void
+    {
+        $admin = $this->superadmin();
+        $gtk = Gtk::query()->create([
+            'nama' => 'Budi',
+            'nip' => '198001012005011001',
+            'jenis' => 'guru',
+            'status' => 'aktif',
+        ]);
+
+        $this->actingAs($admin)
+            ->put(route('gtk.update', $gtk), [
+                'nama' => 'Budi Santoso',
+                'jenis' => 'guru',
+                'status' => 'aktif',
+                'mapel_ijazah' => 'Matematika',
+                'mapel_sertifikasi' => 'Matematika',
+                'status_sertifikasi' => '1',
+                'is_bk' => '1',
+            ])
+            ->assertRedirect(route('gtk.index'));
+
+        $gtk->refresh();
+        $this->assertSame('Matematika', $gtk->mapel_ijazah);
+        $this->assertSame('Matematika', $gtk->mapel_sertifikasi);
+        $this->assertTrue($gtk->status_sertifikasi);
+        $this->assertTrue($gtk->is_bk);
+    }
 }

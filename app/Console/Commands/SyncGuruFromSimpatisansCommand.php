@@ -32,9 +32,6 @@ class SyncGuruFromSimpatisansCommand extends Command
         $gurus = $this->extractInsertRows($sql, 'gurus');
         $users = $this->extractInsertRows($sql, 'users');
         $mapels = $this->extractInsertRows($sql, 'mapels');
-        $guruMapels = $this->extractInsertRows($sql, 'guru_mapels');
-        $tugas = $this->extractInsertRows($sql, 'tugas_tambahans');
-        $guruTugas = $this->extractInsertRows($sql, 'guru_tugas_tambahans');
 
         if ($gurus === []) {
             $this->error('Tidak ada data gurus di dump.');
@@ -44,11 +41,11 @@ class SyncGuruFromSimpatisansCommand extends Command
 
         $mapelById = [];
         foreach ($mapels as $mapel) {
-            $mapelById[$mapel['id']] = $mapel['nama_mapel'] ?? $mapel['nama'] ?? ('#'.$mapel['id']);
-        }
-        $tugasById = [];
-        foreach ($tugas as $item) {
-            $tugasById[$item['id']] = $item['nama_tugas'] ?? ('#'.$item['id']);
+            $key = $this->idKey($mapel['id'] ?? null);
+            if ($key === '') {
+                continue;
+            }
+            $mapelById[$key] = $mapel['nama_mapel'] ?? $mapel['nama'] ?? ('#'.$key);
         }
         $userByNip = [];
         foreach ($users as $user) {
@@ -71,10 +68,7 @@ class SyncGuruFromSimpatisansCommand extends Command
             $gurus,
             $simNips,
             $userByNip,
-            $guruMapels,
-            $guruTugas,
             $mapelById,
-            $tugasById,
             $dry,
             $skipPasswords,
             &$updated,
@@ -104,7 +98,7 @@ class SyncGuruFromSimpatisansCommand extends Command
 
             foreach ($gurus as $sg) {
                 $nip = (string) $sg['username'];
-                $meta = $this->buildMeta($sg, $guruMapels, $guruTugas, $mapelById, $tugasById);
+                $kompetensi = $this->resolveKompetensi($sg, $mapelById);
                 $payload = [
                     'nama' => $this->clean($sg['nama_guru']) ?? $nip,
                     'gelar_depan' => $this->clean($sg['gelar_depan'] ?? null),
@@ -123,7 +117,10 @@ class SyncGuruFromSimpatisansCommand extends Command
                     'status_pegawai' => $this->clean($sg['status_pegawai'] ?? null),
                     'kode_internal' => $this->clean($sg['kode_guru'] ?? null),
                     'duk' => isset($sg['duk']) && $sg['duk'] !== null ? (string) $sg['duk'] : null,
-                    'meta' => $meta,
+                    'mapel_ijazah' => $kompetensi['mapel_ijazah'],
+                    'mapel_sertifikasi' => $kompetensi['mapel_sertifikasi'],
+                    'status_sertifikasi' => $kompetensi['status_sertifikasi'],
+                    'is_bk' => $kompetensi['is_bk'],
                     'status' => 'aktif',
                     'jenis' => Gtk::JENIS_GURU,
                 ];
@@ -198,62 +195,38 @@ class SyncGuruFromSimpatisansCommand extends Command
 
     /**
      * @param  array<string, mixed>  $sg
-     * @param  list<array<string, mixed>>  $guruMapels
-     * @param  list<array<string, mixed>>  $guruTugas
      * @param  array<string, string>  $mapelById
-     * @param  array<string, string>  $tugasById
-     * @return array<string, mixed>
+     * @return array{mapel_ijazah: ?string, mapel_sertifikasi: ?string, status_sertifikasi: bool, is_bk: bool}
      */
-    private function buildMeta(array $sg, array $guruMapels, array $guruTugas, array $mapelById, array $tugasById): array
+    private function resolveKompetensi(array $sg, array $mapelById): array
     {
-        $guruId = $sg['id'];
-        $mapels = [];
-        foreach ($guruMapels as $gm) {
-            if ($gm['guru_id'] !== $guruId) {
-                continue;
-            }
-            $name = $this->clean($mapelById[$gm['mapel_id']] ?? null);
-            if ($name && ! in_array($name, $mapels, true)) {
-                $mapels[] = $name;
-            }
+        $mapelIjazah = null;
+        $mapelIjazahId = $this->idKey($sg['mapel_ijazah_id'] ?? null);
+        if ($mapelIjazahId !== '') {
+            $mapelIjazah = $this->clean($mapelById[$mapelIjazahId] ?? $mapelIjazahId);
         }
 
-        $tugasList = [];
-        $seen = [];
-        foreach ($guruTugas as $gt) {
-            if ($gt['guru_id'] !== $guruId) {
-                continue;
-            }
-            $nama = $this->clean($tugasById[$gt['tugas_tambahan_id']] ?? null) ?? '';
-            $detail = $this->clean($gt['detail'] ?? null);
-            $key = $nama.'|'.($detail ?? '');
-            if (isset($seen[$key])) {
-                continue;
-            }
-            $seen[$key] = true;
-            $tugasList[] = [
-                'nama' => $nama,
-                'detail' => $detail,
-                'is_ekuivalen' => (bool) ((int) ($gt['is_ekuivalen'] ?? 0)),
-            ];
+        $mapelSertifikasi = null;
+        $mapelSertifikasiId = $this->idKey($sg['mapel_sertifikasi_id'] ?? null);
+        if ($mapelSertifikasiId !== '') {
+            $mapelSertifikasi = $this->clean($mapelById[$mapelSertifikasiId] ?? $mapelSertifikasiId);
         }
 
-        $meta = [
+        return [
+            'mapel_ijazah' => $mapelIjazah,
+            'mapel_sertifikasi' => $mapelSertifikasi,
             'status_sertifikasi' => (bool) ((int) ($sg['status_sertifikasi'] ?? 0)),
             'is_bk' => (bool) ((int) ($sg['is_bk'] ?? 0)),
-            'id_gtk' => $sg['id_gtk'] ?? null,
-            'mapel' => $mapels,
-            'tugas_tambahan' => $tugasList,
         ];
+    }
 
-        if (! empty($sg['mapel_ijazah_id'])) {
-            $meta['mapel_ijazah'] = $this->clean($mapelById[$sg['mapel_ijazah_id']] ?? (string) $sg['mapel_ijazah_id']);
-        }
-        if (! empty($sg['mapel_sertifikasi_id'])) {
-            $meta['mapel_sertifikasi'] = $this->clean($mapelById[$sg['mapel_sertifikasi_id']] ?? (string) $sg['mapel_sertifikasi_id']);
+    private function idKey(mixed $value): string
+    {
+        if ($value === null || $value === '') {
+            return '';
         }
 
-        return $meta;
+        return (string) $value;
     }
 
     private function clean(?string $value): ?string

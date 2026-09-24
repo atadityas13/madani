@@ -151,4 +151,43 @@ class GuruAuthApiTest extends TestCase
         $this->getJson('/api/v1/guru/me')
             ->assertForbidden();
     }
+
+    public function test_me_menyertakan_kelengkapan_profil_dari_field_yang_bisa_diubah(): void
+    {
+        $user = $this->buatAkunGuru([
+            'jenis_kelamin' => null,
+            'tempat_lahir' => null,
+            'tanggal_lahir' => null,
+            'agama' => null,
+            'nomor_hp' => null,
+            'email' => null,
+            'alamat' => null,
+            'foto_url' => null,
+        ], ['foto' => null]);
+        Sanctum::actingAs($user);
+
+        $this->getJson('/api/v1/guru/me')
+            ->assertOk()
+            ->assertJsonPath('user.kelengkapan.total', 8)
+            ->assertJsonPath('user.kelengkapan.selesai', 0)
+            ->assertJsonPath('user.kelengkapan.persen', 0)
+            ->assertJsonPath('user.kelengkapan.semua_selesai', false);
+
+        $user->gtk->update([
+            'jenis_kelamin' => 'L',
+            'tempat_lahir' => 'Majalengka',
+            'tanggal_lahir' => '1980-01-01',
+            'agama' => 'Islam',
+            'nomor_hp' => '08123456789',
+            'email' => 'budi@example.com',
+            'alamat' => 'Jl. Merdeka',
+            'foto_url' => 'user_photos/budi.jpg',
+        ]);
+
+        $this->getJson('/api/v1/guru/me')
+            ->assertOk()
+            ->assertJsonPath('user.kelengkapan.selesai', 8)
+            ->assertJsonPath('user.kelengkapan.persen', 100)
+            ->assertJsonPath('user.kelengkapan.semua_selesai', true);
+    }
 }

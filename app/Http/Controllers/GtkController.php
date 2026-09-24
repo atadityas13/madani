@@ -130,11 +130,18 @@ class GtkController extends Controller
             'status_pegawai' => ['nullable', 'string', 'max:30'],
             'kode_internal' => ['nullable', 'string', 'max:40'],
             'duk' => ['nullable', 'string', 'max:40'],
+            'mapel_ijazah' => ['nullable', 'string', 'max:120'],
+            'mapel_sertifikasi' => ['nullable', 'string', 'max:120'],
+            'status_sertifikasi' => ['sometimes', 'boolean'],
+            'is_bk' => ['sometimes', 'boolean'],
             'jenis' => ['required', Rule::in(array_keys(Gtk::jenisOptions()))],
             'status' => ['required', Rule::in(['aktif', 'nonaktif'])],
         ]);
 
-        foreach (['nip', 'nuptk', 'nrg', 'gelar_depan', 'gelar_belakang', 'tempat_lahir', 'agama', 'nomor_hp', 'email', 'alamat', 'jabatan', 'golongan', 'status_pegawai', 'kode_internal', 'duk'] as $field) {
+        $data['status_sertifikasi'] = $request->boolean('status_sertifikasi');
+        $data['is_bk'] = $request->boolean('is_bk');
+
+        foreach (['nip', 'nuptk', 'nrg', 'gelar_depan', 'gelar_belakang', 'tempat_lahir', 'agama', 'nomor_hp', 'email', 'alamat', 'jabatan', 'golongan', 'status_pegawai', 'kode_internal', 'duk', 'mapel_ijazah', 'mapel_sertifikasi'] as $field) {
             $data[$field] = $data[$field] ?? null;
             if (is_string($data[$field]) && trim($data[$field]) === '') {
                 $data[$field] = null;
