@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -16,6 +17,16 @@ class Rombel extends Model
     public function tahunAjaran(): BelongsTo
     {
         return $this->belongsTo(TahunAjaran::class);
+    }
+
+    /**
+     * Urutan kelas: VII → VIII → IX, lalu nomor nama numerik (2 sebelum 10).
+     */
+    public function scopeOrdered(Builder $query): Builder
+    {
+        return $query->orderByRaw("CASE tingkat WHEN 'VII' THEN 1 WHEN 'VIII' THEN 2 WHEN 'IX' THEN 3 ELSE 9 END")
+            ->orderByRaw('CAST(nama AS UNSIGNED)')
+            ->orderBy('nama');
     }
 
     public function waliKelas(): BelongsTo

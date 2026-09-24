@@ -344,6 +344,59 @@ class IzinSiswaApiTest extends TestCase
             ->assertJsonPath('data.rows.0.alpa', 2);
     }
 
+    public function test_rombels_and_rekap_sia_are_ordered_by_tingkat_then_numeric_nama(): void
+    {
+        Queue::fake();
+        $this->seed();
+
+        $wali = $this->buatAkunGuru('197901012005011099', 'Wali Urut');
+        $tahun = TahunAjaran::aktif();
+        $this->assertNotNull($tahun);
+
+        $delapanSatu = Rombel::query()->create([
+            'tahun_ajaran_id' => $tahun->id,
+            'tingkat' => 'VIII',
+            'nama' => '1',
+            'program' => 'Reguler',
+            'gtk_id' => $wali->gtk_id,
+        ]);
+        $tujuhSepuluh = Rombel::query()->create([
+            'tahun_ajaran_id' => $tahun->id,
+            'tingkat' => 'VII',
+            'nama' => '10',
+            'program' => 'Reguler',
+            'gtk_id' => $wali->gtk_id,
+        ]);
+        $tujuhDua = Rombel::query()->create([
+            'tahun_ajaran_id' => $tahun->id,
+            'tingkat' => 'VII',
+            'nama' => '2',
+            'program' => 'Reguler',
+            'gtk_id' => $wali->gtk_id,
+        ]);
+
+        Sanctum::actingAs($wali);
+
+        $rombels = $this->getJson('/api/v1/guru/izin/rombels')
+            ->assertOk()
+            ->json('data');
+
+        $this->assertSame(
+            [$tujuhDua->id, $tujuhSepuluh->id, $delapanSatu->id],
+            array_column($rombels, 'id'),
+        );
+        $this->assertSame(0, $rombels[0]['jumlah_siswa']);
+
+        $rows = $this->getJson('/api/v1/guru/izin/rekap-sia')
+            ->assertOk()
+            ->json('data.rows');
+
+        $this->assertSame(
+            [$tujuhDua->label(), $tujuhSepuluh->label(), $delapanSatu->label()],
+            array_column($rows, 'rombel'),
+        );
+    }
+
     /**
      * @param  array<string, mixed>  $overrides
      * @return array<string, mixed>

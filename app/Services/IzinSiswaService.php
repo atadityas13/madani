@@ -15,6 +15,7 @@ use App\Support\R2Url;
 use App\Support\SuratIzinSiswa;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -199,20 +200,9 @@ class IzinSiswaService
      */
     public function daftarRombelAktif(): array
     {
-        $tahun = TahunAjaran::aktif();
-        if ($tahun === null) {
-            return [];
-        }
-
-        return Rombel::query()
-            ->where('tahun_ajaran_id', $tahun->id)
-            ->withCount(['siswas as jumlah_siswa' => fn ($q) => $q->wherePivot('status', 'aktif')])
+        return $this->queryRombelAktif()
+            ->withCount(['siswas as jumlah_siswa' => fn ($q) => $q->where('rombel_siswas.status', 'aktif')])
             ->get()
-            ->sortBy([
-                fn (Rombel $r) => Rombel::tingkatOrder($r->tingkat),
-                ['nama', 'asc'],
-            ])
-            ->values()
             ->map(fn (Rombel $rombel) => [
                 'id' => $rombel->id,
                 'label' => $rombel->label(),
@@ -270,17 +260,7 @@ class IzinSiswaService
     public function rekapSiaPerKelas(?CarbonInterface $tanggal = null): array
     {
         $hari = ($tanggal ?? now())->toDateString();
-        $tahun = TahunAjaran::aktif();
-        $rombels = $tahun === null
-            ? collect()
-            : Rombel::query()
-                ->where('tahun_ajaran_id', $tahun->id)
-                ->get()
-                ->sortBy([
-                    fn (Rombel $r) => Rombel::tingkatOrder($r->tingkat),
-                    ['nama', 'asc'],
-                ])
-                ->values();
+        $rombels = $this->queryRombelAktif()->get();
 
         $counts = IzinSiswa::query()
             ->selectRaw('rombel_id, jenis, COUNT(*) as jumlah')
@@ -682,6 +662,24 @@ class IzinSiswaService
             Carbon::SATURDAY => 'Sabtu',
             default => 'Minggu',
         };
+    }
+
+    /**
+     * Rombel tahun ajaran aktif, diurutkan seperti daftar rombel web.
+     *
+     * @return Builder<Rombel>
+     */
+    private function queryRombelAktif()
+    {
+        $tahun = TahunAjaran::aktif();
+
+        return Rombel::query()
+            ->when(
+                $tahun === null,
+                fn ($query) => $query->whereRaw('0 = 1'),
+                fn ($query) => $query->where('tahun_ajaran_id', $tahun->id),
+            )
+            ->ordered();
     }
 
     private function kirimNotifikasiSiswaDibatalkan(IzinSiswa $izin): void
