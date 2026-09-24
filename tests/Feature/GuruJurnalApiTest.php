@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Gtk;
 use App\Models\JurnalPembelajaran;
+use App\Models\TahunAjaran;
 use App\Models\User;
 use App\Support\Peran;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -224,6 +225,43 @@ class GuruJurnalApiTest extends TestCase
             ->assertSee('logo-kemenag.png', false)
             ->assertSee('Kepala Contoh', false)
             ->assertSee('MAJALENGKA', false);
+    }
+
+    public function test_cetak_falls_back_to_tahun_ajaran_aktif_and_kepala_from_gtk(): void
+    {
+        $this->seed();
+        $tahun = TahunAjaran::aktif();
+        $this->assertNotNull($tahun);
+
+        Gtk::query()->create([
+            'nama' => 'Kepala Dari Madani',
+            'nip' => '196512311990031001',
+            'jenis' => 'guru',
+            'status' => 'aktif',
+            'jabatan' => 'Kepala Madrasah',
+        ]);
+
+        $user = $this->buatAkunGuru();
+        JurnalPembelajaran::query()->create([
+            'user_id' => $user->id,
+            'kelas_id' => 11,
+            'nama_kelas' => '9A',
+            'mapel_id' => 2,
+            'nama_mapel' => 'IPA',
+            'tanggal' => '2026-09-10',
+            'hari' => 'Kamis',
+            'jam_ke' => 1,
+            'jam_list' => [1],
+            'materi_pokok' => 'Sistem gerak',
+            'ketercapaian' => 'tercapai',
+        ]);
+
+        Sanctum::actingAs($user);
+        $this->get('/api/v1/guru/jurnal/cetak')
+            ->assertOk()
+            ->assertSee('Semester Ganjil Tahun Pelajaran '.$tahun->nama, false)
+            ->assertSee('Kepala Dari Madani', false)
+            ->assertSee('NIP. 196512311990031001', false);
     }
 
     public function test_cetak_empty_returns_422(): void

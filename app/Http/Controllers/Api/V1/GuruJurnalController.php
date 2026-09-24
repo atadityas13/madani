@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Gtk;
 use App\Models\JurnalPembelajaran;
+use App\Models\TahunAjaran;
 use App\Models\User;
 use App\Services\CetakPresetService;
 use App\Services\JamPelajaranService;
@@ -263,9 +264,33 @@ class GuruJurnalController extends Controller
             fn (JurnalPembelajaran $row) => filled($row->semester_tipe) || filled($row->semester_nama_tahun)
         );
 
+        $tanggalRef = $entries
+            ->map(fn (JurnalPembelajaran $row) => optional($row->tanggal)?->toDateString())
+            ->filter()
+            ->sort()
+            ->last();
+        $fallback = $this->defaultSemesterMeta($tanggalRef);
+
         return (object) [
-            'tipe' => $withMeta?->semester_tipe ?: '—',
-            'nama_tahun' => $withMeta?->semester_nama_tahun ?: '—',
+            'tipe' => filled($withMeta?->semester_tipe) ? (string) $withMeta->semester_tipe : $fallback['tipe'],
+            'nama_tahun' => filled($withMeta?->semester_nama_tahun)
+                ? (string) $withMeta->semester_nama_tahun
+                : $fallback['nama_tahun'],
+        ];
+    }
+
+    /**
+     * @return array{tipe: string, nama_tahun: string}
+     */
+    private function defaultSemesterMeta(?string $tanggal = null): array
+    {
+        $ref = filled($tanggal) ? Carbon::parse($tanggal) : now('Asia/Jakarta');
+        $tahun = TahunAjaran::aktif();
+
+        return [
+            // Juli–Desember = Ganjil, Januari–Juni = Genap
+            'tipe' => $ref->month >= 7 ? 'Ganjil' : 'Genap',
+            'nama_tahun' => filled($tahun?->nama) ? (string) $tahun->nama : '—',
         ];
     }
 
@@ -297,28 +322,40 @@ class GuruJurnalController extends Controller
     }
 
     /**
+     * Kepala penandatangan diambil dari data GTK Madani (jabatan Kepala/Plt. Kepala).
+     *
      * @return object{nama_lengkap: string, username: string}|null
      */
     private function resolveKepalaMadrasah(): ?object
     {
-        $gtk = Gtk::query()
+        $preferPlt = ($this->cetakPresetService->getSettings()['pejabat_penandatangan'] ?? 'kepala') === 'plt_kepala';
+
+        $query = Gtk::query()
             ->where('status', 'aktif')
             ->where(function ($query) {
                 $query->where('jabatan', 'like', '%Kepala Madrasah%')
                     ->orWhere('jabatan', 'like', '%Plt. Kepala%')
                     ->orWhere('jabatan', 'like', '%Plt Kepala%');
             })
-            ->orderByRaw("CASE WHEN jabatan LIKE '%Plt%' THEN 1 ELSE 0 END")
-            ->orderBy('id')
-            ->first();
+            ->where(function ($query) {
+                $query->whereNull('jabatan')
+                    ->orWhere('jabatan', 'not like', '%Wakil%');
+            });
 
-        if ($gtk === null || ! filled($gtk->nip)) {
+        if ($preferPlt) {
+            $query->orderByRaw("CASE WHEN jabatan LIKE '%Plt%' THEN 0 ELSE 1 END");
+        } else {
+            $query->orderByRaw("CASE WHEN jabatan LIKE '%Plt%' THEN 1 ELSE 0 END");
+        }
+
+        $gtk = $query->orderBy('id')->first();
+        if ($gtk === null || ! filled(trim($gtk->nama_lengkap))) {
             return null;
         }
 
         return (object) [
             'nama_lengkap' => $gtk->nama_lengkap,
-            'username' => (string) $gtk->nip,
+            'username' => filled($gtk->nip) ? (string) $gtk->nip : '',
         ];
     }
 
@@ -481,6 +518,7 @@ class GuruJurnalController extends Controller
         $tanggal = Carbon::createFromFormat('Y-m-d', $data['tanggal'], 'Asia/Jakarta');
         $hari = $data['hari'] ?? $this->hariIndonesia($tanggal);
         $namaMapel = $data['nama_mapel'] ?? $data['mapel'] ?? null;
+        $semesterDefault = $this->defaultSemesterMeta($data['tanggal']);
 
         return [
             'kelas_id' => (int) $data['kelas_id'],
@@ -498,8 +536,10 @@ class GuruJurnalController extends Controller
             'penugasan_siswa' => $data['penugasan_siswa'] ?? null,
             'catatan_guru' => $data['catatan_guru'] ?? null,
             'semester_id' => $data['semester_id'] ?? null,
-            'semester_tipe' => $data['semester_tipe'] ?? null,
-            'semester_nama_tahun' => $data['semester_nama_tahun'] ?? null,
+            'semester_tipe' => $data['semester_tipe'] ?? $semesterDefault['tipe'],
+            'semester_nama_tahun' => $data['semester_nama_tahun'] ?? (
+                $semesterDefault['nama_tahun'] !== '—' ? $semesterDefault['nama_tahun'] : null
+            ),
         ];
     }
 
@@ -512,15 +552,31 @@ class GuruJurnalController extends Controller
         /** @var JurnalPembelajaran|null $withSemester */
         $withSemester = $entries->first(fn (JurnalPembelajaran $row) => filled($row->semester_tipe) || filled($row->semester_nama_tahun));
 
-        if ($withSemester === null) {
+        if ($withSemester !== null) {
+            return [
+                'id' => $withSemester->semester_id,
+                'nama' => null,
+                'nama_tahun' => $withSemester->semester_nama_tahun,
+                'tipe' => $withSemester->semester_tipe,
+            ];
+        }
+
+        $tanggalRef = $entries
+            ->map(fn (JurnalPembelajaran $row) => optional($row->tanggal)?->toDateString())
+            ->filter()
+            ->sort()
+            ->last();
+        $fallback = $this->defaultSemesterMeta($tanggalRef);
+
+        if ($fallback['nama_tahun'] === '—' && $entries->isEmpty()) {
             return null;
         }
 
         return [
-            'id' => $withSemester->semester_id,
+            'id' => null,
             'nama' => null,
-            'nama_tahun' => $withSemester->semester_nama_tahun,
-            'tipe' => $withSemester->semester_tipe,
+            'nama_tahun' => $fallback['nama_tahun'] !== '—' ? $fallback['nama_tahun'] : null,
+            'tipe' => $fallback['tipe'],
         ];
     }
 
