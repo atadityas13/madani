@@ -186,6 +186,11 @@ class Siswa extends Authenticatable
         return $this->hasOne(SiswaPernyataan::class);
     }
 
+    public function izins(): HasMany
+    {
+        return $this->hasMany(IzinSiswa::class);
+    }
+
     public function deviceTokens(): MorphMany
     {
         return $this->morphMany(DeviceToken::class, 'tokenable');

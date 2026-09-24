@@ -1,0 +1,259 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Jobs\SendNotifikasiFcmJob;
+use App\Models\Gtk;
+use App\Models\IzinSiswa;
+use App\Models\Notifikasi;
+use App\Models\Rombel;
+use App\Models\Siswa;
+use App\Models\TahunAjaran;
+use App\Models\User;
+use App\Support\Peran;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\Sanctum;
+use Spatie\Permission\Models\Role;
+use Tests\TestCase;
+
+class IzinSiswaApiTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private const PNG_1X1 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
+    public function test_siswa_can_create_izin_with_ttd_and_notifies_all_guru(): void
+    {
+        Storage::fake('r2');
+        Queue::fake();
+        $this->seed();
+
+        ['siswa' => $siswa, 'token' => $token, 'rombel' => $rombel] = $this->buatSiswaDenganRombel();
+
+        $this->withToken($token)
+            ->getJson('/api/v1/siswa/izin/meta')
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonStructure(['data' => ['teks_pernyataan_izin' => ['teks', 'versi']]]);
+
+        $tanggal = now()->toDateString();
+        $this->withToken($token)
+            ->postJson('/api/v1/siswa/izin', [
+                'jenis' => 'sakit',
+                'tanggal' => $tanggal,
+                'alasan' => 'Demam tinggi sejak malam',
+                'pernyataan_disetujui' => true,
+                'ttd_wali' => self::PNG_1X1,
+            ])
+            ->assertCreated()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.jenis', 'sakit')
+            ->assertJsonPath('data.status', 'aktif')
+            ->assertJsonPath('data.rombel', $rombel->label());
+
+        $this->assertDatabaseHas('izin_siswas', [
+            'siswa_id' => $siswa->id,
+            'jenis' => 'sakit',
+            'status' => 'aktif',
+            'rombel_id' => $rombel->id,
+        ]);
+
+        $this->assertDatabaseHas('notifikasis', [
+            'audience' => Notifikasi::AUDIENCE_SEMUA_GURU,
+            'jenis' => Notifikasi::JENIS_NOTIFIKASI,
+        ]);
+
+        Queue::assertPushed(SendNotifikasiFcmJob::class);
+
+        $this->withToken($token)
+            ->getJson('/api/v1/siswa/izin')
+            ->assertOk()
+            ->assertJsonPath('data.0.jenis', 'sakit');
+    }
+
+    public function test_siswa_resubmit_same_day_replaces_active_izin(): void
+    {
+        Storage::fake('r2');
+        Queue::fake();
+        $this->seed();
+
+        ['token' => $token] = $this->buatSiswaDenganRombel();
+        $tanggal = now()->toDateString();
+
+        $this->withToken($token)
+            ->postJson('/api/v1/siswa/izin', $this->payload(['jenis' => 'izin', 'tanggal' => $tanggal]))
+            ->assertCreated();
+
+        $this->withToken($token)
+            ->postJson('/api/v1/siswa/izin', $this->payload(['jenis' => 'sakit', 'tanggal' => $tanggal, 'alasan' => 'Sakit perut mendadak']))
+            ->assertCreated()
+            ->assertJsonPath('data.jenis', 'sakit')
+            ->assertJsonPath('data.alasan', 'Sakit perut mendadak');
+
+        $this->assertSame(1, IzinSiswa::query()->where('status', 'aktif')->count());
+    }
+
+    public function test_create_rejected_without_pernyataan_or_ttd(): void
+    {
+        Storage::fake('r2');
+        $this->seed();
+        ['token' => $token] = $this->buatSiswaDenganRombel();
+
+        $this->withToken($token)
+            ->postJson('/api/v1/siswa/izin', [
+                'jenis' => 'izin',
+                'tanggal' => now()->toDateString(),
+                'alasan' => 'Ada keperluan keluarga',
+                'pernyataan_disetujui' => false,
+                'ttd_wali' => self::PNG_1X1,
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('pernyataan_disetujui');
+
+        $this->withToken($token)
+            ->postJson('/api/v1/siswa/izin', [
+                'jenis' => 'izin',
+                'tanggal' => now()->toDateString(),
+                'alasan' => 'Ada keperluan keluarga',
+                'pernyataan_disetujui' => true,
+                'ttd_wali' => 'bukan-gambar',
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('ttd_wali');
+    }
+
+    public function test_guru_sees_rekap_hari_ini_and_only_wali_can_batalkan(): void
+    {
+        Storage::fake('r2');
+        Queue::fake();
+        $this->seed();
+
+        ['siswa' => $siswa, 'token' => $tokenSiswa, 'rombel' => $rombel, 'wali' => $wali] = $this->buatSiswaDenganRombel();
+        $guruLain = $this->buatAkunGuru('198801012010011002', 'Guru Lain');
+
+        $this->withToken($tokenSiswa)
+            ->postJson('/api/v1/siswa/izin', $this->payload([
+                'jenis' => 'izin',
+                'tanggal' => now()->toDateString(),
+                'alasan' => 'Urusan keluarga di luar kota',
+            ]))
+            ->assertCreated();
+
+        $izinId = IzinSiswa::query()->where('siswa_id', $siswa->id)->value('id');
+
+        Sanctum::actingAs($guruLain);
+        $this->getJson('/api/v1/guru/izin/hari-ini')
+            ->assertOk()
+            ->assertJsonPath('data.total', 1)
+            ->assertJsonPath('data.izin', 1)
+            ->assertJsonPath('data.sakit', 0)
+            ->assertJsonPath('data.items.0.bisa_batalkan', false)
+            ->assertJsonPath('data.items.0.nama', $siswa->nama);
+
+        $this->postJson("/api/v1/guru/izin/{$izinId}/batalkan", ['alasan_batal' => 'Tidak valid'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('izin');
+
+        Sanctum::actingAs($wali);
+        $this->getJson('/api/v1/guru/izin/hari-ini')
+            ->assertOk()
+            ->assertJsonPath('data.items.0.bisa_batalkan', true)
+            ->assertJsonPath('data.items.0.rombel', $rombel->label());
+
+        $this->postJson("/api/v1/guru/izin/{$izinId}/batalkan", ['alasan_batal' => 'Siswa ternyata hadir'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'dibatalkan');
+
+        $this->assertDatabaseHas('izin_siswas', [
+            'id' => $izinId,
+            'status' => 'dibatalkan',
+            'dibatalkan_oleh' => $wali->id,
+        ]);
+
+        $this->assertDatabaseHas('notifikasis', [
+            'audience' => Notifikasi::AUDIENCE_SISWA,
+        ]);
+
+        $this->getJson('/api/v1/guru/izin/hari-ini')
+            ->assertOk()
+            ->assertJsonPath('data.total', 0);
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function payload(array $overrides = []): array
+    {
+        return array_merge([
+            'jenis' => 'izin',
+            'tanggal' => now()->toDateString(),
+            'alasan' => 'Keperluan keluarga penting',
+            'pernyataan_disetujui' => true,
+            'ttd_wali' => self::PNG_1X1,
+        ], $overrides);
+    }
+
+    /**
+     * @return array{siswa: Siswa, token: string, rombel: Rombel, wali: User}
+     */
+    private function buatSiswaDenganRombel(): array
+    {
+        $wali = $this->buatAkunGuru('197901012005011001', 'Wali Kelas');
+        $tahun = TahunAjaran::aktif();
+        $this->assertNotNull($tahun);
+
+        $rombel = Rombel::query()->create([
+            'tahun_ajaran_id' => $tahun->id,
+            'tingkat' => 'VIII',
+            'nama' => '2',
+            'program' => 'Reguler',
+            'gtk_id' => $wali->gtk_id,
+        ]);
+
+        $siswa = Siswa::query()->create([
+            'nama' => 'Siswa Izin',
+            'nisn' => '9988776655',
+            'nik' => '3210010101120099',
+            'tempat_lahir' => 'Majalengka',
+            'tanggal_lahir' => '2012-05-01',
+            'jenis_kelamin' => 'L',
+            'agama' => 'Islam',
+            'status_keaktifan' => 'aktif',
+        ]);
+        $siswa->rombels()->attach($rombel->id, ['status' => 'aktif']);
+        $siswa->gantiPassword('sandibaru1');
+
+        $token = $this->postJson('/api/v1/siswa/login', [
+            'nisn' => $siswa->nisn,
+            'password' => 'sandibaru1',
+        ])->assertOk()->json('token');
+
+        return compact('siswa', 'token', 'rombel', 'wali');
+    }
+
+    private function buatAkunGuru(string $nip, string $nama): User
+    {
+        Role::findOrCreate(Peran::GURU);
+
+        $gtk = Gtk::query()->create([
+            'nama' => $nama,
+            'nip' => $nip,
+            'jenis' => 'guru',
+            'status' => 'aktif',
+        ]);
+
+        $user = User::factory()->create([
+            'name' => $nama,
+            'username' => $nip,
+            'password' => 'password123',
+            'is_aktif' => true,
+            'gtk_id' => $gtk->id,
+        ]);
+        $user->syncRoles([Peran::GURU]);
+
+        return $user->fresh()->load('gtk');
+    }
+}

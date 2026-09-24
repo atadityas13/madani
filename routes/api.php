@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\DeviceTokenController;
 use App\Http\Controllers\Api\V1\GuruAuthController;
 use App\Http\Controllers\Api\V1\GuruCalendarEventController;
 use App\Http\Controllers\Api\V1\GuruElapkinController;
+use App\Http\Controllers\Api\V1\GuruIzinController;
 use App\Http\Controllers\Api\V1\GuruJurnalController;
 use App\Http\Controllers\Api\V1\GuruProfileController;
 use App\Http\Controllers\Api\V1\NotifikasiController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\Api\V1\ReferensiController;
 use App\Http\Controllers\Api\V1\SiswaAuthController;
 use App\Http\Controllers\Api\V1\SiswaCalendarController;
 use App\Http\Controllers\Api\V1\SiswaController;
+use App\Http\Controllers\Api\V1\SiswaIzinController;
 use App\Http\Controllers\Api\V1\SiswaKartuController;
 use App\Http\Controllers\Api\V1\SiswaPeriodePendataanController;
 use App\Http\Controllers\Api\V1\TokenIntrospectController;
@@ -59,6 +61,9 @@ Route::prefix('v1')->group(function () {
         Route::post('jurnal', [GuruJurnalController::class, 'store']);
         Route::put('jurnal/{id}', [GuruJurnalController::class, 'update'])->whereNumber('id');
         Route::delete('jurnal/{id}', [GuruJurnalController::class, 'destroy'])->whereNumber('id');
+
+        Route::get('izin/hari-ini', [GuruIzinController::class, 'hariIni']);
+        Route::post('izin/{izin}/batalkan', [GuruIzinController::class, 'batalkan']);
     });
 
     Route::middleware(['auth:sanctum', 'siswa.api'])->group(function () {
@@ -88,6 +93,11 @@ Route::prefix('v1')->group(function () {
             Route::post('siswa/pernyataan/preview', [SiswaController::class, 'previewPernyataan']);
             Route::post('siswa/pernyataan', [SiswaController::class, 'storePernyataan']);
             Route::get('siswa/pernyataan/unduh', [SiswaController::class, 'downloadPernyataan']);
+
+            Route::get('siswa/izin/meta', [SiswaIzinController::class, 'meta']);
+            Route::get('siswa/izin', [SiswaIzinController::class, 'index']);
+            Route::post('siswa/izin', [SiswaIzinController::class, 'store']);
+            Route::get('siswa/izin/{izin}', [SiswaIzinController::class, 'show']);
         });
     });
 });
