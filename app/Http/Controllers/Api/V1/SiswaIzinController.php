@@ -6,14 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\IzinSiswa;
 use App\Models\Siswa;
 use App\Services\IzinSiswaService;
+use App\Services\SuratIzinSiswaPdfService;
 use App\Support\PernyataanIzinSiswa;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\Response;
 
 class SiswaIzinController extends Controller
 {
-    public function __construct(private IzinSiswaService $service) {}
+    public function __construct(
+        private IzinSiswaService $service,
+        private SuratIzinSiswaPdfService $suratPdf,
+    ) {}
 
     public function meta(): JsonResponse
     {
@@ -62,9 +67,16 @@ class SiswaIzinController extends Controller
             'alasan' => ['required', 'string', 'min:5', 'max:1000'],
             'pernyataan_disetujui' => ['required', 'boolean'],
             'ttd_wali' => ['required', 'string'],
+            'lampiran' => ['nullable', 'string'],
+            'jenis_bukti' => ['nullable', 'string', 'min:3', 'max:200', 'required_with:lampiran'],
         ]);
 
-        $izin = $this->service->simpan($siswa, $data, $data['ttd_wali']);
+        $izin = $this->service->simpan(
+            $siswa,
+            $data,
+            $data['ttd_wali'],
+            $data['lampiran'] ?? null,
+        );
 
         return response()->json([
             'success' => true,
@@ -86,5 +98,21 @@ class SiswaIzinController extends Controller
             'success' => true,
             'data' => $this->service->toSiswaItem($izin),
         ]);
+    }
+
+    public function suratPdf(Request $request, IzinSiswa $izin): Response
+    {
+        /** @var Siswa $siswa */
+        $siswa = $request->user();
+
+        if ($izin->siswa_id !== $siswa->id || ! $izin->punyaSuratOrtu()) {
+            abort(404);
+        }
+
+        $download = $request->boolean('download');
+
+        return $download
+            ? $this->suratPdf->download($izin)
+            : $this->suratPdf->stream($izin);
     }
 }

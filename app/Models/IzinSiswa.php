@@ -15,6 +15,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'alasan',
     'pernyataan_disetujui',
     'ttd_wali_path',
+    'lampiran_path',
+    'jenis_bukti',
+    'nama_wali',
+    'dilaporkan_oleh',
     'status',
     'dibatalkan_oleh',
     'dibatalkan_at',
@@ -28,6 +32,8 @@ class IzinSiswa extends Model
 
     public const JENIS_SAKIT = 'sakit';
 
+    public const JENIS_ALPA = 'alpa';
+
     public const STATUS_AKTIF = 'aktif';
 
     public const STATUS_DIBATALKAN = 'dibatalkan';
@@ -36,6 +42,7 @@ class IzinSiswa extends Model
     public const JENIS_LABEL = [
         self::JENIS_IZIN => 'Izin',
         self::JENIS_SAKIT => 'Sakit',
+        self::JENIS_ALPA => 'Alpa',
     ];
 
     protected function casts(): array
@@ -62,9 +69,20 @@ class IzinSiswa extends Model
         return $this->belongsTo(User::class, 'dibatalkan_oleh');
     }
 
+    public function dilaporkanOleh(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'dilaporkan_oleh');
+    }
+
     public function isAktif(): bool
     {
         return $this->status === self::STATUS_AKTIF;
+    }
+
+    public function punyaSuratOrtu(): bool
+    {
+        return in_array($this->jenis, [self::JENIS_IZIN, self::JENIS_SAKIT], true)
+            && filled($this->ttd_wali_path);
     }
 
     public function labelJenis(): string

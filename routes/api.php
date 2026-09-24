@@ -63,6 +63,11 @@ Route::prefix('v1')->group(function () {
         Route::delete('jurnal/{id}', [GuruJurnalController::class, 'destroy'])->whereNumber('id');
 
         Route::get('izin/hari-ini', [GuruIzinController::class, 'hariIni']);
+        Route::get('izin/rekap-sia', [GuruIzinController::class, 'rekapSia']);
+        Route::get('izin/rombels', [GuruIzinController::class, 'rombels']);
+        Route::get('izin/rombels/{rombel}/siswa', [GuruIzinController::class, 'siswaRombel']);
+        Route::post('izin/alpa', [GuruIzinController::class, 'storeAlpa']);
+        Route::get('izin/{izin}/surat.pdf', [GuruIzinController::class, 'suratPdf']);
         Route::post('izin/{izin}/batalkan', [GuruIzinController::class, 'batalkan']);
     });
 
@@ -97,6 +102,7 @@ Route::prefix('v1')->group(function () {
             Route::get('siswa/izin/meta', [SiswaIzinController::class, 'meta']);
             Route::get('siswa/izin', [SiswaIzinController::class, 'index']);
             Route::post('siswa/izin', [SiswaIzinController::class, 'store']);
+            Route::get('siswa/izin/{izin}/surat.pdf', [SiswaIzinController::class, 'suratPdf']);
             Route::get('siswa/izin/{izin}', [SiswaIzinController::class, 'show']);
         });
     });

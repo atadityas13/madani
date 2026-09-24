@@ -5,12 +5,14 @@ namespace Tests\Feature;
 use App\Jobs\SendNotifikasiFcmJob;
 use App\Models\Gtk;
 use App\Models\IzinSiswa;
+use App\Models\JurnalPembelajaran;
 use App\Models\Notifikasi;
 use App\Models\Rombel;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Models\User;
 use App\Support\Peran;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -24,19 +26,44 @@ class IzinSiswaApiTest extends TestCase
 
     private const PNG_1X1 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 
-    public function test_siswa_can_create_izin_with_ttd_and_notifies_all_guru(): void
+    public function test_siswa_can_create_izin_with_ttd_and_notifies_wali_and_mapel_guru(): void
     {
         Storage::fake('r2');
         Queue::fake();
         $this->seed();
 
-        ['siswa' => $siswa, 'token' => $token, 'rombel' => $rombel] = $this->buatSiswaDenganRombel();
+        ['siswa' => $siswa, 'token' => $token, 'rombel' => $rombel, 'wali' => $wali] = $this->buatSiswaDenganRombel();
+        $guruMapel = $this->buatAkunGuru('198801012010011099', 'Guru Mapel Hari Ini');
+        $rombel->update(['source_simpatisans_kelas_id' => 4242]);
+
+        $hari = match (now()->dayOfWeek) {
+            Carbon::MONDAY => 'Senin',
+            Carbon::TUESDAY => 'Selasa',
+            Carbon::WEDNESDAY => 'Rabu',
+            Carbon::THURSDAY => 'Kamis',
+            Carbon::FRIDAY => 'Jumat',
+            Carbon::SATURDAY => 'Sabtu',
+            default => 'Minggu',
+        };
+
+        JurnalPembelajaran::query()->create([
+            'user_id' => $guruMapel->id,
+            'kelas_id' => 4242,
+            'nama_kelas' => $rombel->label(),
+            'mapel_id' => 1,
+            'nama_mapel' => 'Matematika',
+            'tanggal' => now()->toDateString(),
+            'hari' => $hari,
+            'jam_ke' => 1,
+            'materi_pokok' => 'Materi uji',
+        ]);
 
         $this->withToken($token)
             ->getJson('/api/v1/siswa/izin/meta')
             ->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonStructure(['data' => ['teks_pernyataan_izin' => ['teks', 'versi']]]);
+            ->assertJsonStructure(['data' => ['teks_pernyataan_izin' => ['teks', 'versi', 'template']]])
+            ->assertJsonPath('data.teks_pernyataan_izin.versi', 2);
 
         $tanggal = now()->toDateString();
         $this->withToken($token)
@@ -60,10 +87,16 @@ class IzinSiswaApiTest extends TestCase
             'rombel_id' => $rombel->id,
         ]);
 
-        $this->assertDatabaseHas('notifikasis', [
-            'audience' => Notifikasi::AUDIENCE_SEMUA_GURU,
-            'jenis' => Notifikasi::JENIS_NOTIFIKASI,
-        ]);
+        $notifikasi = Notifikasi::query()
+            ->where('audience', Notifikasi::AUDIENCE_GTK)
+            ->where('jenis', Notifikasi::JENIS_NOTIFIKASI)
+            ->latest('id')
+            ->first();
+        $this->assertNotNull($notifikasi);
+        $this->assertEqualsCanonicalizing(
+            [(int) $wali->gtk_id, (int) $guruMapel->gtk_id],
+            array_map('intval', $notifikasi->audience_ids ?? [])
+        );
 
         Queue::assertPushed(SendNotifikasiFcmJob::class);
 
@@ -71,6 +104,72 @@ class IzinSiswaApiTest extends TestCase
             ->getJson('/api/v1/siswa/izin')
             ->assertOk()
             ->assertJsonPath('data.0.jenis', 'sakit');
+
+        $izinId = IzinSiswa::query()->where('siswa_id', $siswa->id)->value('id');
+        $pdf = $this->withToken($token)
+            ->get("/api/v1/siswa/izin/{$izinId}/surat.pdf")
+            ->assertOk();
+        $this->assertSame('application/pdf', $pdf->headers->get('content-type'));
+        $this->assertStringStartsWith('%PDF', $pdf->getContent());
+    }
+
+    public function test_siswa_can_upload_lampiran_and_view_surat_with_bukti(): void
+    {
+        Storage::fake('r2');
+        Queue::fake();
+        $this->seed();
+
+        ['siswa' => $siswa, 'token' => $token, 'rombel' => $rombel, 'wali' => $wali] = $this->buatSiswaDenganRombel();
+
+        $this->withToken($token)
+            ->postJson('/api/v1/siswa/izin', [
+                'jenis' => 'sakit',
+                'tanggal' => now()->toDateString(),
+                'alasan' => 'Demam dan batuk',
+                'pernyataan_disetujui' => true,
+                'ttd_wali' => self::PNG_1X1,
+                'lampiran' => self::PNG_1X1,
+                'jenis_bukti' => 'surat keterangan sakit dari dokter',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.punya_lampiran', true)
+            ->assertJsonPath('data.jenis_bukti', 'surat keterangan sakit dari dokter');
+
+        $izin = IzinSiswa::query()->where('siswa_id', $siswa->id)->first();
+        $this->assertNotNull($izin);
+        $this->assertNotNull($izin->lampiran_path);
+        $this->assertTrue(Storage::disk('r2')->exists($izin->lampiran_path));
+
+        $pdf = $this->withToken($token)
+            ->get("/api/v1/siswa/izin/{$izin->id}/surat.pdf")
+            ->assertOk();
+        $this->assertSame('application/pdf', $pdf->headers->get('content-type'));
+        $content = $pdf->getContent();
+        $this->assertStringStartsWith('%PDF', $content);
+
+        Sanctum::actingAs($wali);
+        $guruPdf = $this->get("/api/v1/guru/izin/{$izin->id}/surat.pdf")->assertOk();
+        $this->assertSame('application/pdf', $guruPdf->headers->get('content-type'));
+        $this->assertStringStartsWith('%PDF', $guruPdf->getContent());
+    }
+
+    public function test_lampiran_requires_jenis_bukti(): void
+    {
+        Storage::fake('r2');
+        $this->seed();
+        ['token' => $token] = $this->buatSiswaDenganRombel();
+
+        $this->withToken($token)
+            ->postJson('/api/v1/siswa/izin', [
+                'jenis' => 'izin',
+                'tanggal' => now()->toDateString(),
+                'alasan' => 'Ada keperluan keluarga',
+                'pernyataan_disetujui' => true,
+                'ttd_wali' => self::PNG_1X1,
+                'lampiran' => self::PNG_1X1,
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('jenis_bukti');
     }
 
     public function test_siswa_resubmit_same_day_replaces_active_izin(): void
@@ -149,6 +248,7 @@ class IzinSiswaApiTest extends TestCase
             ->assertJsonPath('data.total', 1)
             ->assertJsonPath('data.izin', 1)
             ->assertJsonPath('data.sakit', 0)
+            ->assertJsonPath('data.alpa', 0)
             ->assertJsonPath('data.items.0.bisa_batalkan', false)
             ->assertJsonPath('data.items.0.nama', $siswa->nama);
 
@@ -179,6 +279,65 @@ class IzinSiswaApiTest extends TestCase
         $this->getJson('/api/v1/guru/izin/hari-ini')
             ->assertOk()
             ->assertJsonPath('data.total', 0);
+    }
+
+    public function test_guru_can_laporkan_alpa_and_see_rekap_sia(): void
+    {
+        Storage::fake('r2');
+        Queue::fake();
+        $this->seed();
+
+        ['siswa' => $siswa, 'rombel' => $rombel, 'wali' => $wali] = $this->buatSiswaDenganRombel();
+        $siswa2 = Siswa::query()->create([
+            'nama' => 'Siswa Alpa Dua',
+            'nisn' => '9988776656',
+            'nik' => '3210010101120098',
+            'tempat_lahir' => 'Majalengka',
+            'tanggal_lahir' => '2012-06-01',
+            'jenis_kelamin' => 'L',
+            'agama' => 'Islam',
+            'status_keaktifan' => 'aktif',
+        ]);
+        $siswa2->rombels()->attach($rombel->id, ['status' => 'aktif']);
+
+        Sanctum::actingAs($wali);
+        $this->getJson('/api/v1/guru/izin/rombels')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $rombel->id);
+
+        $this->getJson("/api/v1/guru/izin/rombels/{$rombel->id}/siswa")
+            ->assertOk()
+            ->assertJsonPath('data.siswa.0.sudah_lapor', false);
+
+        $this->postJson('/api/v1/guru/izin/alpa', [
+            'rombel_id' => $rombel->id,
+            'siswa_ids' => [$siswa->id, $siswa2->id],
+            'tanggal' => now()->toDateString(),
+        ])
+            ->assertCreated()
+            ->assertJsonPath('data.created', 2)
+            ->assertJsonPath('data.updated', 0);
+
+        $this->assertDatabaseHas('izin_siswas', [
+            'siswa_id' => $siswa->id,
+            'jenis' => 'alpa',
+            'status' => 'aktif',
+            'dilaporkan_oleh' => $wali->id,
+        ]);
+
+        $this->getJson('/api/v1/guru/izin/hari-ini')
+            ->assertOk()
+            ->assertJsonPath('data.alpa', 2)
+            ->assertJsonPath('data.total', 2);
+
+        $this->getJson('/api/v1/guru/izin/rekap-sia')
+            ->assertOk()
+            ->assertJsonPath('data.totals.alpa', 2)
+            ->assertJsonPath('data.totals.sakit', 0)
+            ->assertJsonPath('data.totals.izin', 0)
+            ->assertJsonPath('data.totals.total', 2)
+            ->assertJsonPath('data.rows.0.rombel', $rombel->label())
+            ->assertJsonPath('data.rows.0.alpa', 2);
     }
 
     /**
