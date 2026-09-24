@@ -43,6 +43,8 @@ class IzinSiswaService
             $jenisBukti = null;
         }
 
+        $alasan = filled($data['alasan'] ?? null) ? trim((string) $data['alasan']) : '';
+
         $rombel = $siswa->rombelAktif();
         $bytes = $this->decodePng($ttdWaliBase64);
         $path = $this->simpanPng($siswa->id, $bytes);
@@ -52,7 +54,7 @@ class IzinSiswaService
             $namaWali = 'Orang tua/wali';
         }
 
-        $izin = DB::transaction(function () use ($siswa, $data, $tanggal, $rombel, $path, $lampiran, $jenisBukti, $namaWali) {
+        $izin = DB::transaction(function () use ($siswa, $data, $tanggal, $rombel, $path, $lampiran, $jenisBukti, $namaWali, $alasan) {
             $existing = IzinSiswa::query()
                 ->where('siswa_id', $siswa->id)
                 ->whereDate('tanggal', $tanggal)
@@ -71,7 +73,7 @@ class IzinSiswaService
                 $existing->update([
                     'rombel_id' => $rombel?->id,
                     'jenis' => $data['jenis'],
-                    'alasan' => $data['alasan'],
+                    'alasan' => $alasan,
                     'pernyataan_disetujui' => true,
                     'ttd_wali_path' => $path,
                     'lampiran_path' => $lampiran['path'] ?? null,
@@ -87,7 +89,7 @@ class IzinSiswaService
                 'rombel_id' => $rombel?->id,
                 'jenis' => $data['jenis'],
                 'tanggal' => $tanggal,
-                'alasan' => $data['alasan'],
+                'alasan' => $alasan,
                 'pernyataan_disetujui' => true,
                 'ttd_wali_path' => $path,
                 'lampiran_path' => $lampiran['path'] ?? null,
@@ -608,7 +610,8 @@ class IzinSiswaService
 
         $notifikasi = Notifikasi::query()->create([
             'judul' => "Siswa {$jenis} hari ini",
-            'isi' => "{$nama} ({$kelas}) melapor {$jenis} pada {$tanggal}. Alasan: {$izin->alasan}",
+            'isi' => "{$nama} ({$kelas}) melapor {$jenis} pada {$tanggal}"
+                .(filled($izin->alasan) ? ". Alasan: {$izin->alasan}" : '.'),
             'jenis' => Notifikasi::JENIS_NOTIFIKASI,
             'audience' => Notifikasi::AUDIENCE_GTK,
             'audience_ids' => $gtkIds,

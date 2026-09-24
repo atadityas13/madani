@@ -4,23 +4,24 @@ namespace App\Support;
 
 class PernyataanIzinSiswa
 {
-    public const VERSI = 2;
+    public const VERSI = 4;
 
     public static function template(): string
     {
         return 'Saya selaku orang tua/wali menyatakan bahwa anak saya tidak dapat hadir ke madrasah '
-            .'pada tanggal {tanggal} karena alasan {alasan}, dan saya bertanggungjawab atas kebenaran '
+            .'pada tanggal {tanggal} karena {jenis}{alasan}, dan saya bertanggungjawab atas kebenaran '
             .'laporan ketidakhadiran ini.';
     }
 
-    public static function teks(?string $tanggalDdMmYyyy = null, ?string $alasan = null): string
+    public static function teks(?string $tanggalDdMmYyyy = null, ?string $jenis = null, ?string $alasan = null): string
     {
         $tanggal = filled($tanggalDdMmYyyy) ? $tanggalDdMmYyyy : '{tanggal}';
-        $alasanText = filled($alasan) ? trim((string) $alasan) : '{alasan}';
+        $jenisText = filled($jenis) ? trim((string) $jenis) : '{jenis}';
+        $alasanPart = filled($alasan) ? ' ('.trim((string) $alasan).')' : '';
 
         return str_replace(
-            ['{tanggal}', '{alasan}'],
-            [$tanggal, $alasanText],
+            ['{tanggal}', '{jenis}', '{alasan}'],
+            [$tanggal, $jenisText, $alasanPart],
             self::template()
         );
     }

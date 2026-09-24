@@ -64,7 +64,7 @@ class SiswaIzinController extends Controller
         $data = $request->validate([
             'jenis' => ['required', Rule::in([IzinSiswa::JENIS_IZIN, IzinSiswa::JENIS_SAKIT])],
             'tanggal' => ['required', 'date'],
-            'alasan' => ['required', 'string', 'min:5', 'max:1000'],
+            'alasan' => ['nullable', 'string', 'min:3', 'max:1000'],
             'pernyataan_disetujui' => ['required', 'boolean'],
             'ttd_wali' => ['required', 'string'],
             'lampiran' => ['nullable', 'string'],

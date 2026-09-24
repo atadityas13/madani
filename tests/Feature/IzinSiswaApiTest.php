@@ -63,7 +63,11 @@ class IzinSiswaApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonStructure(['data' => ['teks_pernyataan_izin' => ['teks', 'versi', 'template']]])
-            ->assertJsonPath('data.teks_pernyataan_izin.versi', 2);
+            ->assertJsonPath('data.teks_pernyataan_izin.versi', 4)
+            ->assertJsonPath(
+                'data.teks_pernyataan_izin.template',
+                'Saya selaku orang tua/wali menyatakan bahwa anak saya tidak dapat hadir ke madrasah pada tanggal {tanggal} karena {jenis}{alasan}, dan saya bertanggungjawab atas kebenaran laporan ketidakhadiran ini.'
+            );
 
         $tanggal = now()->toDateString();
         $this->withToken($token)
