@@ -394,6 +394,7 @@ class IzinSiswaService
             'jenis_bukti' => $izin->jenis_bukti,
             'nama_wali' => $izin->nama_wali,
             'punya_lampiran' => filled($izin->lampiran_path),
+            'punya_surat' => $izin->punyaSuratOrtu(),
             'dibatalkan_at' => $izin->dibatalkan_at?->toIso8601String(),
             'alasan_batal' => $izin->alasan_batal,
             'created_at' => $izin->created_at?->toIso8601String(),

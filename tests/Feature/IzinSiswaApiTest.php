@@ -109,7 +109,8 @@ class IzinSiswaApiTest extends TestCase
         $this->withToken($token)
             ->getJson('/api/v1/siswa/izin')
             ->assertOk()
-            ->assertJsonPath('data.0.jenis', 'sakit');
+            ->assertJsonPath('data.0.jenis', 'sakit')
+            ->assertJsonPath('data.0.punya_surat', true);
 
         $izinId = IzinSiswa::query()->where('siswa_id', $siswa->id)->value('id');
         $pdf = $this->withToken($token)
