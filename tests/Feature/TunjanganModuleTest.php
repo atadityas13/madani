@@ -105,6 +105,73 @@ class TunjanganModuleTest extends TestCase
         ]);
     }
 
+    public function test_admin_bisa_hapus_skakpt_yang_sudah_diunggah(): void
+    {
+        Storage::fake('r2');
+        $this->seed();
+        $this->travelTo(now()->setDate(2027, 3, 15));
+
+        $ta = TahunAjaran::aktif();
+        $this->assertNotNull($ta);
+        $gtk = $this->buatGtk(['nrg' => 'NRG-DEL']);
+        $admin = $this->admin();
+
+        $dokumen = app(TunjanganDokumenService::class)->simpanPdf(
+            $gtk,
+            TunjanganDokumen::JENIS_SKAKPT,
+            2,
+            UploadedFile::fake()->create('hapus.pdf', 100, 'application/pdf'),
+            null,
+            $ta,
+        );
+        $path = (string) $dokumen->path;
+
+        $this->actingAs($admin)
+            ->from(route('tunjangan.jenis.show', ['jenis' => 'skakpt', 'gtk' => $gtk]))
+            ->delete(route('tunjangan.jenis.destroy', [
+                'jenis' => 'skakpt',
+                'gtk' => $gtk,
+                'dokumen' => $dokumen,
+            ]))
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseMissing('tunjangan_dokumens', ['id' => $dokumen->id]);
+        Storage::disk('r2')->assertMissing($path);
+    }
+
+    public function test_guru_tidak_bisa_hapus_skakpt_guru_lain(): void
+    {
+        Storage::fake('r2');
+        $this->seed();
+        $this->travelTo(now()->setDate(2027, 3, 15));
+
+        $ta = TahunAjaran::aktif();
+        $this->assertNotNull($ta);
+        $milik = $this->buatGtk(['nama' => 'Milik', 'nrg' => 'NRG-M', 'nuptk' => '11111111111111']);
+        $lain = $this->buatGtk(['nama' => 'Lain', 'nrg' => 'NRG-L', 'nuptk' => '22222222222222']);
+        $guru = $this->buatGuru(nrg: 'NRG-M', gtk: $milik);
+
+        $dokumen = app(TunjanganDokumenService::class)->simpanPdf(
+            $lain,
+            TunjanganDokumen::JENIS_SKAKPT,
+            2,
+            UploadedFile::fake()->create('asing.pdf', 100, 'application/pdf'),
+            null,
+            $ta,
+        );
+
+        $this->actingAs($guru)
+            ->delete(route('tunjangan.jenis.destroy', [
+                'jenis' => 'skakpt',
+                'gtk' => $lain,
+                'dokumen' => $dokumen,
+            ]))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('tunjangan_dokumens', ['id' => $dokumen->id]);
+    }
+
     public function test_preview_stream_inline_bukan_attachment(): void
     {
         Storage::fake('r2');

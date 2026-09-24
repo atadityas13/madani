@@ -182,6 +182,17 @@ class TunjanganController extends Controller
         return back()->with('status', 'PDF berhasil diunggah.');
     }
 
+    public function destroy(string $jenis, Gtk $gtk, TunjanganDokumen $dokumen): RedirectResponse
+    {
+        $this->dokumen->assertJenisUpload($jenis);
+        abort_unless((int) $dokumen->gtk_id === (int) $gtk->id && $dokumen->jenis === $jenis, 404);
+        $this->authorize('hapus', $dokumen);
+
+        $this->dokumen->hapus($dokumen);
+
+        return back()->with('status', 'Berkas berhasil dihapus.');
+    }
+
     public function stream(string $jenis, Gtk $gtk, TunjanganDokumen $dokumen): StreamedResponse
     {
         return $this->fileResponse($jenis, $gtk, $dokumen, inline: true);

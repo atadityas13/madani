@@ -112,6 +112,9 @@
                                                 data-upload-periode="{{ $row['periode'] }}"
                                                 data-upload-label="{{ $row['label'] }}"
                                                 data-upload-mode="{{ $row['dokumen'] ? 'Ganti' : 'Unggah' }}"
+                                                @if ($row['dokumen'])
+                                                    data-delete-url="{{ route('tunjangan.jenis.destroy', [$jenis, $gtk, $row['dokumen']]) }}"
+                                                @endif
                                             >{{ $row['dokumen'] ? 'Ganti' : 'Unggah' }}</button>
                                         @else
                                             <span class="badge text-bg-light text-secondary">Terkunci</span>
@@ -128,24 +131,31 @@
 
     <div class="modal fade" id="modalUploadPdf" tabindex="-1" aria-labelledby="modalUploadPdfLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <form class="modal-content" method="POST" action="{{ $uploadAction }}" enctype="multipart/form-data">
-                @csrf
-                <input type="hidden" name="periode" id="uploadPeriode">
-                <input type="hidden" name="tahun_ajaran_id" value="{{ $tahunAjaran?->id }}">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalUploadPdfLabel">Unggah PDF</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="small text-secondary mb-2" id="uploadPeriodeLabel"></p>
-                    <label class="form-label" for="uploadFile">File PDF (maks. 2 MB)</label>
-                    <input class="form-control" type="file" name="file" id="uploadFile" accept="application/pdf,.pdf" required>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-madani" id="uploadSubmitBtn">Unggah</button>
-                </div>
-            </form>
+            <div class="modal-content">
+                <form method="POST" action="{{ $uploadAction }}" enctype="multipart/form-data" id="formUploadPdf">
+                    @csrf
+                    <input type="hidden" name="periode" id="uploadPeriode">
+                    <input type="hidden" name="tahun_ajaran_id" value="{{ $tahunAjaran?->id }}">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalUploadPdfLabel">Unggah PDF</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="small text-secondary mb-2" id="uploadPeriodeLabel"></p>
+                        <label class="form-label" for="uploadFile">File PDF (maks. 2 MB)</label>
+                        <input class="form-control" type="file" name="file" id="uploadFile" accept="application/pdf,.pdf" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-danger me-auto d-none" id="btnHapusDokumen">Hapus</button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-madani" id="uploadSubmitBtn">Unggah</button>
+                    </div>
+                </form>
+                <form method="POST" id="formHapusDokumen" class="d-none">
+                    @csrf
+                    @method('DELETE')
+                </form>
+            </div>
         </div>
     </div>
 
@@ -194,8 +204,32 @@
                     document.getElementById('uploadSubmitBtn').textContent = mode;
                     document.getElementById('modalUploadPdfLabel').textContent = mode + ' PDF';
                     document.getElementById('uploadFile').value = '';
+
+                    const hapusBtn = document.getElementById('btnHapusDokumen');
+                    const hapusForm = document.getElementById('formHapusDokumen');
+                    const deleteUrl = btn.getAttribute('data-delete-url') || '';
+                    if (deleteUrl) {
+                        hapusBtn.classList.remove('d-none');
+                        hapusForm.setAttribute('action', deleteUrl);
+                    } else {
+                        hapusBtn.classList.add('d-none');
+                        hapusForm.removeAttribute('action');
+                    }
+
                     openModal(uploadModalEl);
                 });
+            });
+
+            document.getElementById('btnHapusDokumen')?.addEventListener('click', () => {
+                const hapusForm = document.getElementById('formHapusDokumen');
+                const action = hapusForm?.getAttribute('action') || '';
+                if (! action) {
+                    return;
+                }
+                if (! window.confirm('Hapus berkas yang sudah diunggah? Tindakan ini tidak bisa dibatalkan.')) {
+                    return;
+                }
+                hapusForm.submit();
             });
 
             const renderPreview = async (url) => {

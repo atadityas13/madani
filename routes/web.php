@@ -127,6 +127,9 @@ Route::middleware('auth')->group(function () {
         Route::post('{jenis}/{gtk}/upload', [TunjanganController::class, 'upload'])
             ->name('jenis.upload')
             ->where('jenis', 'skmt|skbk|skakpt');
+        Route::delete('{jenis}/{gtk}/dokumen/{dokumen}', [TunjanganController::class, 'destroy'])
+            ->name('jenis.destroy')
+            ->where('jenis', 'skmt|skbk|skakpt');
         Route::get('{jenis}/{gtk}/dokumen/{dokumen}/stream', [TunjanganController::class, 'stream'])
             ->name('jenis.stream')
             ->where('jenis', 'skmt|skbk|skakpt');
