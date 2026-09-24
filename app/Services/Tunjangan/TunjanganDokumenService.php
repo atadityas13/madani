@@ -323,6 +323,90 @@ class TunjanganDokumenService
     }
 
     /**
+     * Tahun ajaran yang memuat bulan kalender tertentu (Juli–Juni).
+     */
+    public function tahunAjaranUntukBulanKalender(int $bulan, int $tahunKalender): ?TahunAjaran
+    {
+        $matches = TahunAjaran::query()
+            ->get()
+            ->filter(fn (TahunAjaran $ta) => $this->tahunKalenderUntukBulanSkakpt($ta, $bulan) === $tahunKalender)
+            ->values();
+
+        if ($matches->isEmpty()) {
+            return TahunAjaran::aktif();
+        }
+
+        return $matches->first(fn (TahunAjaran $ta) => $ta->adalahAktif())
+            ?? $matches->first();
+    }
+
+    /**
+     * Pengingat Talim: mulai tanggal 5, cek SKAKPT bulan sebelumnya untuk GTK tersertifikasi.
+     *
+     * @return array{
+     *     tampil: bool,
+     *     judul: string|null,
+     *     isi: string|null,
+     *     bulan: int|null,
+     *     nama_bulan: string|null,
+     *     tahun_ajaran_id: int|null
+     * }
+     */
+    public function pengingatSkakptUntukGtk(Gtk $gtk, ?CarbonInterface $sekarang = null): array
+    {
+        $kosong = [
+            'tampil' => false,
+            'judul' => null,
+            'isi' => null,
+            'bulan' => null,
+            'nama_bulan' => null,
+            'tahun_ajaran_id' => null,
+        ];
+
+        if (! filled($gtk->nrg)) {
+            return $kosong;
+        }
+
+        $sekarang ??= now();
+
+        if ((int) $sekarang->day < 5) {
+            return $kosong;
+        }
+
+        $bulanLalu = $sekarang->copy()->subMonthNoOverflow();
+        $bulan = (int) $bulanLalu->month;
+        $tahunKalender = (int) $bulanLalu->year;
+        $namaBulan = self::namaBulan()[$bulan];
+
+        $tahunAjaran = $this->tahunAjaranUntukBulanKalender($bulan, $tahunKalender);
+        if ($tahunAjaran === null) {
+            return $kosong;
+        }
+
+        $sudahUpload = TunjanganDokumen::query()
+            ->where('gtk_id', $gtk->id)
+            ->where('jenis', TunjanganDokumen::JENIS_SKAKPT)
+            ->where('tahun_ajaran_id', $tahunAjaran->id)
+            ->where('periode', $bulan)
+            ->whereNotNull('path')
+            ->where('path', '!=', '')
+            ->exists();
+
+        if ($sudahUpload) {
+            return $kosong;
+        }
+
+        return [
+            'tampil' => true,
+            'judul' => "Anda belum mengunggah SKAKPT bulan {$namaBulan}.",
+            'isi' => 'Silahkan unduh SKAKPT dari EMIS-GTK dan unggah di menu Tunjangan.',
+            'bulan' => $bulan,
+            'nama_bulan' => $namaBulan,
+            'tahun_ajaran_id' => (int) $tahunAjaran->id,
+        ];
+    }
+
+    /**
      * Daftar admin SKAKPT: filter TA + bulan (default aktif & bulan sebelumnya),
      * hitungan sudah/belum upload, dan filter status upload. Urutan DUK.
      *

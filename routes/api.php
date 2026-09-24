@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\GuruElapkinController;
 use App\Http\Controllers\Api\V1\GuruIzinController;
 use App\Http\Controllers\Api\V1\GuruJurnalController;
 use App\Http\Controllers\Api\V1\GuruProfileController;
+use App\Http\Controllers\Api\V1\GuruTunjanganController;
 use App\Http\Controllers\Api\V1\NotifikasiController;
 use App\Http\Controllers\Api\V1\PengumumanController;
 use App\Http\Controllers\Api\V1\ReferensiController;
@@ -69,6 +70,8 @@ Route::prefix('v1')->group(function () {
         Route::post('izin/alpa', [GuruIzinController::class, 'storeAlpa']);
         Route::get('izin/{izin}/surat.pdf', [GuruIzinController::class, 'suratPdf']);
         Route::post('izin/{izin}/batalkan', [GuruIzinController::class, 'batalkan']);
+
+        Route::get('tunjangan/pengingat-skakpt', [GuruTunjanganController::class, 'pengingatSkakpt']);
     });
 
     Route::middleware(['auth:sanctum', 'siswa.api'])->group(function () {
