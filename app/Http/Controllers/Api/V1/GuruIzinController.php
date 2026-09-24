@@ -41,7 +41,7 @@ class GuruIzinController extends Controller
             'alasan_batal' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $izin = $this->service->batalkanOlehWali(
+        $this->service->batalkanOlehWali(
             $izin,
             $user,
             $data['alasan_batal'] ?? null,
@@ -49,8 +49,7 @@ class GuruIzinController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Laporan dibatalkan.',
-            'data' => $this->service->toGuruItem($izin, $user->gtk_id),
+            'message' => 'Laporan ketidakhadiran dihapus.',
         ]);
     }
 

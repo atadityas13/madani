@@ -22,14 +22,23 @@ class PernyataanSiswa
         $status = $wali?->status;
 
         if ($status === 'Sama dengan ayah kandung') {
-            return (string) ($siswa->ayah?->nama ?: $wali?->nama ?: '');
+            $nama = trim((string) ($siswa->ayah?->nama ?: $wali?->nama ?: ''));
+            if ($nama !== '') {
+                return $nama;
+            }
+        } elseif ($status === 'Sama dengan ibu kandung') {
+            $nama = trim((string) ($siswa->ibu?->nama ?: $wali?->nama ?: ''));
+            if ($nama !== '') {
+                return $nama;
+            }
+        } else {
+            $nama = trim((string) ($wali?->nama ?: ''));
+            if ($nama !== '') {
+                return $nama;
+            }
         }
 
-        if ($status === 'Sama dengan ibu kandung') {
-            return (string) ($siswa->ibu?->nama ?: $wali?->nama ?: '');
-        }
-
-        return (string) ($wali?->nama ?: '');
+        return trim((string) ($siswa->ayah?->nama ?: $siswa->ibu?->nama ?: ''));
     }
 
     /**

@@ -308,15 +308,15 @@ class IzinSiswaService
         ];
     }
 
-    public function batalkanOlehWali(IzinSiswa $izin, User $user, ?string $alasanBatal = null): IzinSiswa
+    public function batalkanOlehWali(IzinSiswa $izin, User $user, ?string $alasanBatal = null): void
     {
         if (! $izin->isAktif()) {
             throw ValidationException::withMessages([
-                'status' => 'Laporan sudah dibatalkan.',
+                'status' => 'Laporan sudah dihapus atau tidak aktif.',
             ]);
         }
 
-        $izin->loadMissing('rombel');
+        $izin->loadMissing(['rombel', 'siswa']);
         $gtkId = $user->gtk_id;
         if ($gtkId === null || $izin->rombel === null || (int) $izin->rombel->gtk_id !== (int) $gtkId) {
             throw ValidationException::withMessages([
@@ -324,17 +324,14 @@ class IzinSiswaService
             ]);
         }
 
-        $izin->update([
-            'status' => IzinSiswa::STATUS_DIBATALKAN,
-            'dibatalkan_oleh' => $user->id,
-            'dibatalkan_at' => now(),
-            'alasan_batal' => filled($alasanBatal) ? trim($alasanBatal) : null,
-        ]);
+        if (filled($alasanBatal)) {
+            $izin->alasan_batal = trim($alasanBatal);
+        }
 
-        $izin = $izin->fresh(['siswa', 'rombel']);
         $this->kirimNotifikasiSiswaDibatalkan($izin);
-
-        return $izin;
+        $this->hapusFileLama($izin->ttd_wali_path, null);
+        $this->hapusFileLama($izin->lampiran_path, null);
+        $izin->delete();
     }
 
     /**
@@ -693,9 +690,9 @@ class IzinSiswaService
         $tanggal = $izin->tanggal?->translatedFormat('d M Y') ?? $izin->tanggal?->toDateString();
 
         $notifikasi = Notifikasi::query()->create([
-            'judul' => "Laporan {$jenis} dibatalkan",
-            'isi' => "Laporan {$jenis} Anda pada {$tanggal} dibatalkan oleh wali kelas."
-                .(filled($izin->alasan_batal) ? ' Alasan: '.$izin->alasan_batal : ''),
+            'judul' => "Laporan {$jenis} dihapus",
+            'isi' => "Laporan {$jenis} Anda pada {$tanggal} dihapus oleh wali kelas."
+                .(filled($izin->alasan_batal) ? ' Catatan: '.$izin->alasan_batal : ''),
             'jenis' => Notifikasi::JENIS_NOTIFIKASI,
             'audience' => Notifikasi::AUDIENCE_SISWA,
             'audience_ids' => [(string) $izin->siswa_id],

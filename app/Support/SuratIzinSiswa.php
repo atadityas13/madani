@@ -60,9 +60,7 @@ class SuratIzinSiswa
         }
 
         $kelas = $izin->rombel?->label() ?? '—';
-        $namaWali = filled($izin->nama_wali)
-            ? (string) $izin->nama_wali
-            : 'Orang tua/wali';
+        $namaWali = self::resolveNamaWali($izin);
 
         return [
             'kota' => $kota,
@@ -88,5 +86,23 @@ class SuratIzinSiswa
             'jenis_bukti' => $jenisBukti,
             'punya_lampiran' => $punyaLampiran,
         ];
+    }
+
+    private static function resolveNamaWali(IzinSiswa $izin): string
+    {
+        $dariSiswa = $izin->siswa !== null
+            ? PernyataanSiswa::namaWaliEfektif($izin->siswa)
+            : '';
+
+        if ($dariSiswa !== '') {
+            return $dariSiswa;
+        }
+
+        $tersimpan = trim((string) ($izin->nama_wali ?? ''));
+        if ($tersimpan !== '' && $tersimpan !== 'Orang tua/wali') {
+            return $tersimpan;
+        }
+
+        return 'Orang tua/wali';
     }
 }

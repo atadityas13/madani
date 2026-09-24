@@ -7,11 +7,13 @@ use App\Models\Gtk;
 use App\Models\IzinSiswa;
 use App\Models\JurnalPembelajaran;
 use App\Models\Notifikasi;
+use App\Models\OrangTua;
 use App\Models\Rombel;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Models\User;
 use App\Support\Peran;
+use App\Support\SuratIzinSiswa;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
@@ -157,6 +159,47 @@ class IzinSiswaApiTest extends TestCase
         $this->assertStringStartsWith('%PDF', $guruPdf->getContent());
     }
 
+    public function test_surat_izin_uses_nama_orang_tua_from_siswa_data(): void
+    {
+        Storage::fake('r2');
+        Queue::fake();
+        $this->seed();
+
+        ['siswa' => $siswa, 'token' => $token] = $this->buatSiswaDenganRombel();
+        OrangTua::query()->create([
+            'siswa_id' => $siswa->id,
+            'peran' => 'ayah',
+            'nama' => 'Ahmad Fulan',
+            'nik' => '3210010101700099',
+            'status_hidup' => 'hidup',
+        ]);
+        OrangTua::query()->create([
+            'siswa_id' => $siswa->id,
+            'peran' => 'ibu',
+            'nama' => 'Siti Aminah',
+            'nik' => '3210010101720099',
+            'status_hidup' => 'hidup',
+        ]);
+        OrangTua::query()->create([
+            'siswa_id' => $siswa->id,
+            'peran' => 'wali',
+            'status' => 'Sama dengan ayah kandung',
+        ]);
+
+        $this->withToken($token)
+            ->postJson('/api/v1/siswa/izin', $this->payload([
+                'jenis' => 'izin',
+                'alasan' => 'Keperluan keluarga',
+            ]))
+            ->assertCreated()
+            ->assertJsonPath('data.nama_wali', 'Ahmad Fulan');
+
+        $izin = IzinSiswa::query()->where('siswa_id', $siswa->id)->first();
+        $this->assertNotNull($izin);
+        $this->assertSame('Ahmad Fulan', $izin->nama_wali);
+        $this->assertSame('Ahmad Fulan', SuratIzinSiswa::payload($izin)['nama_wali']);
+    }
+
     public function test_lampiran_requires_jenis_bukti(): void
     {
         Storage::fake('r2');
@@ -268,12 +311,11 @@ class IzinSiswaApiTest extends TestCase
 
         $this->postJson("/api/v1/guru/izin/{$izinId}/batalkan", ['alasan_batal' => 'Siswa ternyata hadir'])
             ->assertOk()
-            ->assertJsonPath('data.status', 'dibatalkan');
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('message', 'Laporan ketidakhadiran dihapus.');
 
-        $this->assertDatabaseHas('izin_siswas', [
+        $this->assertDatabaseMissing('izin_siswas', [
             'id' => $izinId,
-            'status' => 'dibatalkan',
-            'dibatalkan_oleh' => $wali->id,
         ]);
 
         $this->assertDatabaseHas('notifikasis', [
