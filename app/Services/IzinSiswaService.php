@@ -253,14 +253,16 @@ class IzinSiswaService
     /**
      * @return array{
      *     tanggal: string,
-     *     rows: list<array{rombel_id: int, rombel: string, sakit: int, izin: int, alpa: int, total: int}>,
-     *     totals: array{sakit: int, izin: int, alpa: int, total: int}
+     *     rows: list<array{rombel_id: int, rombel: string, jumlah_siswa: int, sakit: int, izin: int, alpa: int, total: int, hadir: int}>,
+     *     totals: array{jumlah_siswa: int, sakit: int, izin: int, alpa: int, total: int, hadir: int}
      * }
      */
     public function rekapSiaPerKelas(?CarbonInterface $tanggal = null): array
     {
         $hari = ($tanggal ?? now())->toDateString();
-        $rombels = $this->queryRombelAktif()->get();
+        $rombels = $this->queryRombelAktif()
+            ->withCount(['siswas as jumlah_siswa' => fn ($q) => $q->where('rombel_siswas.status', 'aktif')])
+            ->get();
 
         $counts = IzinSiswa::query()
             ->selectRaw('rombel_id, jenis, COUNT(*) as jumlah')
@@ -275,24 +277,33 @@ class IzinSiswaService
         $totalSakit = 0;
         $totalIzin = 0;
         $totalAlpa = 0;
+        $totalJumlahSiswa = 0;
+        $totalHadir = 0;
 
         foreach ($rombels as $rombel) {
             $byJenis = $counts->get($rombel->id, collect());
             $sakit = (int) ($byJenis->firstWhere('jenis', IzinSiswa::JENIS_SAKIT)?->jumlah ?? 0);
             $izin = (int) ($byJenis->firstWhere('jenis', IzinSiswa::JENIS_IZIN)?->jumlah ?? 0);
             $alpa = (int) ($byJenis->firstWhere('jenis', IzinSiswa::JENIS_ALPA)?->jumlah ?? 0);
-            $total = $sakit + $izin + $alpa;
+            $tidakHadir = $sakit + $izin + $alpa;
+            $jumlahSiswa = (int) $rombel->jumlah_siswa;
+            $hadir = max(0, $jumlahSiswa - $tidakHadir);
+
             $totalSakit += $sakit;
             $totalIzin += $izin;
             $totalAlpa += $alpa;
+            $totalJumlahSiswa += $jumlahSiswa;
+            $totalHadir += $hadir;
 
             $rows[] = [
                 'rombel_id' => $rombel->id,
                 'rombel' => $rombel->label(),
+                'jumlah_siswa' => $jumlahSiswa,
                 'sakit' => $sakit,
                 'izin' => $izin,
                 'alpa' => $alpa,
-                'total' => $total,
+                'total' => $tidakHadir,
+                'hadir' => $hadir,
             ];
         }
 
@@ -300,10 +311,12 @@ class IzinSiswaService
             'tanggal' => $hari,
             'rows' => $rows,
             'totals' => [
+                'jumlah_siswa' => $totalJumlahSiswa,
                 'sakit' => $totalSakit,
                 'izin' => $totalIzin,
                 'alpa' => $totalAlpa,
                 'total' => $totalSakit + $totalIzin + $totalAlpa,
+                'hadir' => $totalHadir,
             ],
         ];
     }

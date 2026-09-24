@@ -384,7 +384,10 @@ class IzinSiswaApiTest extends TestCase
             ->assertJsonPath('data.totals.izin', 0)
             ->assertJsonPath('data.totals.total', 2)
             ->assertJsonPath('data.rows.0.rombel', $rombel->label())
-            ->assertJsonPath('data.rows.0.alpa', 2);
+            ->assertJsonPath('data.rows.0.alpa', 2)
+            ->assertJsonPath('data.rows.0.jumlah_siswa', 2)
+            ->assertJsonPath('data.rows.0.hadir', 0)
+            ->assertJsonPath('data.totals.hadir', 0);
     }
 
     public function test_rombels_and_rekap_sia_are_ordered_by_tingkat_then_numeric_nama(): void
