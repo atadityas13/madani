@@ -51,7 +51,7 @@ class Navigasi
                     ['label' => 'PPDB', 'route' => 'ppdb.index', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN]],
                     ['label' => 'Data siswa', 'route' => 'siswa.index', 'match' => ['siswa.index', 'siswa.create', 'siswa.store', 'siswa.show', 'siswa.edit', 'siswa.update', 'siswa.generate-nis', 'siswa.portofolio*', 'siswa.kartu*', 'siswa.dokumen.*', 'siswa.foto.*', 'siswa.pernyataan.*', 'siswa.reset-password', 'siswa.pengajuan.*', 'siswa.relasi.*'], 'roles' => [Peran::SUPERADMIN, Peran::ADMIN, Peran::WALI_KELAS]],
                     ['label' => 'Monitoring', 'route' => 'siswa.monitoring', 'match' => 'siswa.monitoring*', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN, Peran::WALI_KELAS]],
-                    ['label' => 'Mutasi', 'route' => 'mutasi.index', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN]],
+                    ['label' => 'Mutasi/DO', 'route' => 'mutasi.index', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN]],
                     ['label' => 'Alumni', 'route' => 'alumni.index', 'roles' => [Peran::SUPERADMIN, Peran::ADMIN]],
                 ],
             ],

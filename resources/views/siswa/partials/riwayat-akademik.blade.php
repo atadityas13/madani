@@ -1,5 +1,6 @@
 @php
     $masuk = $siswa->dataMasukAkademik();
+    $keluar = $siswa->dataMutasiKeluar();
     $riwayatRombel = $siswa->rombels
         ->sortByDesc(fn ($rombel) => $rombel->tahunAjaran?->tanggal_mulai?->format('Ymd') ?? '0')
         ->values();
@@ -35,6 +36,41 @@
         </div>
     </div>
 </div>
+
+@if ($keluar)
+    <div class="madani-card p-4 mb-3">
+        <div class="stat-label mb-3">Status keluar</div>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Jenis</label>
+                <input class="form-control bg-light" value="{{ $keluar['label'] }}" readonly>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Tanggal</label>
+                <input class="form-control bg-light" value="{{ $keluar['tanggal'] ? \Illuminate\Support\Carbon::parse($keluar['tanggal'])->format('d/m/Y') : '—' }}" readonly>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Alasan</label>
+                <input class="form-control bg-light" value="{{ $keluar['alasan'] ?: '—' }}" readonly>
+            </div>
+            @if ($keluar['jenis'] === 'keluar')
+                <div class="col-md-3">
+                    <label class="form-label">Sekolah tujuan</label>
+                    <input class="form-control bg-light" value="{{ $keluar['nama_sekolah'] ?: '—' }}" readonly>
+                </div>
+                @if ($keluar['npsn'])
+                    <div class="col-md-3">
+                        <label class="form-label">Nomor dokumen EMIS</label>
+                        <input class="form-control bg-light" value="{{ $keluar['npsn'] }}" readonly>
+                    </div>
+                @endif
+            @endif
+            <div class="col-12">
+                <div class="form-text">Data dari modul Mutasi/DO.</div>
+            </div>
+        </div>
+    </div>
+@endif
 
 <div class="madani-card p-0 mb-3">
     <div class="p-4 pb-0">

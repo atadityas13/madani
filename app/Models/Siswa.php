@@ -136,6 +136,11 @@ class Siswa extends Authenticatable
         return $this->hasMany(SiswaPeriodik::class);
     }
 
+    public function mutasis(): HasMany
+    {
+        return $this->hasMany(SiswaMutasi::class);
+    }
+
     public function periodikAktif(): ?SiswaPeriodik
     {
         $this->loadMissing('periodiks');
@@ -238,12 +243,55 @@ class Siswa extends Authenticatable
     }
 
     /**
-     * Mutasi masuk akan diisi setelah modul Mutasi tersedia.
-     *
      * @return array{alasan: ?string, nama_sekolah: ?string, npsn: ?string}|null
      */
     public function dataMutasiMasuk(): ?array
     {
-        return null;
+        $this->loadMissing('mutasis');
+
+        $mutasi = $this->mutasis
+            ->where('jenis', SiswaMutasi::JENIS_MASUK)
+            ->sortByDesc('tanggal')
+            ->sortByDesc('id')
+            ->first();
+
+        if ($mutasi === null) {
+            return null;
+        }
+
+        return [
+            'alasan' => $mutasi->alasan,
+            'nama_sekolah' => $mutasi->nama_sekolah,
+            'npsn' => $mutasi->nomor_dokumen_emis,
+        ];
+    }
+
+    /**
+     * Catatan mutasi keluar atau dropout terakhir (untuk riwayat akademik).
+     *
+     * @return array{jenis: string, label: string, tanggal: ?string, alasan: ?string, nama_sekolah: ?string, npsn: ?string}|null
+     */
+    public function dataMutasiKeluar(): ?array
+    {
+        $this->loadMissing('mutasis');
+
+        $mutasi = $this->mutasis
+            ->whereIn('jenis', [SiswaMutasi::JENIS_KELUAR, SiswaMutasi::JENIS_DO])
+            ->sortByDesc('tanggal')
+            ->sortByDesc('id')
+            ->first();
+
+        if ($mutasi === null) {
+            return null;
+        }
+
+        return [
+            'jenis' => $mutasi->jenis,
+            'label' => $mutasi->isDo() ? 'Dropout' : 'Mutasi keluar',
+            'tanggal' => $mutasi->tanggal?->format('Y-m-d'),
+            'alasan' => $mutasi->alasan,
+            'nama_sekolah' => $mutasi->nama_sekolah,
+            'npsn' => $mutasi->nomor_dokumen_emis,
+        ];
     }
 }

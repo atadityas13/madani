@@ -11,6 +11,7 @@ use App\Http\Controllers\GtkMonitoringController;
 use App\Http\Controllers\KelembagaanController;
 use App\Http\Controllers\Manajemen\DatabaseController;
 use App\Http\Controllers\Manajemen\VendorJobAdminController;
+use App\Http\Controllers\MutasiController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\NotifikasiPembacaController;
 use App\Http\Controllers\NotifMediaController;
@@ -213,11 +214,16 @@ Route::middleware('auth')->group(function () {
             'subheading' => 'Penerimaan peserta didik baru',
             'keterangan' => 'Menu PPDB disiapkan di sini. Alur pendaftaran akan menyusul.',
         ])->name('ppdb.index');
-        Route::view('/mutasi', 'pages.soon', [
-            'heading' => 'Mutasi',
-            'subheading' => 'Mutasi masuk dan keluar',
-            'keterangan' => 'Menu mutasi disiapkan di sini. Proses pindah madrasah akan menyusul.',
-        ])->name('mutasi.index');
+        Route::get('/mutasi', [MutasiController::class, 'index'])->name('mutasi.index');
+        Route::get('/mutasi/masuk/create', [MutasiController::class, 'createMasuk'])->name('mutasi.masuk.create');
+        Route::post('/mutasi/masuk', [MutasiController::class, 'storeMasuk'])->name('mutasi.masuk.store');
+        Route::get('/mutasi/keluar/create', [MutasiController::class, 'createKeluar'])->name('mutasi.keluar.create');
+        Route::post('/mutasi/keluar', [MutasiController::class, 'storeKeluar'])->name('mutasi.keluar.store');
+        Route::get('/mutasi/do/create', [MutasiController::class, 'createDo'])->name('mutasi.do.create');
+        Route::post('/mutasi/do', [MutasiController::class, 'storeDo'])->name('mutasi.do.store');
+        Route::get('/mutasi/siswa-cari', [MutasiController::class, 'cariSiswa'])->name('mutasi.siswa-cari');
+        Route::delete('/mutasi/{mutasi}', [MutasiController::class, 'batalkan'])->name('mutasi.batalkan');
+        Route::get('/mutasi/{mutasi}/cetak', [MutasiController::class, 'cetak'])->name('mutasi.cetak');
         Route::view('/alumni', 'pages.soon', [
             'heading' => 'Alumni',
             'subheading' => 'Data lulusan',

@@ -3,7 +3,7 @@
     $tautanSiswa = [
         ['route' => 'ppdb.index', 'label' => 'PPDB', 'icon' => 'bi-person-plus'],
         ['route' => 'siswa.index', 'label' => 'Data Siswa', 'icon' => 'bi-people', 'match' => 'siswa.*'],
-        ['route' => 'mutasi.index', 'label' => 'Mutasi', 'icon' => 'bi-arrow-left-right'],
+        ['route' => 'mutasi.index', 'label' => 'Mutasi/DO', 'icon' => 'bi-arrow-left-right'],
         ['route' => 'alumni.index', 'label' => 'Alumni', 'icon' => 'bi-mortarboard'],
     ];
 @endphp
