@@ -16,15 +16,14 @@
 
 <div class="modal fade" id="mutasiMasukModal" tabindex="-1" aria-labelledby="mutasiMasukModalLabel" aria-hidden="true" @if ($bukaModal) data-modal-open @endif>
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <form method="POST" action="{{ route('mutasi.masuk.store') }}" data-mutasi-stack>
-                @csrf
-                <input type="hidden" name="_mutasi_form" value="masuk">
-                <div class="modal-header">
-                    <h5 class="modal-title stat-label mb-0" id="mutasiMasukModalLabel">Tambah mutasi masuk</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-                </div>
-                <div class="modal-body">
+        <form class="modal-content" method="POST" action="{{ route('mutasi.masuk.store') }}" data-mutasi-stack>
+            @csrf
+            <input type="hidden" name="_mutasi_form" value="masuk">
+            <div class="modal-header">
+                <h5 class="modal-title stat-label mb-0" id="mutasiMasukModalLabel">Tambah mutasi masuk</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body">
                     <div class="mb-3" data-mutasi-step>
                         <label class="form-label" for="masuk_jenis_sekolah">Jenis sekolah asal</label>
                         <select class="form-select @if ($isOld && $errors->has('jenis_sekolah')) is-invalid @endif" id="masuk_jenis_sekolah" name="jenis_sekolah" required data-emis-toggle data-mutasi-required>
@@ -195,7 +194,6 @@
                     <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Batal</button>
                     <button class="btn btn-madani" type="submit">Simpan</button>
                 </div>
-            </form>
-        </div>
+        </form>
     </div>
 </div>

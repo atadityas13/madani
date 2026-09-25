@@ -145,6 +145,30 @@
 @include('mutasi.partials.modal-keluar', ['bukaModal' => $bukaModalKeluar])
 @include('mutasi.partials.modal-do', ['bukaModal' => $bukaModalDo])
 
+<style>
+    #mutasiMasukModal .modal-dialog,
+    #mutasiKeluarModal .modal-dialog,
+    #mutasiDoModal .modal-dialog {
+        max-height: calc(100vh - 2rem);
+        margin: 1rem auto;
+    }
+
+    #mutasiMasukModal .modal-content,
+    #mutasiKeluarModal .modal-content,
+    #mutasiDoModal .modal-content {
+        max-height: calc(100vh - 2rem);
+        overflow: hidden;
+    }
+
+    #mutasiMasukModal .modal-body,
+    #mutasiKeluarModal .modal-body,
+    #mutasiDoModal .modal-body {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+</style>
+
 <script>
 (() => {
     const cariUrl = @json($cariSiswaUrl);
