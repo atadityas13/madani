@@ -149,22 +149,91 @@
 (() => {
     const cariUrl = @json($cariSiswaUrl);
 
-    const syncEmis = (root) => {
-        const jenis = root.querySelector('[data-emis-toggle]');
-        const wrap = root.querySelector('[data-emis-wrap]');
-        const input = root.querySelector('[data-emis-input]');
-        if (! jenis || ! wrap || ! input) return;
-        const apply = () => {
-            const madrasah = jenis.value === 'madrasah';
-            wrap.style.display = madrasah ? '' : 'none';
-            input.required = madrasah;
-            if (! madrasah) input.value = '';
-        };
-        jenis.addEventListener('change', apply);
-        apply();
+    const isVisible = (el) => el && el.style.display !== 'none' && ! el.hasAttribute('hidden');
+
+    const stepFilled = (step) => {
+        if (step.hasAttribute('data-mutasi-optional')) {
+            return true;
+        }
+        if (step.hasAttribute('data-mutasi-alamat')) {
+            return true;
+        }
+
+        const emisOnly = step.hasAttribute('data-emis-wrap');
+        if (emisOnly && ! isVisible(step)) {
+            return true;
+        }
+
+        const required = step.querySelector('[data-mutasi-required], [data-mutasi-required-if-visible]');
+        if (! required) {
+            return true;
+        }
+
+        if (required.hasAttribute('data-mutasi-required-if-visible') && ! isVisible(step)) {
+            return true;
+        }
+
+        return String(required.value || '').trim() !== '';
     };
 
-    document.querySelectorAll('.modal').forEach((modal) => syncEmis(modal));
+    const syncStack = (form) => {
+        const steps = [...form.querySelectorAll('[data-mutasi-step]')];
+        let unlock = true;
+
+        steps.forEach((step) => {
+            const emisWrap = step.hasAttribute('data-emis-wrap');
+            const jenis = form.querySelector('[data-emis-toggle]');
+            const showEmis = jenis?.value === 'madrasah';
+
+            if (emisWrap) {
+                step.style.display = unlock && showEmis ? '' : 'none';
+                if (! showEmis) {
+                    const input = step.querySelector('[data-emis-input]');
+                    if (input) {
+                        input.value = '';
+                        input.required = false;
+                    }
+
+                    return;
+                }
+                const input = step.querySelector('[data-emis-input]');
+                if (input) {
+                    input.required = true;
+                }
+            }
+
+            if (! unlock) {
+                if (! emisWrap) {
+                    step.hidden = true;
+                }
+
+                return;
+            }
+
+            if (! emisWrap) {
+                if (step.hasAttribute('data-siswa-detail')) {
+                    const hasData = Boolean(step.querySelector('[data-detail-nisn]')?.value);
+                    step.hidden = ! hasData;
+                } else {
+                    step.hidden = false;
+                }
+            }
+
+            if (! stepFilled(step) || (step.hasAttribute('data-siswa-detail') && step.hidden)) {
+                unlock = false;
+            }
+        });
+    };
+
+    const bindStack = (form) => {
+        const sync = () => syncStack(form);
+        form.addEventListener('input', sync);
+        form.addEventListener('change', sync);
+        form._mutasiSync = sync;
+        sync();
+    };
+
+    document.querySelectorAll('[data-mutasi-stack]').forEach(bindStack);
 
     const bindCombobox = (form) => {
         const tingkat = form.querySelector('[data-tingkat-select]');
@@ -178,16 +247,23 @@
         const labelStore = box.querySelector('[data-siswa-label-store]');
         let items = [];
 
+        const bump = () => form._mutasiSync?.();
+
         const setDetail = (item) => {
             if (! detail) return;
             if (! item) {
+                detail.querySelector('[data-detail-nisn]').value = '';
+                detail.querySelector('[data-detail-rombel]').value = '';
+                detail.querySelector('[data-detail-wali]').value = '';
                 detail.hidden = true;
+                bump();
                 return;
             }
             detail.querySelector('[data-detail-nisn]').value = item.nisn || '—';
             detail.querySelector('[data-detail-rombel]').value = item.rombel || '—';
             detail.querySelector('[data-detail-wali]').value = item.wali || '—';
             detail.hidden = false;
+            bump();
         };
 
         const clearSiswa = () => {
@@ -218,6 +294,7 @@
                     search.value = item.label;
                     setDetail(item);
                     results.hidden = true;
+                    bump();
                 });
                 results.appendChild(btn);
             });
@@ -234,6 +311,7 @@
             const keepId = idInput.value;
             clearSiswa();
             search.disabled = ! tingkatValue;
+            bump();
             if (! tingkatValue) return;
 
             search.placeholder = 'Memuat…';
@@ -258,6 +336,7 @@
                 items = [];
                 search.placeholder = 'Gagal memuat siswa';
             }
+            bump();
         };
 
         tingkat.addEventListener('change', () => loadSiswa(tingkat.value));
@@ -271,6 +350,7 @@
             labelStore.value = '';
             setDetail(null);
             filterLocal();
+            bump();
         });
         search.addEventListener('blur', () => {
             setTimeout(() => { results.hidden = true; }, 150);
@@ -278,6 +358,8 @@
 
         if (tingkat.value) {
             loadSiswa(tingkat.value);
+        } else {
+            bump();
         }
     };
 

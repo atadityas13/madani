@@ -9,7 +9,7 @@
     data-siswa-combobox
     data-cari-url="{{ $cariSiswaUrl }}"
 >
-    <input type="hidden" name="siswa_id" value="{{ $siswaId }}" data-siswa-id>
+    <input type="hidden" name="siswa_id" value="{{ $siswaId }}" data-siswa-id data-mutasi-required>
     <input type="hidden" name="siswa_label" value="{{ $siswaLabel }}" data-siswa-label-store>
     <input
         class="form-control @if ($invalid) is-invalid @endif"
