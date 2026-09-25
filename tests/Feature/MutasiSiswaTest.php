@@ -21,16 +21,16 @@ class MutasiSiswaTest extends TestCase
         $this->get(route('mutasi.index'))
             ->assertOk()
             ->assertSee('Mutasi/DO')
-            ->assertSee('Catat mutasi masuk')
+            ->assertSee('Tambah')
             ->assertSee('Dropout');
 
         $this->get(route('mutasi.index', ['tab' => 'keluar']))
             ->assertOk()
-            ->assertSee('Catat mutasi keluar');
+            ->assertSee('Tambah mutasi keluar', false);
 
         $this->get(route('mutasi.index', ['tab' => 'do']))
             ->assertOk()
-            ->assertSee('Catat dropout');
+            ->assertSee('Tambah dropout', false);
     }
 
     public function test_mutasi_masuk_membuat_siswa_aktif_tanpa_rombel_dan_periodik_pindahan(): void

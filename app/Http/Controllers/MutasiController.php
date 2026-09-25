@@ -8,7 +8,6 @@ use App\Services\MutasiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -35,16 +34,11 @@ class MutasiController extends Controller
             'tab' => $tab,
             'mutasis' => $mutasis,
             'tabOptions' => SiswaMutasi::tabOptions(),
-        ]);
-    }
-
-    public function createMasuk(): View
-    {
-        return view('mutasi.create-masuk', [
             'alasanOptions' => SiswaMutasi::alasanOptions(),
             'jenisSekolahOptions' => SiswaMutasi::jenisSekolahOptions(),
             'pekerjaanOptions' => config('emis.pekerjaan', []),
             'tingkatOptions' => ['VII', 'VIII', 'IX'],
+            'cariSiswaUrl' => route('mutasi.siswa-cari'),
         ]);
     }
 
@@ -55,12 +49,7 @@ class MutasiController extends Controller
 
         return redirect()
             ->route('mutasi.index', ['tab' => 'masuk'])
-            ->with('status', 'Mutasi masuk berhasil dicatat.');
-    }
-
-    public function createKeluar(Request $request): View
-    {
-        return $this->createNonaktifForm($request, SiswaMutasi::JENIS_KELUAR);
+            ->with('status', 'Mutasi masuk berhasil ditambahkan.');
     }
 
     public function storeKeluar(Request $request): RedirectResponse
@@ -70,12 +59,7 @@ class MutasiController extends Controller
 
         return redirect()
             ->route('mutasi.index', ['tab' => 'keluar'])
-            ->with('status', 'Mutasi keluar berhasil dicatat.');
-    }
-
-    public function createDo(Request $request): View
-    {
-        return $this->createNonaktifForm($request, SiswaMutasi::JENIS_DO);
+            ->with('status', 'Mutasi keluar berhasil ditambahkan.');
     }
 
     public function storeDo(Request $request): RedirectResponse
@@ -85,7 +69,7 @@ class MutasiController extends Controller
 
         return redirect()
             ->route('mutasi.index', ['tab' => 'do'])
-            ->with('status', 'Dropout berhasil dicatat.');
+            ->with('status', 'Dropout berhasil ditambahkan.');
     }
 
     public function cariSiswa(Request $request): JsonResponse
@@ -108,17 +92,20 @@ class MutasiController extends Controller
                 });
             })
             ->orderBy('nama')
-            ->limit(30)
+            ->limit(50)
             ->get()
             ->map(function (Siswa $siswa) {
                 $rombel = $siswa->rombels->first();
+                $rombelLabel = $rombel?->label() ?? '—';
+                $nisn = $siswa->nisn ?: '—';
 
                 return [
                     'id' => $siswa->id,
                     'nama' => $siswa->nama,
                     'nisn' => $siswa->nisn,
-                    'rombel' => $rombel?->label() ?? '—',
+                    'rombel' => $rombelLabel,
                     'wali' => $siswa->wali?->nama ?: '—',
+                    'label' => $nisn.' - '.$siswa->nama.' - '.$rombelLabel,
                 ];
             });
 
@@ -152,42 +139,6 @@ class MutasiController extends Controller
             ->with('error', 'Cetak surat belum tersedia. Template surat penerimaan/keluar akan menyusul.');
     }
 
-    private function createNonaktifForm(Request $request, string $jenis): View
-    {
-        $tingkat = $request->string('tingkat')->toString();
-        $tingkat = in_array($tingkat, ['VII', 'VIII', 'IX'], true) ? $tingkat : '';
-
-        $siswas = $tingkat === ''
-            ? collect()
-            : $this->siswaAktifByTingkat($tingkat);
-
-        $view = $jenis === SiswaMutasi::JENIS_DO
-            ? 'mutasi.create-do'
-            : 'mutasi.create-keluar';
-
-        return view($view, [
-            'alasanOptions' => SiswaMutasi::alasanOptions(),
-            'jenisSekolahOptions' => SiswaMutasi::jenisSekolahOptions(),
-            'tingkatOptions' => ['VII', 'VIII', 'IX'],
-            'tingkat' => $tingkat,
-            'siswas' => $siswas,
-            'siswaId' => old('siswa_id', $request->input('siswa_id')),
-        ]);
-    }
-
-    /**
-     * @return Collection<int, Siswa>
-     */
-    private function siswaAktifByTingkat(string $tingkat): Collection
-    {
-        return Siswa::query()
-            ->with(['wali', 'rombels' => fn ($q) => $q->wherePivot('status', 'aktif')])
-            ->where('angkatan', $tingkat)
-            ->whereIn('status_keaktifan', ['aktif', 'aktif_tanpa_rombel'])
-            ->orderBy('nama')
-            ->get(['id', 'nama', 'nisn', 'angkatan', 'status_keaktifan']);
-    }
-
     /**
      * @return array<string, mixed>
      */
@@ -216,6 +167,7 @@ class MutasiController extends Controller
             'pekerjaan' => ['required', 'string', Rule::in(array_keys(config('emis.pekerjaan', [])))],
             'no_hp' => ['nullable', 'string', 'max:20'],
             'alamat' => ['nullable', 'string', 'max:255'],
+            'blok' => ['nullable', 'string', 'max:100'],
             'rt' => ['nullable', 'string', 'max:5'],
             'rw' => ['nullable', 'string', 'max:5'],
             'desa' => ['nullable', 'string', 'max:100'],
