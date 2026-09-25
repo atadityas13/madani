@@ -44,32 +44,29 @@
     </div>
 @endif
 
+<form method="GET" action="{{ route('mutasi.index') }}" class="d-flex align-items-center gap-2 mb-3">
+    <input type="hidden" name="tab" value="{{ $tab }}">
+    <label class="form-label mb-0 text-nowrap" for="mutasi_tahun_ajaran_id">Tahun ajaran</label>
+    <select class="form-select" id="mutasi_tahun_ajaran_id" name="tahun_ajaran_id" onchange="this.form.submit()" style="min-width: 10rem; max-width: 14rem;">
+        @forelse ($tahunAjarans as $ta)
+            <option value="{{ $ta->id }}" @selected((int) $tahunAjaran?->id === (int) $ta->id)>{{ $ta->label() }}</option>
+        @empty
+            <option value="">Belum ada tahun ajaran</option>
+        @endforelse
+    </select>
+</form>
+
 <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-3">
-    <div class="d-flex align-items-center gap-3 flex-wrap">
-        <ul class="nav nav-pills">
-            @foreach ($tabOptions as $key => $label)
-                <li class="nav-item">
-                    <a
-                        class="nav-link @if ($tab === $key) active @endif"
-                        href="{{ route('mutasi.index', array_filter(['tab' => $key, 'tahun_ajaran_id' => $tahunAjaran?->id])) }}"
-                    >{{ $label }}</a>
-                </li>
-            @endforeach
-        </ul>
-        <form method="GET" action="{{ route('mutasi.index') }}" class="d-flex align-items-center gap-2">
-            <input type="hidden" name="tab" value="{{ $tab }}">
-            <label class="form-label mb-0 text-nowrap" for="mutasi_tahun_ajaran_id">Tahun ajaran</label>
-            <select class="form-select" id="mutasi_tahun_ajaran_id" name="tahun_ajaran_id" onchange="this.form.submit()" style="min-width: 10rem;">
-                @forelse ($tahunAjarans as $ta)
-                    <option value="{{ $ta->id }}" @selected((int) $tahunAjaran?->id === (int) $ta->id)>
-                        {{ $ta->label() }}@if ($tahunAktif && (int) $tahunAktif->id === (int) $ta->id) (berjalan)@endif
-                    </option>
-                @empty
-                    <option value="">Belum ada tahun ajaran</option>
-                @endforelse
-            </select>
-        </form>
-    </div>
+    <ul class="nav nav-pills">
+        @foreach ($tabOptions as $key => $label)
+            <li class="nav-item">
+                <a
+                    class="nav-link @if ($tab === $key) active @endif"
+                    href="{{ route('mutasi.index', array_filter(['tab' => $key, 'tahun_ajaran_id' => $tahunAjaran?->id])) }}"
+                >{{ $label }}</a>
+            </li>
+        @endforeach
+    </ul>
     <button class="btn btn-madani" type="button" data-bs-toggle="modal" data-bs-target="{{ $modalTargets[$tab] }}">
         {{ $createLabels[$tab] }}
     </button>
@@ -87,7 +84,7 @@
                     @if ($showSekolah)
                         <th>{{ $tab === 'masuk' ? 'Sekolah asal' : 'Sekolah tujuan' }}</th>
                     @endif
-                    <th>Alasan</th>
+                    <th>{{ $tab === 'masuk' ? 'Nomor Dok. EMIS' : 'Alasan' }}</th>
                     <th class="text-end">Aksi</th>
                 </tr>
             </thead>
@@ -109,14 +106,15 @@
                         </td>
                         <td>{{ $siswa?->nisn ?: '—' }}</td>
                         @if ($showSekolah)
-                            <td>
-                                {{ $mutasi->nama_sekolah ?: '—' }}
-                                @if ($mutasi->jenis_sekolah === 'madrasah' && $mutasi->nomor_dokumen_emis)
-                                    <div class="small text-secondary">EMIS: {{ $mutasi->nomor_dokumen_emis }}</div>
-                                @endif
-                            </td>
+                            <td>{{ $mutasi->nama_sekolah ?: '—' }}</td>
                         @endif
-                        <td>{{ $mutasi->alasan }}</td>
+                        <td>
+                            @if ($tab === 'masuk')
+                                {{ $mutasi->nomor_dokumen_emis ?: '—' }}
+                            @else
+                                {{ $mutasi->alasan }}
+                            @endif
+                        </td>
                         <td>
                             <div class="emis-aksi justify-content-end">
                                 @if ($tab === 'masuk' && ! $bisaBatalkanMasuk)
