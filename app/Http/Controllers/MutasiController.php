@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Siswa;
 use App\Models\SiswaMutasi;
+use App\Models\TahunAjaran;
 use App\Services\MutasiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -22,9 +23,14 @@ class MutasiController extends Controller
             $tab = SiswaMutasi::JENIS_MASUK;
         }
 
+        $tahunAjarans = TahunAjaran::query()->orderByDesc('tanggal_mulai')->get();
+        $tahunAktif = TahunAjaran::aktif();
+        $tahunAjaran = $this->resolveTahunAjaran($request, $tahunAktif);
+
         $mutasis = SiswaMutasi::query()
             ->with(['siswa.wali', 'siswa.rombels' => fn ($q) => $q->wherePivot('status', 'aktif'), 'rombel', 'tahunAjaran'])
             ->where('jenis', $tab)
+            ->when($tahunAjaran, fn ($query) => $query->where('tahun_ajaran_id', $tahunAjaran->id))
             ->orderByDesc('tanggal')
             ->orderByDesc('id')
             ->paginate(20)
@@ -39,6 +45,9 @@ class MutasiController extends Controller
             'pekerjaanOptions' => config('emis.pekerjaan', []),
             'tingkatOptions' => ['VII', 'VIII', 'IX'],
             'cariSiswaUrl' => route('mutasi.siswa-cari'),
+            'tahunAjarans' => $tahunAjarans,
+            'tahunAjaran' => $tahunAjaran,
+            'tahunAktif' => $tahunAktif,
         ]);
     }
 
@@ -222,5 +231,16 @@ class MutasiController extends Controller
                 $query->whereIn('status_keaktifan', ['aktif', 'aktif_tanpa_rombel']);
             }),
         ];
+    }
+
+    private function resolveTahunAjaran(Request $request, ?TahunAjaran $tahunAktif): ?TahunAjaran
+    {
+        $tahunAjaranId = $request->integer('tahun_ajaran_id');
+
+        if ($tahunAjaranId > 0) {
+            return TahunAjaran::query()->find($tahunAjaranId) ?? $tahunAktif;
+        }
+
+        return $tahunAktif;
     }
 }

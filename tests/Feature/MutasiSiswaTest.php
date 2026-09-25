@@ -22,7 +22,8 @@ class MutasiSiswaTest extends TestCase
             ->assertOk()
             ->assertSee('Mutasi/DO')
             ->assertSee('Tambah')
-            ->assertSee('Dropout');
+            ->assertSee('Dropout')
+            ->assertSee('Tahun ajaran');
 
         $this->get(route('mutasi.index', ['tab' => 'keluar']))
             ->assertOk()
@@ -31,6 +32,63 @@ class MutasiSiswaTest extends TestCase
         $this->get(route('mutasi.index', ['tab' => 'do']))
             ->assertOk()
             ->assertSee('Tambah dropout', false);
+    }
+
+    public function test_daftar_mutasi_difilter_tahun_ajaran_aktif_secara_default(): void
+    {
+        $this->actingAsOperator();
+        $tahunAktif = TahunAjaran::aktif();
+        $this->assertNotNull($tahunAktif);
+
+        $tahunLama = TahunAjaran::query()->create([
+            'nama' => '2024/2025',
+            'tanggal_mulai' => '2024-07-01',
+            'tanggal_selesai' => '2025-06-30',
+            'is_aktif' => false,
+            'status' => TahunAjaran::STATUS_ARSIP,
+        ]);
+
+        $siswaAktif = Siswa::query()->create([
+            'nama' => 'Siswa TA Aktif',
+            'nisn' => '1010101010',
+            'status_keaktifan' => 'aktif_tanpa_rombel',
+            'angkatan' => 'VII',
+        ]);
+        $siswaLama = Siswa::query()->create([
+            'nama' => 'Siswa TA Lama',
+            'nisn' => '2020202020',
+            'status_keaktifan' => 'aktif_tanpa_rombel',
+            'angkatan' => 'VII',
+        ]);
+
+        SiswaMutasi::query()->create([
+            'jenis' => SiswaMutasi::JENIS_MASUK,
+            'siswa_id' => $siswaAktif->id,
+            'tanggal' => now()->toDateString(),
+            'alasan' => 'Lainnya',
+            'jenis_sekolah' => SiswaMutasi::SEKOLAH_UMUM,
+            'nama_sekolah' => 'SMP Aktif',
+            'tahun_ajaran_id' => $tahunAktif->id,
+        ]);
+        SiswaMutasi::query()->create([
+            'jenis' => SiswaMutasi::JENIS_MASUK,
+            'siswa_id' => $siswaLama->id,
+            'tanggal' => now()->toDateString(),
+            'alasan' => 'Lainnya',
+            'jenis_sekolah' => SiswaMutasi::SEKOLAH_UMUM,
+            'nama_sekolah' => 'SMP Lama',
+            'tahun_ajaran_id' => $tahunLama->id,
+        ]);
+
+        $this->get(route('mutasi.index', ['tab' => 'masuk']))
+            ->assertOk()
+            ->assertSee('Siswa TA Aktif')
+            ->assertDontSee('Siswa TA Lama');
+
+        $this->get(route('mutasi.index', ['tab' => 'masuk', 'tahun_ajaran_id' => $tahunLama->id]))
+            ->assertOk()
+            ->assertSee('Siswa TA Lama')
+            ->assertDontSee('Siswa TA Aktif');
     }
 
     public function test_mutasi_masuk_membuat_siswa_aktif_tanpa_rombel_dan_periodik_pindahan(): void
