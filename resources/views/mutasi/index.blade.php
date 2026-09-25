@@ -110,7 +110,25 @@
                         @endif
                         <td>
                             @if ($tab === 'masuk')
-                                {{ $mutasi->nomor_dokumen_emis ?: '—' }}
+                                <form
+                                    method="POST"
+                                    action="{{ route('mutasi.nomor-dokumen-emis.update', $mutasi) }}"
+                                    class="mb-0"
+                                    data-no-loading
+                                >
+                                    @csrf
+                                    @method('PATCH')
+                                    <input
+                                        class="form-control form-control-sm"
+                                        type="text"
+                                        name="nomor_dokumen_emis"
+                                        value="{{ $mutasi->nomor_dokumen_emis }}"
+                                        maxlength="50"
+                                        placeholder="Isi nomor…"
+                                        aria-label="Nomor dokumen EMIS"
+                                        onchange="this.form.submit()"
+                                    >
+                                </form>
                             @else
                                 {{ $mutasi->alasan }}
                             @endif

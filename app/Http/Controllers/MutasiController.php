@@ -81,6 +81,33 @@ class MutasiController extends Controller
             ->with('status', 'Dropout berhasil ditambahkan.');
     }
 
+    public function updateNomorDokumenEmis(Request $request, SiswaMutasi $mutasi): RedirectResponse
+    {
+        if (! $mutasi->isMasuk()) {
+            abort(404);
+        }
+
+        $data = $request->validate([
+            'nomor_dokumen_emis' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        $nomor = filled($data['nomor_dokumen_emis'] ?? null)
+            ? trim((string) $data['nomor_dokumen_emis'])
+            : null;
+
+        $mutasi->update([
+            'nomor_dokumen_emis' => $nomor,
+        ]);
+
+        if ($mutasi->jenis_sekolah === SiswaMutasi::SEKOLAH_MADRASAH) {
+            $mutasi->siswa?->periodikAktif()?->update([
+                'npsn_asal' => $nomor,
+            ]);
+        }
+
+        return back()->with('status', 'Nomor dokumen EMIS diperbarui.');
+    }
+
     public function cariSiswa(Request $request): JsonResponse
     {
         $data = $request->validate([

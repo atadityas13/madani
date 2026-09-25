@@ -219,6 +219,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/mutasi/keluar', [MutasiController::class, 'storeKeluar'])->name('mutasi.keluar.store');
         Route::post('/mutasi/do', [MutasiController::class, 'storeDo'])->name('mutasi.do.store');
         Route::get('/mutasi/siswa-cari', [MutasiController::class, 'cariSiswa'])->name('mutasi.siswa-cari');
+        Route::patch('/mutasi/{mutasi}/nomor-dokumen-emis', [MutasiController::class, 'updateNomorDokumenEmis'])
+            ->name('mutasi.nomor-dokumen-emis.update');
         Route::delete('/mutasi/{mutasi}', [MutasiController::class, 'batalkan'])->name('mutasi.batalkan');
         Route::get('/mutasi/{mutasi}/cetak', [MutasiController::class, 'cetak'])->name('mutasi.cetak');
         Route::view('/alumni', 'pages.soon', [

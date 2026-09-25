@@ -139,6 +139,31 @@ class MutasiSiswaTest extends TestCase
         $this->assertNull($mutasi->nomor_dokumen_emis);
     }
 
+    public function test_nomor_dokumen_emis_bisa_diedit_dari_daftar_masuk(): void
+    {
+        $this->actingAsOperator();
+
+        $this->post(route('mutasi.masuk.store'), $this->payloadMasuk([
+            'jenis_sekolah' => 'madrasah',
+            'nomor_dokumen_emis' => null,
+            'nama_sekolah' => 'MTs Edit EMIS',
+            'nisn' => '2468246824',
+            'nik' => '3210010101010088',
+        ]))->assertRedirect();
+
+        $mutasi = SiswaMutasi::query()->whereHas('siswa', fn ($q) => $q->where('nisn', '2468246824'))->firstOrFail();
+
+        $this->from(route('mutasi.index', ['tab' => 'masuk']))
+            ->patch(route('mutasi.nomor-dokumen-emis.update', $mutasi), [
+                'nomor_dokumen_emis' => 'EMIS-EDIT-01',
+            ])
+            ->assertRedirect();
+
+        $mutasi->refresh();
+        $this->assertSame('EMIS-EDIT-01', $mutasi->nomor_dokumen_emis);
+        $this->assertSame('EMIS-EDIT-01', $mutasi->siswa?->periodikAktif()?->npsn_asal);
+    }
+
     public function test_mutasi_masuk_tolak_nisn_siswa_aktif(): void
     {
         $this->actingAsOperator();
