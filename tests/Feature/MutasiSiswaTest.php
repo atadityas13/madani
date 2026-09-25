@@ -121,6 +121,24 @@ class MutasiSiswaTest extends TestCase
         $this->assertSame('Ikut pindah orang tua', $siswa->dataMutasiMasuk()['alasan']);
     }
 
+    public function test_mutasi_masuk_madrasah_boleh_tanpa_nomor_dokumen_emis(): void
+    {
+        $this->actingAsOperator();
+
+        $this->post(route('mutasi.masuk.store'), $this->payloadMasuk([
+            'jenis_sekolah' => 'madrasah',
+            'nomor_dokumen_emis' => null,
+            'nama_sekolah' => 'MTs Tanpa EMIS',
+            'nisn' => '1357913579',
+            'nik' => '3210010101010099',
+        ]))->assertRedirect(route('mutasi.index', ['tab' => 'masuk']));
+
+        $mutasi = SiswaMutasi::query()->whereHas('siswa', fn ($q) => $q->where('nisn', '1357913579'))->first();
+        $this->assertNotNull($mutasi);
+        $this->assertSame(SiswaMutasi::SEKOLAH_MADRASAH, $mutasi->jenis_sekolah);
+        $this->assertNull($mutasi->nomor_dokumen_emis);
+    }
+
     public function test_mutasi_masuk_tolak_nisn_siswa_aktif(): void
     {
         $this->actingAsOperator();

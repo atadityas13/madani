@@ -157,12 +157,7 @@ class MutasiController extends Controller
             'tanggal' => ['nullable', 'date'],
             'alasan' => ['required', 'string', Rule::in(array_keys(SiswaMutasi::alasanOptions()))],
             'jenis_sekolah' => ['required', Rule::in(array_keys(SiswaMutasi::jenisSekolahOptions()))],
-            'nomor_dokumen_emis' => [
-                Rule::requiredIf($request->input('jenis_sekolah') === SiswaMutasi::SEKOLAH_MADRASAH),
-                'nullable',
-                'string',
-                'max:50',
-            ],
+            'nomor_dokumen_emis' => ['nullable', 'string', 'max:50'],
             'nama_sekolah' => ['required', 'string', 'max:150'],
             'nama' => ['required', 'string', 'max:150'],
             'nisn' => ['required', 'digits:10', Rule::unique('siswas', 'nisn')],

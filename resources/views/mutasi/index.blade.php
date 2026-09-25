@@ -238,7 +238,8 @@
                 }
                 const input = step.querySelector('[data-emis-input]');
                 if (input) {
-                    input.required = true;
+                    input.required = step.hasAttribute('data-mutasi-required-if-visible')
+                        || Boolean(step.querySelector('[data-mutasi-required-if-visible]'));
                 }
             }
 

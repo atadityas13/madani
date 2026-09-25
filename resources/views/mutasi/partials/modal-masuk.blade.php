@@ -37,9 +37,9 @@
                         @endif
                     </div>
 
-                    <div class="mb-3" data-mutasi-step data-emis-wrap @style(['display: none' => $oldVal('jenis_sekolah', '') !== 'madrasah'])>
-                        <label class="form-label" for="masuk_nomor_dokumen_emis">Nomor dokumen EMIS</label>
-                        <input class="form-control @if ($isOld && $errors->has('nomor_dokumen_emis')) is-invalid @endif" id="masuk_nomor_dokumen_emis" name="nomor_dokumen_emis" value="{{ $oldVal('nomor_dokumen_emis') }}" maxlength="50" data-emis-input data-mutasi-required-if-visible>
+                    <div class="mb-3" data-mutasi-step data-emis-wrap data-mutasi-optional @style(['display: none' => $oldVal('jenis_sekolah', '') !== 'madrasah'])>
+                        <label class="form-label" for="masuk_nomor_dokumen_emis">Nomor dokumen EMIS <span class="text-secondary fw-normal">(opsional)</span></label>
+                        <input class="form-control @if ($isOld && $errors->has('nomor_dokumen_emis')) is-invalid @endif" id="masuk_nomor_dokumen_emis" name="nomor_dokumen_emis" value="{{ $oldVal('nomor_dokumen_emis') }}" maxlength="50" data-emis-input>
                         @if ($isOld)
                             @error('nomor_dokumen_emis')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         @endif
