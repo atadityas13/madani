@@ -158,10 +158,7 @@ class ElapkinBridge
             'nuptk' => $gtk?->nuptk,
             'golongan' => $gtk?->golongan,
             'unit_kerja' => $unitKerja,
-            'nip_penilai' => $kepala['nip'] ?? null,
-            'nama_penilai' => $kepala['nama'] ?? null,
-            'jabatan_penilai' => $kepala['jabatan'] ?? 'Kepala Madrasah',
-            'penilai_peran' => 'Kepala Madrasah',
+            // Pejabat penilai diatur di e-Lapkin; jangan dikirim agar tidak menimpa pengaturan di sana.
             // Mapel & tugas tambahan live di Simpatisans — tidak di-snapshot Madani.
             'mapel' => [],
             'tugas_tambahan' => [],

@@ -61,4 +61,23 @@ class GuruElapkinApiTest extends TestCase
             ->assertJsonPath('nip', '198001012005011001')
             ->assertJsonStructure(['signature', 'profile_hash', 'profile']);
     }
+
+    public function test_sso_profile_tidak_mengirim_pejabat_penilai(): void
+    {
+        Gtk::query()->create([
+            'nama' => 'Kepala Lama',
+            'nip' => '197001011990011001',
+            'jenis' => 'guru',
+            'status' => 'aktif',
+            'jabatan' => 'Kepala Madrasah',
+        ]);
+
+        Sanctum::actingAs($this->guruUser());
+
+        $this->getJson('/api/v1/guru/elapkin-sso')
+            ->assertOk()
+            ->assertJsonMissingPath('profile.nip_penilai')
+            ->assertJsonMissingPath('profile.nama_penilai')
+            ->assertJsonMissingPath('profile.jabatan_penilai');
+    }
 }
