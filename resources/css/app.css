@@ -2240,6 +2240,41 @@ a.biodata-path-item:hover {
     text-align: center;
 }
 
+.talim-menu-list {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.talim-menu-item {
+    display: block;
+    background: #fff;
+    border: 1px solid var(--madani-line, #ececec);
+    border-radius: 0.85rem;
+    padding: 1rem 1.05rem;
+    text-decoration: none;
+    color: inherit;
+}
+
+.talim-menu-item__title {
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 0.2rem;
+    font-size: 1.05rem;
+}
+
+.talim-menu-item__desc {
+    font-size: 0.85rem;
+    color: #64748b;
+    line-height: 1.35;
+    margin: 0;
+}
+
+.talim-menu-item__chev {
+    float: right;
+    color: #94a3b8;
+    font-weight: 700;
+}
+
 .vendor-stat {
     transition: box-shadow 0.15s ease, transform 0.15s ease;
 }

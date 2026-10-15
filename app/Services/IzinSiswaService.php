@@ -15,6 +15,7 @@ use App\Support\R2Url;
 use App\Support\SuratIzinSiswa;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -257,10 +258,17 @@ class IzinSiswaService
      *     totals: array{jumlah_siswa: int, sakit: int, izin: int, alpa: int, total: int, hadir: int}
      * }
      */
-    public function rekapSiaPerKelas(?CarbonInterface $tanggal = null): array
+    /**
+     * @param  list<int>|null  $rombelIds  null = semua rombel aktif; [] = kosong
+     */
+    public function rekapSiaPerKelas(?CarbonInterface $tanggal = null, ?array $rombelIds = null): array
     {
         $hari = ($tanggal ?? now())->toDateString();
         $rombels = $this->queryRombelAktif()
+            ->when(
+                $rombelIds !== null,
+                fn ($query) => $query->whereIn('id', $rombelIds === [] ? [0] : $rombelIds),
+            )
             ->withCount(['siswas as jumlah_siswa' => fn ($q) => $q->where('rombel_siswas.status', 'aktif')])
             ->get();
 
@@ -348,9 +356,10 @@ class IzinSiswaService
     }
 
     /**
+     * @param  list<int>|null  $rombelIds
      * @return Collection<int, IzinSiswa>
      */
-    public function daftarHariIni(?CarbonInterface $tanggal = null): Collection
+    public function daftarHariIni(?CarbonInterface $tanggal = null, ?array $rombelIds = null): Collection
     {
         $hari = ($tanggal ?? now())->toDateString();
 
@@ -358,12 +367,57 @@ class IzinSiswaService
             ->with(['siswa:id,nama,nisn', 'rombel:id,tingkat,nama,gtk_id'])
             ->whereDate('tanggal', $hari)
             ->where('status', IzinSiswa::STATUS_AKTIF)
+            ->when(
+                $rombelIds !== null,
+                fn ($query) => $query->whereIn('rombel_id', $rombelIds === [] ? [0] : $rombelIds),
+            )
             ->get()
             ->sortBy([
                 ['jenis', 'asc'],
                 fn (IzinSiswa $izin) => mb_strtolower((string) $izin->siswa?->nama),
             ])
             ->values();
+    }
+
+    /**
+     * Daftar izin/sakit (bukan alpa) untuk halaman surat admin/wali.
+     *
+     * @param  list<int>|null  $rombelIds
+     */
+    public function paginasiSurat(
+        ?CarbonInterface $tanggal = null,
+        ?string $jenis = null,
+        ?int $rombelId = null,
+        ?string $q = null,
+        ?array $rombelIds = null,
+        int $perPage = 25,
+    ): LengthAwarePaginator {
+        $hari = ($tanggal ?? now())->toDateString();
+        $jenis = filled($jenis) ? $jenis : null;
+        $jenisValid = in_array($jenis, [IzinSiswa::JENIS_IZIN, IzinSiswa::JENIS_SAKIT], true) ? $jenis : null;
+        $q = filled($q) ? trim((string) $q) : null;
+
+        return IzinSiswa::query()
+            ->with(['siswa:id,nama,nisn', 'rombel:id,tingkat,nama,gtk_id'])
+            ->whereDate('tanggal', $hari)
+            ->where('status', IzinSiswa::STATUS_AKTIF)
+            ->whereIn('jenis', $jenisValid ? [$jenisValid] : [IzinSiswa::JENIS_IZIN, IzinSiswa::JENIS_SAKIT])
+            ->when(
+                $rombelIds !== null,
+                fn ($query) => $query->whereIn('rombel_id', $rombelIds === [] ? [0] : $rombelIds),
+            )
+            ->when($rombelId, fn ($query) => $query->where('rombel_id', $rombelId))
+            ->when($q, function ($query) use ($q): void {
+                $query->whereHas('siswa', function ($siswa) use ($q): void {
+                    $siswa->where('nama', 'like', '%'.$q.'%')
+                        ->orWhere('nisn', 'like', '%'.$q.'%')
+                        ->orWhere('nis', 'like', '%'.$q.'%');
+                });
+            })
+            ->orderBy('jenis')
+            ->orderBy('created_at')
+            ->paginate($perPage)
+            ->withQueryString();
     }
 
     /**

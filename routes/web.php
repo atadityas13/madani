@@ -8,6 +8,7 @@ use App\Http\Controllers\CalendarEventController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GtkController;
 use App\Http\Controllers\GtkMonitoringController;
+use App\Http\Controllers\IzinSiswaWebController;
 use App\Http\Controllers\KelembagaanController;
 use App\Http\Controllers\Manajemen\DatabaseController;
 use App\Http\Controllers\Manajemen\VendorJobAdminController;
@@ -142,6 +143,11 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:wali_kelas|guru|superadmin|admin')->group(function () {
         Route::get('/talim/wali', WaliKelasController::class)->name('talim.wali');
         Route::get('/talim/wali/siswa', [WaliKelasController::class, 'siswa'])->name('talim.wali.siswa');
+        Route::get('/talim/wali/rekap', [IzinSiswaWebController::class, 'rekap'])->name('talim.wali.rekap');
+        Route::get('/talim/wali/izin', [IzinSiswaWebController::class, 'index'])->name('talim.wali.izin');
+        Route::get('/talim/wali/izin/{izin}/surat.pdf', [IzinSiswaWebController::class, 'surat'])
+            ->name('talim.wali.izin.surat')
+            ->whereUuid('izin');
     });
 
     // Samakan dengan API Talim: cukup akun GTK (role guru atau wali_kelas).
@@ -251,6 +257,11 @@ Route::middleware('auth')->group(function () {
             ->where('modul', 'siswa|gtk|rombel|tahun-ajaran|periode-pendataan|jurnal|notifikasi|identitas|app-settings');
     });
 
+    Route::get('rekap-sia', [IzinSiswaWebController::class, 'rekap'])->name('rekap-sia.index');
+    Route::get('izin-siswa', [IzinSiswaWebController::class, 'index'])->name('izin-siswa.index');
+    Route::get('izin-siswa/{izin}/surat.pdf', [IzinSiswaWebController::class, 'surat'])
+        ->name('izin-siswa.surat')
+        ->whereUuid('izin');
     Route::get('siswa', [SiswaController::class, 'index'])->name('siswa.index');
     Route::get('siswa/monitoring', [SiswaMonitoringController::class, 'index'])->name('siswa.monitoring');
     Route::get('siswa/monitoring/export', [SiswaMonitoringController::class, 'export'])->name('siswa.monitoring.export');

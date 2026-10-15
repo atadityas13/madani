@@ -5,6 +5,13 @@
 @section('subheading', $rombel ? $rombel->label().($tahun_label ? ' · '.$tahun_label : '') : 'Belum ada rombel')
 
 @section('content')
+<style>
+    .talim-menu-list{display:grid;gap:.65rem}
+    .talim-menu-item{display:block;background:#fff;border:1px solid #ececec;border-radius:.85rem;padding:1rem 1.05rem;text-decoration:none;color:inherit}
+    .talim-menu-item__title{font-weight:800;color:#0f172a;margin-bottom:.2rem;font-size:1.05rem}
+    .talim-menu-item__desc{font-size:.85rem;color:#64748b;line-height:1.35;margin:0}
+    .talim-menu-item__chev{float:right;color:#94a3b8;font-weight:700}
+</style>
 @if (! $rombel)
     <div class="talim-empty">
         <div class="fw-semibold mb-1">Belum ada rombel</div>
@@ -26,6 +33,22 @@
             @endif
         @endforeach
     </div>
+
+    <section class="talim-section">
+        <h2 class="talim-section__title">Kehadiran</h2>
+        <div class="talim-menu-list">
+            <a class="talim-menu-item" href="{{ route('talim.wali.rekap') }}">
+                <span class="talim-menu-item__chev">›</span>
+                <div class="talim-menu-item__title">Rekap SIA</div>
+                <p class="talim-menu-item__desc">Hadir, sakit, izin, dan alpa kelas Anda hari ini.</p>
+            </a>
+            <a class="talim-menu-item" href="{{ route('talim.wali.izin') }}">
+                <span class="talim-menu-item__chev">›</span>
+                <div class="talim-menu-item__title">Surat izin/sakit</div>
+                <p class="talim-menu-item__desc">Cetak surat izin atau sakit siswa.</p>
+            </a>
+        </div>
+    </section>
 
     <section class="talim-section">
         <h2 class="talim-section__title">5 login siswa terakhir</h2>
