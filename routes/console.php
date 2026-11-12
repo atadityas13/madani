@@ -10,4 +10,3 @@ Artisan::command('inspire', function () {
 
 Schedule::command('r2:cleanup')->monthlyOn(1, '02:00');
 Schedule::command('notifikasi:dispatch-scheduled')->everyMinute()->withoutOverlapping(5);
-Schedule::command('talim:prune-sessions')->everyFifteenMinutes()->withoutOverlapping(30);

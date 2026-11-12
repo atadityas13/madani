@@ -52,13 +52,6 @@ return [
         'credentials_json' => env('FIREBASE_CREDENTIALS_JSON'),
     ],
 
-    'talim' => [
-        // Menit tanpa aktivitas sebelum token guru Ta'lim dianggap sesi mati.
-        // Jangan pakai sanctum.expiration: itu dihitung dari created_at, jadi guru
-        // yang tetap memakai aplikasi ikut terputus.
-        'session_idle_minutes' => (int) env('TALIM_SESSION_IDLE_MINUTES', 120),
-    ],
-
     'elapkin' => [
         'sso_secret' => env('ELAPKIN_SSO_SECRET', 'MTSN11-TALIM-SSO-2026'),
         'mobile_url' => env('ELAPKIN_MOBILE_URL', 'https://e-lapkin.mtsn11majalengka.sch.id/mobile-app/'),

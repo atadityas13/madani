@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Gtk;
-use App\Support\TalimSession;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
@@ -13,7 +12,7 @@ class GtkMonitoringService
 {
     /**
      * @return array{
-     *     rows: Collection<int, array{no: int, nama: string, terakhir_login: string, sesi: string, jumlah_jurnal: int, terakhir_jurnal: string}>,
+     *     rows: Collection<int, array{no: int, nama: string, terakhir_login: string, jumlah_jurnal: int, terakhir_jurnal: string}>,
      *     q: string
      * }
      */
@@ -24,10 +23,7 @@ class GtkMonitoringService
         $gtks = Gtk::query()
             ->with(['akun' => function ($query) {
                 $query->withCount('jurnalPembelajarans')
-                    ->withMax('jurnalPembelajarans', 'updated_at')
-                    ->withExists(['tokens as sesi_talim_aktif' => function ($tokenQuery) {
-                        TalimSession::constrainLiveGuruTokens($tokenQuery);
-                    }]);
+                    ->withMax('jurnalPembelajarans', 'updated_at');
             }])
             ->whereHas('akun')
             ->when($q !== '', function ($query) use ($q) {
@@ -48,7 +44,6 @@ class GtkMonitoringService
                 'no' => $index + 1,
                 'nama' => $gtk->nama_lengkap,
                 'terakhir_login' => $this->formatWaktu($akun?->last_login_at, 'Belum pernah login'),
-                'sesi' => $akun?->sesi_talim_aktif ? 'Sedang aktif' : 'Tidak aktif',
                 'jumlah_jurnal' => $jumlah,
                 'terakhir_jurnal' => $this->formatWaktu(
                     $terakhirJurnalAt ? Carbon::parse($terakhirJurnalAt) : null,

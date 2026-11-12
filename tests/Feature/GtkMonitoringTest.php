@@ -6,7 +6,6 @@ use App\Models\Gtk;
 use App\Models\JurnalPembelajaran;
 use App\Models\User;
 use App\Support\Peran;
-use App\Support\TalimSession;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -68,7 +67,6 @@ class GtkMonitoringTest extends TestCase
         $user->refresh();
         $this->assertTrue($user->first_login_at->equalTo($first));
         $this->assertTrue($user->last_login_at->greaterThan($first));
-        $this->assertSame(1, $user->tokens()->where('name', TalimSession::GURU_TOKEN)->count());
     }
 
     public function test_halaman_monitoring_menampilkan_format_terakhir_login(): void
@@ -137,47 +135,7 @@ class GtkMonitoringTest extends TestCase
             ->assertSee('Jumlah Jurnal tercatat', false)
             ->assertSee('Terakhir mengisi Jurnal', false)
             ->assertSee('Rabu, 09-09-2026 pukul 10:15:01', false)
-            ->assertSee('Belum mengisi jurnal', false)
-            ->assertSee("Sesi Ta'lim", false)
-            ->assertSee('Tidak aktif', false)
-            ->assertDontSee('Sedang aktif', false);
-    }
-
-    public function test_monitoring_menandai_sesi_aktif_hanya_untuk_token_guru_yang_masih_hidup(): void
-    {
-        $this->seed();
-
-        $aktif = $this->buatAkunGuru([
-            'nama' => 'Aktif Guru',
-            'gelar_depan' => null,
-            'nip' => '198401012008011004',
-        ], [
-            'username' => '198401012008011004',
-            'last_login_at' => now()->subDays(20),
-        ]);
-        $aktif->createToken(TalimSession::GURU_TOKEN)->accessToken->forceFill([
-            'created_at' => now()->subDays(20),
-            'last_used_at' => now()->subMinutes(10),
-        ])->save();
-
-        $idle = $this->buatAkunGuru([
-            'nama' => 'Idle Guru',
-            'gelar_depan' => null,
-            'nip' => '198501012009011005',
-        ], [
-            'username' => '198501012009011005',
-            'last_login_at' => now(),
-        ]);
-        $idle->createToken(TalimSession::GURU_TOKEN)->accessToken->forceFill([
-            'last_used_at' => now()->subMinutes(TalimSession::idleMinutes() + 1),
-        ])->save();
-
-        $admin = User::query()->where('username', 'admin')->first();
-
-        $this->actingAs($admin)
-            ->get(route('gtk.monitoring'))
-            ->assertOk()
-            ->assertSeeInOrder(['Aktif Guru', 'Sedang aktif', 'Idle Guru', 'Tidak aktif'], false);
+            ->assertSee('Belum mengisi jurnal', false);
     }
 
     public function test_monitoring_hanya_untuk_admin(): void

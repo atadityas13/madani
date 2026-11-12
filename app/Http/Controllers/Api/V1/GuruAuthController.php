@@ -7,7 +7,6 @@ use App\Models\Gtk;
 use App\Models\User;
 use App\Support\AppMaintenanceGate;
 use App\Support\GuruApiPayload;
-use App\Support\TalimSession;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -57,8 +56,8 @@ class GuruAuthController extends Controller
             ]);
         }
 
-        $user->tokens()->where('name', TalimSession::GURU_TOKEN)->delete();
-        $token = $user->createToken(TalimSession::GURU_TOKEN)->plainTextToken;
+        $user->tokens()->where('name', 'talim-guru')->delete();
+        $token = $user->createToken('talim-guru')->plainTextToken;
         $user->catatLogin();
 
         return response()->json([
