@@ -6,9 +6,12 @@ use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Policies\TunjanganDokumenPolicy;
 use App\Support\Navigasi;
+use App\Support\TalimSession;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Sanctum\PersonalAccessToken;
+use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +29,14 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         date_default_timezone_set(config('app.timezone'));
+
+        Sanctum::authenticateAccessTokensUsing(function (PersonalAccessToken $token, bool $isValid): bool {
+            if (! $isValid) {
+                return false;
+            }
+
+            return ! TalimSession::revokeIfStale($token);
+        });
 
         Siswa::creating(function (Siswa $siswa): void {
             $siswa->ensurePasswordAwal();

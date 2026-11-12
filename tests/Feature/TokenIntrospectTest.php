@@ -8,6 +8,7 @@ use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Models\User;
 use App\Support\Peran;
+use App\Support\TalimSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -100,6 +101,25 @@ class TokenIntrospectTest extends TestCase
         $this->postJson('/api/v1/token/introspect', ['token' => $token])
             ->assertUnauthorized()
             ->assertJsonPath('active', false);
+    }
+
+    public function test_introspect_token_guru_idle_tidak_aktif_dan_dihapus(): void
+    {
+        ['user' => $user, 'token' => $plain] = $this->buatGuruToken();
+        $accessToken = $user->tokens()->where('name', TalimSession::GURU_TOKEN)->firstOrFail();
+        $accessToken->forceFill([
+            'last_used_at' => now()->subMinutes(TalimSession::idleMinutes() + 1),
+        ])->save();
+
+        $this->postJson('/api/v1/token/introspect', ['token' => $plain], [
+            'X-Madani-Introspect-Secret' => 'test-introspect-secret',
+        ])
+            ->assertOk()
+            ->assertJsonPath('active', false);
+
+        $this->assertDatabaseMissing('personal_access_tokens', [
+            'id' => $accessToken->id,
+        ]);
     }
 
     public function test_introspect_token_tidak_dikenal(): void

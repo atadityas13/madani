@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AppMenu;
 use App\Models\Siswa;
 use App\Models\User;
+use App\Support\TalimSession;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -59,6 +60,8 @@ class WebviewEnterController extends Controller
                 abort(404);
             }
             Auth::guard('web')->login($user);
+            $request->session()->regenerate();
+            TalimSession::forgetOtherWebSessions($user, $request->session()->getId());
         }
 
         return redirect()->away($url);

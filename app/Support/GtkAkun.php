@@ -73,7 +73,7 @@ class GtkAkun
             'must_change_password' => true,
         ])->save();
 
-        $user->tokens()->where('name', 'talim-guru')->delete();
+        $user->tokens()->where('name', TalimSession::GURU_TOKEN)->delete();
 
         return $password;
     }

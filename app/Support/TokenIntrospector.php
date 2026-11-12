@@ -49,7 +49,11 @@ class TokenIntrospector
      */
     private function inspectGuru(PersonalAccessToken $accessToken, User $tokenable): array
     {
-        if ($accessToken->name !== 'talim-guru') {
+        if ($accessToken->name !== TalimSession::GURU_TOKEN) {
+            return ['active' => false];
+        }
+
+        if (TalimSession::revokeIfStale($accessToken)) {
             return ['active' => false];
         }
 
