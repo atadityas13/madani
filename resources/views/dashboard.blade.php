@@ -5,29 +5,35 @@
 @section('subheading', $tahunAktif?->label() ?? 'Belum ada tahun ajaran aktif')
 
 @section('content')
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="madani-card p-3">
-            <div class="stat-label">Siswa</div>
-            <div class="fs-3 fw-bold">{{ $jumlahSiswa }}</div>
+<div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-5 g-3 mb-4">
+    <div class="col">
+        <div class="madani-card p-3 h-100">
+            <div class="stat-label">Rombel</div>
+            <div class="fs-3 fw-bold">{{ $jumlahRombel }}</div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="madani-card p-3">
-            <div class="stat-label">Aktif</div>
+    <div class="col">
+        <div class="madani-card p-3 h-100">
+            <div class="stat-label">Siswa Aktif</div>
             <div class="fs-3 fw-bold">{{ $siswaAktif }}</div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="madani-card p-3">
-            <div class="stat-label">Tanpa rombel</div>
+    <div class="col">
+        <div class="madani-card p-3 h-100">
+            <div class="stat-label">Aktif tanpa rombel</div>
             <div class="fs-3 fw-bold">{{ $tanpaRombel }}</div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="madani-card p-3">
-            <div class="stat-label">Rombel</div>
-            <div class="fs-3 fw-bold">{{ $jumlahRombel }}</div>
+    <div class="col">
+        <div class="madani-card p-3 h-100">
+            <div class="stat-label">Siswa Masuk</div>
+            <div class="fs-3 fw-bold">{{ $siswaMasuk }}</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="madani-card p-3 h-100">
+            <div class="stat-label">Siswa Keluar (mutasi+DO)</div>
+            <div class="fs-3 fw-bold">{{ $siswaKeluar }}</div>
         </div>
     </div>
 </div>

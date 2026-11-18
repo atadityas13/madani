@@ -116,19 +116,28 @@ class MutasiController extends Controller
         ]);
 
         $q = trim((string) ($data['q'] ?? ''));
+        $tahun = TahunAjaran::aktif();
 
         $siswas = Siswa::query()
             ->with(['wali', 'rombels' => fn ($query) => $query->wherePivot('status', 'aktif')])
-            ->where('angkatan', $data['tingkat'])
             ->whereIn('status_keaktifan', ['aktif', 'aktif_tanpa_rombel'])
+            ->where(function ($query) use ($data, $tahun) {
+                $query->where('angkatan', $data['tingkat'])
+                    ->orWhereHas('rombels', function ($rombel) use ($data, $tahun) {
+                        $rombel->where('rombels.tingkat', $data['tingkat'])
+                            ->where('rombel_siswas.status', 'aktif')
+                            ->when($tahun, fn ($inner) => $inner->where('rombels.tahun_ajaran_id', $tahun->id));
+                    });
+            })
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($inner) use ($q) {
                     $inner->where('nama', 'like', '%'.$q.'%')
-                        ->orWhere('nisn', 'like', '%'.$q.'%');
+                        ->orWhere('nisn', 'like', '%'.$q.'%')
+                        ->orWhere('nis', 'like', '%'.$q.'%');
                 });
             })
             ->orderBy('nama')
-            ->limit(50)
+            ->limit(30)
             ->get()
             ->map(function (Siswa $siswa) {
                 $rombel = $siswa->rombels->first();

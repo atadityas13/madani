@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Rombel;
 use App\Models\Siswa;
+use App\Models\SiswaMutasi;
 use App\Models\TahunAjaran;
 use App\Services\JurnalRankingService;
 use Illuminate\Http\RedirectResponse;
@@ -39,15 +40,23 @@ class DashboardController extends Controller
         }
 
         $bisaKelola = (bool) $user?->bisaKelola();
+        $mutasiQuery = SiswaMutasi::query()
+            ->when($tahunAktif, fn ($query) => $query->where('tahun_ajaran_id', $tahunAktif->id));
+
+        if ($user?->adalahWali()) {
+            $rombelIds = $user->rombelIdsAktif();
+            $mutasiQuery->whereIn('rombel_id', $rombelIds === [] ? [0] : $rombelIds);
+        }
 
         return view('dashboard', [
             'tahunAktif' => $tahunAktif,
-            'jumlahSiswa' => (clone $siswaQuery)->count(),
+            'jumlahRombel' => $rombelQuery->count(),
             'siswaAktif' => (clone $siswaQuery)->where('status_keaktifan', 'aktif')->count(),
             'tanpaRombel' => $user?->adalahWali()
                 ? 0
                 : Siswa::query()->where('status_keaktifan', 'aktif_tanpa_rombel')->count(),
-            'jumlahRombel' => $rombelQuery->count(),
+            'siswaMasuk' => (clone $mutasiQuery)->where('jenis', SiswaMutasi::JENIS_MASUK)->count(),
+            'siswaKeluar' => (clone $mutasiQuery)->whereIn('jenis', [SiswaMutasi::JENIS_KELUAR, SiswaMutasi::JENIS_DO])->count(),
             'jurnalRanking' => $bisaKelola ? $this->jurnalRanking->terbanyak() : collect(),
             'tampilkanJurnalRanking' => $bisaKelola,
         ]);

@@ -360,27 +360,30 @@
             results.hidden = false;
         };
 
-        const filterLocal = () => {
-            const q = search.value.trim().toLowerCase();
-            const list = ! q ? items : items.filter((item) => item.label.toLowerCase().includes(q));
-            render(list.slice(0, 30));
-        };
+        let cariTimer = null;
 
-        const loadSiswa = async (tingkatValue) => {
-            const keepId = idInput.value;
-            clearSiswa();
+        const loadSiswa = async (tingkatValue, q = '', keepId = '') => {
             search.disabled = ! tingkatValue;
             bump();
-            if (! tingkatValue) return;
+            if (! tingkatValue) {
+                items = [];
+                results.hidden = true;
+                results.innerHTML = '';
+                return;
+            }
 
             search.placeholder = 'Memuat…';
             try {
                 const url = new URL(cariUrl, window.location.origin);
                 url.searchParams.set('tingkat', tingkatValue);
+                if (q !== '') {
+                    url.searchParams.set('q', q);
+                }
                 const res = await fetch(url.toString(), { headers: { Accept: 'application/json' } });
                 const json = await res.json();
                 items = Array.isArray(json.data) ? json.data : [];
                 search.placeholder = 'Ketik NISN atau nama…';
+                render(items);
 
                 if (keepId) {
                     const found = items.find((item) => String(item.id) === String(keepId));
@@ -389,26 +392,40 @@
                         labelStore.value = found.label;
                         search.value = found.label;
                         setDetail(found);
+                        results.hidden = true;
                     }
                 }
             } catch (e) {
                 items = [];
                 search.placeholder = 'Gagal memuat siswa';
+                results.hidden = true;
             }
             bump();
         };
 
-        tingkat.addEventListener('change', () => loadSiswa(tingkat.value));
+        tingkat.addEventListener('change', () => {
+            clearSiswa();
+            loadSiswa(tingkat.value, '');
+        });
 
         search.addEventListener('focus', () => {
-            if (! tingkat.value || ! items.length) return;
-            filterLocal();
+            if (! tingkat.value) return;
+            if (items.length) {
+                render(items);
+                return;
+            }
+            loadSiswa(tingkat.value, search.value.trim(), idInput.value);
         });
         search.addEventListener('input', () => {
+            if (idInput.value !== '' && search.value === labelStore.value) {
+                return;
+            }
             idInput.value = '';
             labelStore.value = '';
             setDetail(null);
-            filterLocal();
+            clearTimeout(cariTimer);
+            const q = search.value.trim();
+            cariTimer = setTimeout(() => loadSiswa(tingkat.value, q), 200);
             bump();
         });
         search.addEventListener('blur', () => {
@@ -416,7 +433,7 @@
         });
 
         if (tingkat.value) {
-            loadSiswa(tingkat.value);
+            loadSiswa(tingkat.value, '', idInput.value);
         } else {
             bump();
         }

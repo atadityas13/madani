@@ -93,8 +93,11 @@
             </tbody>
         </table>
     </div>
-    @if ($gtks->hasPages())
-        <div class="p-3">{{ $gtks->links() }}</div>
-    @endif
+    @include('gtk.partials.index-pagination', [
+        'gtks' => $gtks,
+        'q' => $q,
+        'jenis' => $jenis,
+        'perPage' => $perPage,
+    ])
 </div>
 @endsection

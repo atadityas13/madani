@@ -34,6 +34,7 @@ class SiswaNisGeneratorService
 
         $siswaTanpaNis = Siswa::query()
             ->where('angkatan', $angkatan)
+            ->where('status_keaktifan', '!=', 'nonaktif')
             ->where(function ($query) {
                 $query->whereNull('nis')->orWhere('nis', '');
             })
@@ -74,6 +75,7 @@ class SiswaNisGeneratorService
     public function jumlahTanpaNis(): int
     {
         return Siswa::query()
+            ->where('status_keaktifan', '!=', 'nonaktif')
             ->where(function ($query) {
                 $query->whereNull('nis')->orWhere('nis', '');
             })
@@ -87,6 +89,7 @@ class SiswaNisGeneratorService
     {
         $rows = Siswa::query()
             ->selectRaw('angkatan, COUNT(*) as total')
+            ->where('status_keaktifan', '!=', 'nonaktif')
             ->where(function ($query) {
                 $query->whereNull('nis')->orWhere('nis', '');
             })

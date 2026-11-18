@@ -72,6 +72,7 @@ class SiswaController extends Controller
         }
 
         $query = Siswa::query()
+            ->where('status_keaktifan', '!=', 'nonaktif')
             ->with([
                 'pernyataan',
                 'rombels' => function ($rombelQuery) use ($tahun) {

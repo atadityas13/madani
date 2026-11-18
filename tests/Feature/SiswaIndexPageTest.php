@@ -127,6 +127,32 @@ class SiswaIndexPageTest extends TestCase
         $this->assertTrue($posBudi < $posDelapan, 'Angkatan VII sebelum VIII');
     }
 
+    public function test_index_menyembunyikan_siswa_nonaktif(): void
+    {
+        $this->seed();
+
+        Siswa::query()->create([
+            'nama' => 'Siswa Masih Aktif',
+            'nisn' => '2000000001',
+            'status_keaktifan' => 'aktif',
+            'angkatan' => 'VII',
+        ]);
+        Siswa::query()->create([
+            'nama' => 'Siswa Sudah DO',
+            'nisn' => '2000000002',
+            'status_keaktifan' => 'nonaktif',
+            'angkatan' => 'VII',
+        ]);
+
+        $admin = User::query()->where('username', 'admin')->first();
+
+        $this->actingAs($admin)
+            ->get(route('siswa.index'))
+            ->assertOk()
+            ->assertSee('Siswa Masih Aktif', false)
+            ->assertDontSee('Siswa Sudah DO', false);
+    }
+
     public function test_index_filters_by_tingkat_and_rombel(): void
     {
         $this->seed();

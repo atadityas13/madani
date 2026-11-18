@@ -21,5 +21,5 @@
         data-siswa-search
         disabled
     >
-    <div class="list-group position-absolute w-100 shadow-sm mt-1" data-siswa-results hidden style="z-index: 1080; max-height: 240px; overflow: auto;"></div>
+    <div class="list-group shadow-sm mt-1" data-siswa-results hidden style="max-height: 240px; overflow: auto;"></div>
 </div>

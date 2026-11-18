@@ -435,6 +435,88 @@ class MutasiSiswaTest extends TestCase
         ], $overrides);
     }
 
+    public function test_cari_siswa_untuk_do_menemukan_nama_di_luar_batas_awal_dan_yang_ada_di_rombel(): void
+    {
+        $this->actingAsOperator();
+        $tahun = TahunAjaran::aktif();
+
+        $rombel = Rombel::query()->create([
+            'tahun_ajaran_id' => $tahun->id,
+            'tingkat' => 'VII',
+            'nama' => '1',
+        ]);
+
+        for ($i = 1; $i <= 35; $i++) {
+            Siswa::query()->create([
+                'nama' => sprintf('Awal Siswa %02d', $i),
+                'nisn' => sprintf('31%08d', $i),
+                'status_keaktifan' => 'aktif',
+                'angkatan' => 'VII',
+            ]);
+        }
+
+        $terlambat = Siswa::query()->create([
+            'nama' => 'Zzz Target Dropout',
+            'nisn' => '3199999999',
+            'status_keaktifan' => 'aktif',
+            'angkatan' => 'VII',
+        ]);
+
+        $tanpaAngkatan = Siswa::query()->create([
+            'nama' => 'Siswa Rombel Tanpa Angkatan',
+            'nisn' => '3188888888',
+            'status_keaktifan' => 'aktif',
+            'angkatan' => null,
+        ]);
+        $rombel->siswas()->attach($tanpaAngkatan->id, ['status' => 'aktif']);
+
+        Siswa::query()->create([
+            'nama' => 'Siswa Nonaktif Tersembunyi',
+            'nisn' => '3177777777',
+            'status_keaktifan' => 'nonaktif',
+            'angkatan' => 'VII',
+        ]);
+
+        $this->getJson(route('mutasi.siswa-cari', [
+            'tingkat' => 'VII',
+            'q' => 'Zzz Target',
+        ]))
+            ->assertOk()
+            ->assertJsonFragment(['id' => $terlambat->id, 'nama' => 'Zzz Target Dropout'])
+            ->assertJsonMissing(['nama' => 'Siswa Nonaktif Tersembunyi']);
+
+        $this->getJson(route('mutasi.siswa-cari', [
+            'tingkat' => 'VII',
+            'q' => 'Tanpa Angkatan',
+        ]))
+            ->assertOk()
+            ->assertJsonFragment(['id' => $tanpaAngkatan->id, 'nama' => 'Siswa Rombel Tanpa Angkatan']);
+    }
+
+    public function test_dropout_yang_baru_disimpan_muncul_di_daftar_do(): void
+    {
+        $this->actingAsOperator();
+        $tahun = TahunAjaran::aktif();
+
+        $siswa = Siswa::query()->create([
+            'nama' => 'Siswa Tampil Di Daftar DO',
+            'nisn' => '3011223344',
+            'status_keaktifan' => 'aktif',
+            'angkatan' => 'IX',
+        ]);
+
+        $this->post(route('mutasi.do.store'), [
+            'siswa_id' => $siswa->id,
+            'alasan' => 'Kendala akademik',
+        ])->assertRedirect(route('mutasi.index', ['tab' => 'do']));
+
+        $this->get(route('mutasi.index', ['tab' => 'do']))
+            ->assertOk()
+            ->assertSee('Siswa Tampil Di Daftar DO', false);
+
+        $this->assertSame($tahun->id, SiswaMutasi::query()->where('siswa_id', $siswa->id)->value('tahun_ajaran_id'));
+    }
+
     private function actingAsOperator(): static
     {
         $this->seed();

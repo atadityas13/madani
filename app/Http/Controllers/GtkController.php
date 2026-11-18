@@ -16,8 +16,9 @@ class GtkController extends Controller
     {
         $q = trim((string) $request->query('q', ''));
         $jenis = trim((string) $request->query('jenis', ''));
+        $perPageRaw = (string) $request->query('per_page', '15');
 
-        $gtks = Gtk::query()
+        $query = Gtk::query()
             ->with('akun')
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($inner) use ($q) {
@@ -29,14 +30,24 @@ class GtkController extends Controller
             ->when($jenis !== '' && array_key_exists($jenis, Gtk::jenisOptions()), function ($query) use ($jenis) {
                 $query->where('jenis', $jenis);
             })
-            ->orderBy('nama')
-            ->paginate(15)
-            ->withQueryString();
+            ->orderBy('nama');
+
+        $allowedPerPage = [15, 30, 50, 100];
+        if ($perPageRaw === 'all') {
+            $perPage = max((clone $query)->count(), 1);
+            $perPageLabel = 'all';
+        } else {
+            $perPage = in_array((int) $perPageRaw, $allowedPerPage, true) ? (int) $perPageRaw : 15;
+            $perPageLabel = (string) $perPage;
+        }
+
+        $gtks = $query->paginate($perPage)->withQueryString();
 
         return view('gtk.index', [
             'gtks' => $gtks,
             'q' => $q,
             'jenis' => $jenis,
+            'perPage' => $perPageLabel,
         ]);
     }
 
