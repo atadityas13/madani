@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Gtk;
 use App\Models\User;
 use App\Support\GtkAkun;
+use App\Support\UkuranHalaman;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -16,7 +17,6 @@ class GtkController extends Controller
     {
         $q = trim((string) $request->query('q', ''));
         $jenis = trim((string) $request->query('jenis', ''));
-        $perPageRaw = (string) $request->query('per_page', '15');
 
         $query = Gtk::query()
             ->with('akun')
@@ -32,22 +32,13 @@ class GtkController extends Controller
             })
             ->orderBy('nama');
 
-        $allowedPerPage = [15, 30, 50, 100];
-        if ($perPageRaw === 'all') {
-            $perPage = max((clone $query)->count(), 1);
-            $perPageLabel = 'all';
-        } else {
-            $perPage = in_array((int) $perPageRaw, $allowedPerPage, true) ? (int) $perPageRaw : 15;
-            $perPageLabel = (string) $perPage;
-        }
-
-        $gtks = $query->paginate($perPage)->withQueryString();
+        $hasil = UkuranHalaman::paginateQuery($query, $request, UkuranHalaman::STANDAR, 15);
 
         return view('gtk.index', [
-            'gtks' => $gtks,
+            'gtks' => $hasil['baris'],
             'q' => $q,
             'jenis' => $jenis,
-            'perPage' => $perPageLabel,
+            'perPage' => $hasil['label'],
         ]);
     }
 

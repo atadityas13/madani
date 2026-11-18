@@ -53,5 +53,11 @@
             </tbody>
         </table>
     </div>
+    @include('partials.daftar-pagination', [
+        'rows' => $tahunAjarans,
+        'perPage' => $perPage,
+        'pagerId' => 'tahunAjaran',
+        'navLabel' => 'Navigasi halaman tahun ajaran',
+    ])
 </div>
 @endsection

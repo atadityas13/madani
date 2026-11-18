@@ -92,6 +92,12 @@
                 </tbody>
             </table>
         </div>
+        @include('partials.daftar-pagination', [
+            'rows' => $jobs,
+            'perPage' => $perPage,
+            'pagerId' => 'vendorDashboard',
+            'navLabel' => 'Navigasi halaman job aktif',
+        ])
     </div>
 @endif
 @endsection

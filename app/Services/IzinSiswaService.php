@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Support\PernyataanSiswa;
 use App\Support\R2Url;
 use App\Support\SuratIzinSiswa;
+use App\Support\UkuranHalaman;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -390,14 +391,14 @@ class IzinSiswaService
         ?int $rombelId = null,
         ?string $q = null,
         ?array $rombelIds = null,
-        int $perPage = 25,
+        int|string $perPage = 25,
     ): LengthAwarePaginator {
         $hari = ($tanggal ?? now())->toDateString();
         $jenis = filled($jenis) ? $jenis : null;
         $jenisValid = in_array($jenis, [IzinSiswa::JENIS_IZIN, IzinSiswa::JENIS_SAKIT], true) ? $jenis : null;
         $q = filled($q) ? trim((string) $q) : null;
 
-        return IzinSiswa::query()
+        $query = IzinSiswa::query()
             ->with(['siswa:id,nama,nisn', 'rombel:id,tingkat,nama,gtk_id'])
             ->whereDate('tanggal', $hari)
             ->where('status', IzinSiswa::STATUS_AKTIF)
@@ -415,9 +416,11 @@ class IzinSiswaService
                 });
             })
             ->orderBy('jenis')
-            ->orderBy('created_at')
-            ->paginate($perPage)
-            ->withQueryString();
+            ->orderBy('created_at');
+
+        $ukuran = UkuranHalaman::resolve((string) $perPage, UkuranHalaman::IZIN, 25, (clone $query)->count());
+
+        return $query->paginate($ukuran['jumlah'])->withQueryString();
     }
 
     /**

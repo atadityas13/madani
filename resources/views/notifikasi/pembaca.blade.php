@@ -96,11 +96,13 @@
     </div>
 </div>
 
-@if ($reads->hasPages())
-    <div class="mt-3">
-        {{ $reads->links() }}
-    </div>
-@endif
+@include('partials.daftar-pagination', [
+    'rows' => $reads,
+    'perPage' => $perPage,
+    'bawaan' => 30,
+    'pagerId' => 'pembaca',
+    'navLabel' => 'Navigasi halaman pembaca',
+])
 
 <script>
 (() => {

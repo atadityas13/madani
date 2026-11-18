@@ -41,5 +41,11 @@
             </tbody>
         </table>
     </div>
+    @include('partials.daftar-pagination', [
+        'rows' => $rows,
+        'perPage' => $perPage,
+        'pagerId' => 'monitoringGtk',
+        'navLabel' => 'Navigasi halaman monitoring GTK',
+    ])
 </div>
 @endsection

@@ -93,11 +93,11 @@
             </tbody>
         </table>
     </div>
-    @include('gtk.partials.index-pagination', [
-        'gtks' => $gtks,
-        'q' => $q,
-        'jenis' => $jenis,
+    @include('partials.daftar-pagination', [
+        'rows' => $gtks,
         'perPage' => $perPage,
+        'pagerId' => 'gtk',
+        'navLabel' => 'Navigasi halaman GTK',
     ])
 </div>
 @endsection

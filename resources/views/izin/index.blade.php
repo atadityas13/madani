@@ -77,9 +77,12 @@
     </div>
 </div>
 
-@if ($items->hasPages())
-    <div class="mt-3">
-        {{ $items->links() }}
-    </div>
-@endif
+@include('partials.daftar-pagination', [
+    'rows' => $items,
+    'perPage' => $perPage,
+    'ukuran' => \App\Support\UkuranHalaman::IZIN,
+    'bawaan' => 25,
+    'pagerId' => 'izin',
+    'navLabel' => 'Navigasi halaman surat izin',
+])
 @endsection

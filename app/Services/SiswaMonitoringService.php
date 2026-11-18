@@ -8,6 +8,7 @@ use App\Models\TahunAjaran;
 use App\Models\User;
 use App\Support\KelengkapanSiswa;
 use App\Support\R2Url;
+use App\Support\UkuranHalaman;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator as Paginator;
@@ -164,8 +165,12 @@ class SiswaMonitoringService
         if (! in_array($jenisKelamin, ['L', 'P'], true)) {
             $jenisKelamin = '';
         }
-        $perPageRaw = (string) $request->query('per_page', '10');
-        $perPage = in_array($perPageRaw, ['10', '25', '50', '100'], true) ? (int) $perPageRaw : 10;
+        $perPage = (int) UkuranHalaman::label(
+            (string) $request->query('per_page', '10'),
+            UkuranHalaman::MONITORING,
+            10,
+            false,
+        );
         $statusLengkap = trim((string) $request->query('status_lengkap', ''));
         if (! in_array($statusLengkap, ['sudah_lengkap', 'belum_lengkap', 'belum_variabel'], true)) {
             $statusLengkap = '';

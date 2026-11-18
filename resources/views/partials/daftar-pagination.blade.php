@@ -1,5 +1,17 @@
 @php
     /** @var \Illuminate\Pagination\LengthAwarePaginator $rows */
+    $ukuran = $ukuran ?? \App\Support\UkuranHalaman::STANDAR;
+    $bawaan = $bawaan ?? ($ukuran[0] ?? 15);
+    $semuanya = $semuanya ?? true;
+    $pagerId = $pagerId ?? 'daftar';
+    $navLabel = $navLabel ?? 'Navigasi halaman';
+    $perPage = (string) ($perPage ?? \App\Support\UkuranHalaman::label(
+        (string) request()->query('per_page', (string) $bawaan),
+        $ukuran,
+        $bawaan,
+        $semuanya,
+    ));
+    $pageName = $rows->getPageName();
     $from = $rows->firstItem() ?? 0;
     $to = $rows->lastItem() ?? 0;
     $total = $rows->total();
@@ -19,32 +31,38 @@
         data
     </div>
 
-    <form class="siswa-index-pagination__controls" method="GET" action="{{ route('siswa.monitoring') }}">
-        <input type="hidden" name="q" value="{{ $q }}">
-        <input type="hidden" name="tingkat" value="{{ $tingkat }}">
-        <input type="hidden" name="rombel_id" value="{{ $rombelId }}">
-        <input type="hidden" name="jenis_kelamin" value="{{ $jenisKelamin ?? '' }}">
-        <input type="hidden" name="status_lengkap" value="{{ $statusLengkap }}">
-        @foreach ($belum as $item)
-            <input type="hidden" name="belum[]" value="{{ $item }}">
+    <form class="siswa-index-pagination__controls" method="GET" action="{{ url()->current() }}">
+        @foreach (request()->except([$pageName, 'per_page']) as $name => $value)
+            @if (is_array($value))
+                @foreach ($value as $item)
+                    @if (is_scalar($item) || $item === null)
+                        <input type="hidden" name="{{ $name }}[]" value="{{ $item }}">
+                    @endif
+                @endforeach
+            @elseif (is_scalar($value) || $value === null)
+                <input type="hidden" name="{{ $name }}" value="{{ $value }}">
+            @endif
         @endforeach
 
-        <label class="siswa-index-pagination__label" for="monitoringPerPage">
+        <label class="siswa-index-pagination__label" for="{{ $pagerId }}PerPage">
             Tampil
-            <select class="form-select form-select-sm" id="monitoringPerPage" name="per_page" onchange="this.form.page.value='1'; this.form.submit()">
-                @foreach ([10, 25, 50, 100] as $size)
+            <select class="form-select form-select-sm" id="{{ $pagerId }}PerPage" name="per_page" onchange="this.form.elements['{{ $pageName }}'].value='1'; this.form.submit()">
+                @foreach ($ukuran as $size)
                     <option value="{{ $size }}" @selected($perPage === (string) $size)>{{ $size }}</option>
                 @endforeach
+                @if ($semuanya)
+                    <option value="all" @selected($perPage === 'all')>Semua</option>
+                @endif
             </select>
         </label>
 
-        <label class="siswa-index-pagination__label" for="monitoringPageJump">
+        <label class="siswa-index-pagination__label" for="{{ $pagerId }}PageJump">
             Halaman
             <input
                 class="form-control form-control-sm siswa-index-pagination__page-input"
-                id="monitoringPageJump"
+                id="{{ $pagerId }}PageJump"
                 type="number"
-                name="page"
+                name="{{ $pageName }}"
                 min="1"
                 max="{{ $last }}"
                 value="{{ $current }}"
@@ -53,7 +71,7 @@
         <button class="btn btn-sm btn-outline-secondary" type="submit">Go</button>
     </form>
 
-    <nav class="siswa-index-pagination__pages" aria-label="Navigasi halaman monitoring">
+    <nav class="siswa-index-pagination__pages" aria-label="{{ $navLabel }}">
         @if ($rows->onFirstPage())
             <span class="siswa-index-page is-disabled" aria-disabled="true">Sebelumnya</span>
         @else

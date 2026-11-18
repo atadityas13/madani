@@ -121,7 +121,7 @@ class VendorKartuTest extends TestCase
             ->assertSee('Belum Foto')
             ->assertDontSee('Siswa Rombel B')
             ->assertSee('name="rombel_id"', false)
-            ->assertDontSee('name="rombel_id" value="'.$rombelA->id.'"', false);
+            ->assertSee('name="rombel_id" value="'.$rombelA->id.'"', false);
 
         $this->actingAs($vendor)
             ->get(route('vendor.jobs.show', ['vendorJob' => $job, 'rombel_id' => $rombelB->id]))

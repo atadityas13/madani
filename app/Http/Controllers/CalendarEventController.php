@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CalendarEvent;
+use App\Support\UkuranHalaman;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,20 +12,27 @@ use Illuminate\View\View;
 
 class CalendarEventController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         try {
-            $items = CalendarEvent::query()
-                ->orderByDesc('event_date')
-                ->orderByDesc('event_time')
-                ->orderByDesc('id')
-                ->get();
+            $hasil = UkuranHalaman::paginateQuery(
+                CalendarEvent::query()
+                    ->orderByDesc('event_date')
+                    ->orderByDesc('event_time')
+                    ->orderByDesc('id'),
+                $request,
+                UkuranHalaman::STANDAR,
+                15,
+            );
+            $items = $hasil['baris'];
+            $perPage = $hasil['label'];
         } catch (QueryException) {
-            $items = collect();
+            $items = UkuranHalaman::kosong($request);
+            $perPage = '15';
             session()->flash('error', 'Tabel kalender belum tersedia. Jalankan: php artisan migrate');
         }
 
-        return view('calendar-events.index', compact('items'));
+        return view('calendar-events.index', compact('items', 'perPage'));
     }
 
     public function store(Request $request): RedirectResponse

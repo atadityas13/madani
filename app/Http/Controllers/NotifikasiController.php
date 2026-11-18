@@ -10,6 +10,7 @@ use App\Models\NotifMedia;
 use App\Models\Rombel;
 use App\Models\Siswa;
 use App\Models\User;
+use App\Support\UkuranHalaman;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,15 +22,26 @@ use Illuminate\View\View;
 
 class NotifikasiController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         try {
-            $items = Notifikasi::query()
-                ->orderByDesc('published_at')
-                ->orderByDesc('id')
+            $scheduled = Notifikasi::query()
+                ->whereNotNull('scheduled_at')
+                ->whereNull('sent_at')
+                ->orderBy('scheduled_at')
                 ->get();
+            $hasil = UkuranHalaman::paginateQuery(
+                Notifikasi::query()->orderByDesc('published_at')->orderByDesc('id'),
+                $request,
+                UkuranHalaman::STANDAR,
+                15,
+            );
+            $items = $hasil['baris'];
+            $perPage = $hasil['label'];
         } catch (QueryException) {
-            $items = collect();
+            $items = UkuranHalaman::kosong($request);
+            $scheduled = collect();
+            $perPage = '15';
             session()->flash('error', 'Tabel notifikasi belum tersedia. Jalankan: php artisan migrate');
         }
 
@@ -54,10 +66,10 @@ class NotifikasiController extends Controller
 
         $mediaImages = NotifMedia::query()->where('type', NotifMedia::TYPE_IMAGE)->orderByDesc('id')->limit(100)->get();
         $mediaAudios = NotifMedia::query()->where('type', NotifMedia::TYPE_AUDIO)->orderByDesc('id')->limit(100)->get();
-        $scheduled = $items->filter(fn (Notifikasi $n) => $n->scheduled_at !== null && $n->sent_at === null);
 
         return view('notifikasi.index', compact(
             'items',
+            'perPage',
             'gtks',
             'rombels',
             'siswas',

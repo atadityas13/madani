@@ -170,9 +170,14 @@
             </tbody>
         </table>
     </div>
-    @if ($mutasis->hasPages())
-        <div class="p-3">{{ $mutasis->links() }}</div>
-    @endif
+    @include('partials.daftar-pagination', [
+        'rows' => $mutasis,
+        'perPage' => $perPage,
+        'ukuran' => \App\Support\UkuranHalaman::DENGAN_DUA_PULUH,
+        'bawaan' => 20,
+        'pagerId' => 'mutasi',
+        'navLabel' => 'Navigasi halaman mutasi',
+    ])
 </div>
 
 @include('mutasi.partials.modal-masuk', ['bukaModal' => $bukaModalMasuk])

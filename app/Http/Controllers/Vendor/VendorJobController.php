@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Vendor;
 use App\Http\Controllers\Controller;
 use App\Models\Siswa;
 use App\Models\VendorJob;
+use App\Support\UkuranHalaman;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -30,7 +31,11 @@ class VendorJobController extends Controller
             ->orderByDesc('updated_at')
             ->get();
 
-        return view('vendor.jobs.index', compact('jobs', 'foto'));
+        return view('vendor.jobs.index', [
+            'jobs' => UkuranHalaman::paginate($jobs, $request, UkuranHalaman::STANDAR, 15),
+            'foto' => $foto,
+            'perPage' => UkuranHalaman::label((string) $request->query('per_page', '15'), UkuranHalaman::STANDAR, 15),
+        ]);
     }
 
     public function show(Request $request, VendorJob $vendorJob): View
@@ -57,8 +62,9 @@ class VendorJobController extends Controller
                     ->where('rombels.id', $rombelId)
                     ->where('rombel_siswas.status', 'aktif'));
             })
-            ->orderBy('nama')
-            ->get();
+            ->orderBy('nama');
+
+        $hasil = UkuranHalaman::paginateQuery($siswas, $request, UkuranHalaman::STANDAR, 15);
 
         $total = $vendorJob->siswas()->count();
         $sudahFoto = $vendorJob->siswas()->whereNotNull('foto')->where('foto', '!=', '')->count();
@@ -74,7 +80,8 @@ class VendorJobController extends Controller
 
         return view('vendor.jobs.show', [
             'job' => $vendorJob,
-            'siswas' => $siswas,
+            'siswas' => $hasil['baris'],
+            'perPage' => $hasil['label'],
             'q' => $q,
             'foto' => $foto,
             'rombelId' => $rombelId,

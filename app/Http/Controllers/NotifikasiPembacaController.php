@@ -8,6 +8,7 @@ use App\Models\Rombel;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Models\User;
+use App\Support\UkuranHalaman;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -54,9 +55,9 @@ class NotifikasiPembacaController extends Controller
                     $q->whereIn('reader_id', $siswaIds);
                 }
             })
-            ->orderByDesc('read_at')
-            ->paginate(30)
-            ->withQueryString();
+            ->orderByDesc('read_at');
+
+        $hasil = UkuranHalaman::paginateQuery($reads, $request, UkuranHalaman::STANDAR, 30);
 
         $tahunAktif = TahunAjaran::aktif();
         $rombels = Rombel::query()
@@ -65,15 +66,16 @@ class NotifikasiPembacaController extends Controller
             ->orderBy('nama')
             ->get(['id', 'nama', 'tingkat']);
 
-        return view('notifikasi.pembaca', compact(
-            'notifikasi',
-            'reads',
-            'tipe',
-            'rombelId',
-            'rombels',
-            'countSemua',
-            'countGuru',
-            'countSiswa',
-        ));
+        return view('notifikasi.pembaca', [
+            'notifikasi' => $notifikasi,
+            'reads' => $hasil['baris'],
+            'perPage' => $hasil['label'],
+            'tipe' => $tipe,
+            'rombelId' => $rombelId,
+            'rombels' => $rombels,
+            'countSemua' => $countSemua,
+            'countGuru' => $countGuru,
+            'countSiswa' => $countSiswa,
+        ]);
     }
 }

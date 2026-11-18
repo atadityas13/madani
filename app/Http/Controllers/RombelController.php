@@ -6,6 +6,7 @@ use App\Models\Rombel;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Services\Simpatisans\RombelSyncService;
+use App\Support\UkuranHalaman;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,24 +17,32 @@ use RuntimeException;
 
 class RombelController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         $this->authorize('viewAny', Rombel::class);
 
         $tahunAktif = TahunAjaran::aktif();
         $user = auth()->user();
 
-        $rombels = Rombel::query()
-            ->with(['waliKelas', 'tahunAjaran'])
-            ->withCount(['siswas as anggota_count' => fn ($query) => $query->where('rombel_siswas.status', 'aktif')])
-            ->when($tahunAktif, fn ($query) => $query->where('tahun_ajaran_id', $tahunAktif->id))
-            ->when($user?->adalahWali(), fn ($query) => $query->where('gtk_id', $user->gtk_id ?: 0))
-            ->orderByRaw("CASE tingkat WHEN 'VII' THEN 1 WHEN 'VIII' THEN 2 WHEN 'IX' THEN 3 ELSE 9 END")
-            ->orderByRaw('CAST(nama AS UNSIGNED)')
-            ->orderBy('nama')
-            ->get();
+        $hasil = UkuranHalaman::paginateQuery(
+            Rombel::query()
+                ->with(['waliKelas', 'tahunAjaran'])
+                ->withCount(['siswas as anggota_count' => fn ($query) => $query->where('rombel_siswas.status', 'aktif')])
+                ->when($tahunAktif, fn ($query) => $query->where('tahun_ajaran_id', $tahunAktif->id))
+                ->when($user?->adalahWali(), fn ($query) => $query->where('gtk_id', $user->gtk_id ?: 0))
+                ->orderByRaw("CASE tingkat WHEN 'VII' THEN 1 WHEN 'VIII' THEN 2 WHEN 'IX' THEN 3 ELSE 9 END")
+                ->orderByRaw('CAST(nama AS UNSIGNED)')
+                ->orderBy('nama'),
+            $request,
+            UkuranHalaman::STANDAR,
+            15,
+        );
 
-        return view('rombel.index', compact('rombels', 'tahunAktif'));
+        return view('rombel.index', [
+            'rombels' => $hasil['baris'],
+            'tahunAktif' => $tahunAktif,
+            'perPage' => $hasil['label'],
+        ]);
     }
 
     public function syncFromSimpatisans(RombelSyncService $syncService): RedirectResponse
@@ -65,10 +74,12 @@ class RombelController extends Controller
             ));
     }
 
-    public function show(Rombel $rombel): View
+    public function show(Request $request, Rombel $rombel): View
     {
         $this->authorize('view', $rombel);
         $rombel->load(['waliKelas', 'tahunAjaran', 'anggotaAktif']);
+        $anggota = UkuranHalaman::paginate($rombel->anggotaAktif, $request, UkuranHalaman::STANDAR, 15);
+        $perPage = UkuranHalaman::label((string) $request->query('per_page', '15'), UkuranHalaman::STANDAR, 15);
 
         $sudahTerisi = Rombel::query()
             ->where('tahun_ajaran_id', $rombel->tahun_ajaran_id)
@@ -97,7 +108,7 @@ class RombelController extends Controller
             ->orderBy('nama')
             ->get();
 
-        return view('rombel.show', compact('rombel', 'kandidat', 'rombelsTujuan'));
+        return view('rombel.show', compact('rombel', 'anggota', 'perPage', 'kandidat', 'rombelsTujuan'));
     }
 
     public function storeAnggota(Request $request, Rombel $rombel): RedirectResponse

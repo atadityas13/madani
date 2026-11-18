@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\IzinSiswaService;
 use App\Services\SuratIzinSiswaPdfService;
 use App\Services\WaliKelasDashboardService;
+use App\Support\UkuranHalaman;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -39,7 +40,12 @@ class IzinSiswaWebController extends Controller
         $tanggal = $this->tanggalFilter($request);
         $rombelIds = $this->rombelIdsTerbatas($user);
         $rekap = $this->service->rekapSiaPerKelas($tanggal, $rombelIds);
-        $rincian = $this->service->daftarHariIni($tanggal, $rombelIds);
+        $rincian = UkuranHalaman::paginate(
+            $this->service->daftarHariIni($tanggal, $rombelIds),
+            $request,
+            UkuranHalaman::STANDAR,
+            15,
+        );
         $rombelWali = $user->bisaKelola() ? null : $this->waliDashboard->rombelWali($user);
 
         return view('izin.rekap', [
@@ -49,6 +55,7 @@ class IzinSiswaWebController extends Controller
             'tanggal' => $tanggal->toDateString(),
             'rekap' => $rekap,
             'rincian' => $rincian,
+            'perPage' => UkuranHalaman::label((string) $request->query('per_page', '15'), UkuranHalaman::STANDAR, 15),
             'rombel_wali' => $rombelWali,
             'tahun_label' => TahunAjaran::aktif()?->label(),
             'admin' => $user->bisaKelola(),
@@ -82,12 +89,14 @@ class IzinSiswaWebController extends Controller
         }
 
         $q = trim((string) $request->query('q', ''));
+        $perPage = UkuranHalaman::label((string) $request->query('per_page', '25'), UkuranHalaman::IZIN, 25);
         $items = $this->service->paginasiSurat(
             $tanggal,
             $jenis !== '' ? $jenis : null,
             $rombelId,
             $q !== '' ? $q : null,
             $rombelIds,
+            $perPage,
         );
 
         $rombels = $user->bisaKelola()
@@ -108,6 +117,7 @@ class IzinSiswaWebController extends Controller
             'rombelId' => $rombelId,
             'q' => $q,
             'items' => $items,
+            'perPage' => $perPage,
             'rombels' => $rombels,
             'rombel_wali' => $rombelWali,
             'tahun_label' => TahunAjaran::aktif()?->label(),

@@ -83,6 +83,12 @@
                     </tbody>
                 </table>
             </div>
+            @include('partials.daftar-pagination', [
+                'rows' => $items,
+                'perPage' => $perPage,
+                'pagerId' => 'media',
+                'navLabel' => 'Navigasi halaman media',
+            ])
         </div>
     </div>
 </div>

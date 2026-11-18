@@ -48,9 +48,9 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse ($rombel->anggotaAktif as $siswa)
+                @forelse ($anggota as $siswa)
                     <tr>
-                        <td>{{ $loop->iteration }}</td>
+                        <td>{{ ($anggota->firstItem() ?? 1) + $loop->index }}</td>
                         <td><a href="{{ route('siswa.show', $siswa) }}">{{ $siswa->nama }}</a></td>
                         <td>{{ $siswa->nisn ?: '—' }}</td>
                         <td>{{ $siswa->jenis_kelamin ?: '—' }}</td>
@@ -81,6 +81,12 @@
             </tbody>
         </table>
     </div>
+    @include('partials.daftar-pagination', [
+        'rows' => $anggota,
+        'perPage' => $perPage,
+        'pagerId' => 'anggotaRombel',
+        'navLabel' => 'Navigasi halaman anggota rombel',
+    ])
 </div>
 
 @can('update', $rombel)

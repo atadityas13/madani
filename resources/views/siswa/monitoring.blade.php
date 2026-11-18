@@ -299,15 +299,14 @@
         </table>
     </div>
 
-    @include('siswa.partials.monitoring-pagination', [
+    @include('partials.daftar-pagination', [
         'rows' => $rows,
-        'q' => $q,
-        'tingkat' => $tingkat,
-        'rombelId' => $rombel_id,
-        'jenisKelamin' => $jenis_kelamin,
         'perPage' => (string) $per_page,
-        'statusLengkap' => $status_lengkap,
-        'belum' => $belum,
+        'ukuran' => \App\Support\UkuranHalaman::MONITORING,
+        'bawaan' => 10,
+        'semuanya' => false,
+        'pagerId' => 'monitoring',
+        'navLabel' => 'Navigasi halaman monitoring',
     ])
 </div>
 

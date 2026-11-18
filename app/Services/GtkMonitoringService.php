@@ -3,45 +3,53 @@
 namespace App\Services;
 
 use App\Models\Gtk;
+use App\Support\UkuranHalaman;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 
 class GtkMonitoringService
 {
     /**
      * @return array{
-     *     rows: Collection<int, array{no: int, nama: string, terakhir_login: string, jumlah_jurnal: int, terakhir_jurnal: string}>,
-     *     q: string
+     *     rows: LengthAwarePaginator,
+     *     q: string,
+     *     perPage: string
      * }
      */
     public function halaman(Request $request): array
     {
         $q = trim((string) $request->query('q', ''));
 
-        $gtks = Gtk::query()
-            ->with(['akun' => function ($query) {
-                $query->withCount('jurnalPembelajarans')
-                    ->withMax('jurnalPembelajarans', 'updated_at');
-            }])
-            ->whereHas('akun')
-            ->when($q !== '', function ($query) use ($q) {
-                $query->where(function ($inner) use ($q) {
-                    $inner->where('nama', 'like', "%{$q}%")
-                        ->orWhere('nip', 'like', "%{$q}%");
-                });
-            })
-            ->orderBy('nama')
-            ->get();
+        $hasil = UkuranHalaman::paginateQuery(
+            Gtk::query()
+                ->with(['akun' => function ($query) {
+                    $query->withCount('jurnalPembelajarans')
+                        ->withMax('jurnalPembelajarans', 'updated_at');
+                }])
+                ->whereHas('akun')
+                ->when($q !== '', function ($query) use ($q) {
+                    $query->where(function ($inner) use ($q) {
+                        $inner->where('nama', 'like', "%{$q}%")
+                            ->orWhere('nip', 'like', "%{$q}%");
+                    });
+                })
+                ->orderBy('nama'),
+            $request,
+            UkuranHalaman::STANDAR,
+            15,
+        );
 
-        $rows = $gtks->values()->map(function (Gtk $gtk, int $index) {
+        $rows = $hasil['baris'];
+        $offset = ($rows->currentPage() - 1) * $rows->perPage();
+        $rows->setCollection($rows->getCollection()->values()->map(function (Gtk $gtk, int $index) use ($offset) {
             $akun = $gtk->akun;
             $jumlah = (int) ($akun?->jurnal_pembelajarans_count ?? 0);
             $terakhirJurnalAt = $akun?->jurnal_pembelajarans_max_updated_at;
 
             return [
-                'no' => $index + 1,
+                'no' => $offset + $index + 1,
                 'nama' => $gtk->nama_lengkap,
                 'terakhir_login' => $this->formatWaktu($akun?->last_login_at, 'Belum pernah login'),
                 'jumlah_jurnal' => $jumlah,
@@ -50,11 +58,12 @@ class GtkMonitoringService
                     'Belum mengisi jurnal',
                 ),
             ];
-        });
+        }));
 
         return [
             'rows' => $rows,
             'q' => $q,
+            'perPage' => $hasil['label'],
         ];
     }
 

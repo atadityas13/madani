@@ -145,12 +145,13 @@
         </table>
     </div>
 
-    @include('siswa.partials.index-pagination', [
-        'siswas' => $siswas,
-        'q' => $q,
-        'tingkat' => $tingkat,
-        'rombelId' => $rombelId,
+    @include('partials.daftar-pagination', [
+        'rows' => $siswas,
         'perPage' => $perPage,
+        'ukuran' => \App\Support\UkuranHalaman::SISWA,
+        'bawaan' => 10,
+        'pagerId' => 'siswa',
+        'navLabel' => 'Navigasi halaman siswa',
     ])
 </div>
 

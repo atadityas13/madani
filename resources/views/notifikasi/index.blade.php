@@ -114,6 +114,12 @@
             </tbody>
         </table>
     </div>
+    @include('partials.daftar-pagination', [
+        'rows' => $items,
+        'perPage' => $perPage,
+        'pagerId' => 'notifikasi',
+        'navLabel' => 'Navigasi halaman notifikasi',
+    ])
 </div>
 
 @foreach ($items as $item)

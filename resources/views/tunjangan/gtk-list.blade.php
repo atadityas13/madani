@@ -172,7 +172,7 @@
             <tbody>
                 @forelse ($gtks as $gtk)
                     <tr>
-                        <td>{{ $loop->iteration }}</td>
+                        <td>{{ ($gtks->firstItem() ?? 1) + $loop->index }}</td>
                         <td>{{ $gtk->nama_lengkap }}</td>
                         <td>{{ $gtk->nip ?: '—' }}</td>
                         <td>{{ $gtk->nuptk ?: '—' }}</td>
@@ -205,5 +205,11 @@
             </tbody>
         </table>
     </div>
+    @include('partials.daftar-pagination', [
+        'rows' => $gtks,
+        'perPage' => $perPage,
+        'pagerId' => 'tunjanganGtk',
+        'navLabel' => 'Navigasi halaman guru tunjangan',
+    ])
 </div>
 @endsection

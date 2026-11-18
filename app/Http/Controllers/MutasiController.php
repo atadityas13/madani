@@ -6,6 +6,7 @@ use App\Models\Siswa;
 use App\Models\SiswaMutasi;
 use App\Models\TahunAjaran;
 use App\Services\MutasiService;
+use App\Support\UkuranHalaman;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,13 +33,14 @@ class MutasiController extends Controller
             ->where('jenis', $tab)
             ->when($tahunAjaran, fn ($query) => $query->where('tahun_ajaran_id', $tahunAjaran->id))
             ->orderByDesc('tanggal')
-            ->orderByDesc('id')
-            ->paginate(20)
-            ->withQueryString();
+            ->orderByDesc('id');
+
+        $hasil = UkuranHalaman::paginateQuery($mutasis, $request, UkuranHalaman::DENGAN_DUA_PULUH, 20);
 
         return view('mutasi.index', [
             'tab' => $tab,
-            'mutasis' => $mutasis,
+            'mutasis' => $hasil['baris'],
+            'perPage' => $hasil['label'],
             'tabOptions' => SiswaMutasi::tabOptions(),
             'alasanOptions' => SiswaMutasi::alasanOptions(),
             'jenisSekolahOptions' => SiswaMutasi::jenisSekolahOptions(),

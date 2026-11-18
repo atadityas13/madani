@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AppMenu;
 use App\Support\AppMenuHost;
+use App\Support\UkuranHalaman;
 use Database\Seeders\AppMenuSeeder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,7 +23,8 @@ class AppMenuController extends Controller
 
             return view('app-menus.index', [
                 'audience' => AppMenu::AUDIENCE_GURU,
-                'items' => collect(),
+                'items' => UkuranHalaman::kosong($request),
+                'perPage' => '15',
             ]);
         }
 
@@ -35,13 +37,21 @@ class AppMenuController extends Controller
             $audience = AppMenu::AUDIENCE_GURU;
         }
 
-        $items = AppMenu::query()
-            ->where('audience', $audience)
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get();
+        $hasil = UkuranHalaman::paginateQuery(
+            AppMenu::query()
+                ->where('audience', $audience)
+                ->orderBy('sort_order')
+                ->orderBy('id'),
+            $request,
+            UkuranHalaman::STANDAR,
+            15,
+        );
 
-        return view('app-menus.index', compact('items', 'audience'));
+        return view('app-menus.index', [
+            'items' => $hasil['baris'],
+            'audience' => $audience,
+            'perPage' => $hasil['label'],
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -148,7 +158,11 @@ class AppMenuController extends Controller
         }
 
         return redirect()
-            ->route('app-menus.index', ['audience' => $appMenu->audience])
+            ->route('app-menus.index', array_filter([
+                'audience' => $appMenu->audience,
+                'page' => request('page'),
+                'per_page' => request('per_page'),
+            ], fn ($value) => $value !== null && $value !== ''))
             ->with('success', 'Urutan menu diperbarui.');
     }
 

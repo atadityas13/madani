@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\TahunAjaran;
+use App\Support\UkuranHalaman;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -11,10 +12,18 @@ use Illuminate\View\View;
 
 class TahunAjaranController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $hasil = UkuranHalaman::paginateQuery(
+            TahunAjaran::query()->orderByDesc('tanggal_mulai')->orderByDesc('nama'),
+            $request,
+            UkuranHalaman::STANDAR,
+            15,
+        );
+
         return view('tahun-ajaran.index', [
-            'tahunAjarans' => TahunAjaran::query()->orderByDesc('tanggal_mulai')->orderByDesc('nama')->get(),
+            'tahunAjarans' => $hasil['baris'],
+            'perPage' => $hasil['label'],
         ]);
     }
 

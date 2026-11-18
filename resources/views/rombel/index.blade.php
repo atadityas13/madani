@@ -54,5 +54,11 @@
             </tbody>
         </table>
     </div>
+    @include('partials.daftar-pagination', [
+        'rows' => $rombels,
+        'perPage' => $perPage,
+        'pagerId' => 'rombel',
+        'navLabel' => 'Navigasi halaman rombel',
+    ])
 </div>
 @endsection

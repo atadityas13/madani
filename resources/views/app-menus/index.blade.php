@@ -54,12 +54,16 @@
                             <div class="d-flex flex-column gap-1">
                                 <form method="POST" action="{{ route('app-menus.move-up', $item) }}">
                                     @csrf
+                                    <input type="hidden" name="page" value="{{ request('page') }}">
+                                    <input type="hidden" name="per_page" value="{{ request('per_page') }}">
                                     <button class="btn btn-sm btn-outline-secondary py-0 px-1" type="submit" title="Naik">
                                         <i class="bi bi-chevron-up"></i>
                                     </button>
                                 </form>
                                 <form method="POST" action="{{ route('app-menus.move-down', $item) }}">
                                     @csrf
+                                    <input type="hidden" name="page" value="{{ request('page') }}">
+                                    <input type="hidden" name="per_page" value="{{ request('per_page') }}">
                                     <button class="btn btn-sm btn-outline-secondary py-0 px-1" type="submit" title="Turun">
                                         <i class="bi bi-chevron-down"></i>
                                     </button>
@@ -131,6 +135,12 @@
             </tbody>
         </table>
     </div>
+    @include('partials.daftar-pagination', [
+        'rows' => $items,
+        'perPage' => $perPage,
+        'pagerId' => 'menu',
+        'navLabel' => 'Navigasi halaman menu',
+    ])
 </div>
 
 <div class="modal fade" id="modalTambahMenu" tabindex="-1" aria-hidden="true">

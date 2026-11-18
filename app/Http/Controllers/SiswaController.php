@@ -16,6 +16,7 @@ use App\Services\SiswaPernyataanService;
 use App\Services\Vendor\VendorFotoService;
 use App\Support\KelengkapanSiswa;
 use App\Support\R2Url;
+use App\Support\UkuranHalaman;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -38,7 +39,6 @@ class SiswaController extends Controller
         $q = trim((string) $request->query('q', ''));
         $tingkat = trim((string) $request->query('tingkat', ''));
         $rombelId = trim((string) $request->query('rombel_id', ''));
-        $perPageRaw = (string) $request->query('per_page', '10');
         $user = auth()->user();
         $tahun = TahunAjaran::aktif();
 
@@ -125,23 +125,14 @@ class SiswaController extends Controller
             ->orderBy('rombel_urut.rombel_nama')
             ->orderBy('siswas.nama');
 
-        $allowedPerPage = [10, 20, 50, 100];
-        if ($perPageRaw === 'all') {
-            $perPage = max((clone $query)->count(), 1);
-            $perPageLabel = 'all';
-        } else {
-            $perPage = in_array((int) $perPageRaw, $allowedPerPage, true) ? (int) $perPageRaw : 10;
-            $perPageLabel = (string) $perPage;
-        }
-
-        $siswas = $query->paginate($perPage)->withQueryString();
+        $hasil = UkuranHalaman::paginateQuery($query, $request, UkuranHalaman::SISWA, 10);
 
         return view('siswa.index', [
-            'siswas' => $siswas,
+            'siswas' => $hasil['baris'],
             'q' => $q,
             'tingkat' => $tingkat,
             'rombelId' => $rombelId,
-            'perPage' => $perPageLabel,
+            'perPage' => $hasil['label'],
             'tingkatOptions' => $tingkatOptions,
             'rombels' => $rombelsForSelect,
             'jumlahTanpaNis' => $this->nisGenerator->jumlahTanpaNis(),

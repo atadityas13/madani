@@ -9,6 +9,7 @@ use App\Models\TunjanganDokumen;
 use App\Services\Persuratan\SptjmTpgPdfService;
 use App\Services\Tunjangan\TunjanganDokumenService;
 use App\Services\Tunjangan\TunjanganZipImportService;
+use App\Support\UkuranHalaman;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -74,6 +75,18 @@ class TunjanganController extends Controller
             $payload['gtks'] = $skakpt['gtks'];
             $payload['skakptFilter'] = $skakpt;
         }
+
+        $payload['perPage'] = UkuranHalaman::label(
+            (string) $request->query('per_page', '15'),
+            UkuranHalaman::STANDAR,
+            15,
+        );
+        $payload['gtks'] = UkuranHalaman::paginate(
+            $payload['gtks'],
+            $request,
+            UkuranHalaman::STANDAR,
+            15,
+        );
 
         return view('tunjangan.gtk-list', $payload);
     }

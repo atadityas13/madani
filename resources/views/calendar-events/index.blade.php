@@ -86,6 +86,12 @@
             </tbody>
         </table>
     </div>
+    @include('partials.daftar-pagination', [
+        'rows' => $items,
+        'perPage' => $perPage,
+        'pagerId' => 'kalender',
+        'navLabel' => 'Navigasi halaman kalender',
+    ])
 </div>
 
 @foreach ($items as $item)

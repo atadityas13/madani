@@ -91,9 +91,9 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse ($rincian as $i => $izin)
+                @forelse ($rincian as $izin)
                     <tr>
-                        <td>{{ $i + 1 }}</td>
+                        <td>{{ ($rincian->firstItem() ?? 1) + $loop->index }}</td>
                         <td>{{ $izin->siswa?->nama }}</td>
                         @if ($admin)
                             <td>{{ $izin->rombel?->label() }}</td>
@@ -109,5 +109,11 @@
             </tbody>
         </table>
     </div>
+    @include('partials.daftar-pagination', [
+        'rows' => $rincian,
+        'perPage' => $perPage,
+        'pagerId' => 'rekapSia',
+        'navLabel' => 'Navigasi halaman rekap SIA',
+    ])
 </div>
 @endsection

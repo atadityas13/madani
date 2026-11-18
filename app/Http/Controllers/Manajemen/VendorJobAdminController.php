@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Manajemen;
 use App\Http\Controllers\Controller;
 use App\Models\VendorJob;
 use App\Services\Vendor\VendorJobService;
+use App\Support\UkuranHalaman;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -12,17 +13,24 @@ use Illuminate\View\View;
 
 class VendorJobAdminController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         $this->authorize('create', VendorJob::class);
 
-        $jobs = VendorJob::query()
-            ->with(['vendor'])
-            ->withCount('siswas')
-            ->orderByDesc('updated_at')
-            ->paginate(20);
+        $hasil = UkuranHalaman::paginateQuery(
+            VendorJob::query()
+                ->with(['vendor'])
+                ->withCount('siswas')
+                ->orderByDesc('updated_at'),
+            $request,
+            UkuranHalaman::DENGAN_DUA_PULUH,
+            20,
+        );
 
-        return view('manajemen.vendor-jobs.index', compact('jobs'));
+        return view('manajemen.vendor-jobs.index', [
+            'jobs' => $hasil['baris'],
+            'perPage' => $hasil['label'],
+        ]);
     }
 
     public function create(VendorJobService $jobs): View

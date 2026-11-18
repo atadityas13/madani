@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\NotifMedia;
+use App\Support\UkuranHalaman;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -10,11 +11,19 @@ use Illuminate\View\View;
 
 class NotifMediaController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $items = NotifMedia::query()->orderByDesc('id')->limit(200)->get();
+        $hasil = UkuranHalaman::paginateQuery(
+            NotifMedia::query()->orderByDesc('id'),
+            $request,
+            UkuranHalaman::STANDAR,
+            15,
+        );
 
-        return view('notifikasi.media', compact('items'));
+        return view('notifikasi.media', [
+            'items' => $hasil['baris'],
+            'perPage' => $hasil['label'],
+        ]);
     }
 
     public function store(Request $request): RedirectResponse

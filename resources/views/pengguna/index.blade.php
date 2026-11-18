@@ -56,8 +56,11 @@
             </tbody>
         </table>
     </div>
-    @if ($users->hasPages())
-        <div class="p-3">{{ $users->links() }}</div>
-    @endif
+    @include('partials.daftar-pagination', [
+        'rows' => $users,
+        'perPage' => $perPage,
+        'pagerId' => 'pengguna',
+        'navLabel' => 'Navigasi halaman pengguna',
+    ])
 </div>
 @endsection

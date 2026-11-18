@@ -186,6 +186,12 @@
             </tbody>
         </table>
     </div>
+    @include('partials.daftar-pagination', [
+        'rows' => $siswas,
+        'perPage' => $perPage,
+        'pagerId' => 'vendorSiswa',
+        'navLabel' => 'Navigasi halaman siswa job',
+    ])
 </div>
 
 @can('uploadFoto', $job)

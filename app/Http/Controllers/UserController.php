@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Gtk;
 use App\Models\User;
 use App\Support\Peran;
+use App\Support\UkuranHalaman;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -20,20 +21,27 @@ class UserController extends Controller
 
         $q = trim((string) $request->query('q', ''));
 
-        $users = User::query()
-            ->with(['roles', 'gtk'])
-            ->when($q !== '', function ($query) use ($q) {
-                $query->where(function ($inner) use ($q) {
-                    $inner->where('name', 'like', "%{$q}%")
-                        ->orWhere('username', 'like', "%{$q}%")
-                        ->orWhere('email', 'like', "%{$q}%");
-                });
-            })
-            ->orderBy('name')
-            ->paginate(15)
-            ->withQueryString();
+        $hasil = UkuranHalaman::paginateQuery(
+            User::query()
+                ->with(['roles', 'gtk'])
+                ->when($q !== '', function ($query) use ($q) {
+                    $query->where(function ($inner) use ($q) {
+                        $inner->where('name', 'like', "%{$q}%")
+                            ->orWhere('username', 'like', "%{$q}%")
+                            ->orWhere('email', 'like', "%{$q}%");
+                    });
+                })
+                ->orderBy('name'),
+            $request,
+            UkuranHalaman::STANDAR,
+            15,
+        );
 
-        return view('pengguna.index', compact('users', 'q'));
+        return view('pengguna.index', [
+            'users' => $hasil['baris'],
+            'q' => $q,
+            'perPage' => $hasil['label'],
+        ]);
     }
 
     public function create(): View

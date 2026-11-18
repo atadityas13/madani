@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pengumuman;
+use App\Support\UkuranHalaman;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,19 +12,24 @@ use Illuminate\View\View;
 
 class PengumumanController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         try {
-            $items = Pengumuman::query()
-                ->orderByDesc('published_at')
-                ->orderByDesc('id')
-                ->get();
+            $hasil = UkuranHalaman::paginateQuery(
+                Pengumuman::query()->orderByDesc('published_at')->orderByDesc('id'),
+                $request,
+                UkuranHalaman::STANDAR,
+                15,
+            );
+            $items = $hasil['baris'];
+            $perPage = $hasil['label'];
         } catch (QueryException) {
-            $items = collect();
+            $items = UkuranHalaman::kosong($request);
+            $perPage = '15';
             session()->flash('error', 'Tabel pengumuman belum tersedia. Jalankan: php artisan migrate');
         }
 
-        return view('pengumuman.index', compact('items'));
+        return view('pengumuman.index', compact('items', 'perPage'));
     }
 
     public function store(Request $request): RedirectResponse

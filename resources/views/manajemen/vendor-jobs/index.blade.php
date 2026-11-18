@@ -63,7 +63,12 @@
     </div>
 </div>
 
-@if ($jobs->hasPages())
-    <div class="mt-3">{{ $jobs->links() }}</div>
-@endif
+@include('partials.daftar-pagination', [
+    'rows' => $jobs,
+    'perPage' => $perPage,
+    'ukuran' => \App\Support\UkuranHalaman::DENGAN_DUA_PULUH,
+    'bawaan' => 20,
+    'pagerId' => 'vendorJobAdmin',
+    'navLabel' => 'Navigasi halaman job vendor',
+])
 @endsection
