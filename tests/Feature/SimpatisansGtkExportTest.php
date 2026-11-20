@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Gtk;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class SimpatisansGtkExportTest extends TestCase
@@ -57,5 +58,24 @@ class SimpatisansGtkExportTest extends TestCase
             ->assertJsonPath('data.0.status_sertifikasi', true)
             ->assertJsonPath('data.0.status', 'aktif')
             ->assertJsonMissing(['nama' => 'Tendik Kantor']);
+    }
+
+    public function test_tanggal_lahir_tidak_valid_tidak_menggagalkan_ekspor(): void
+    {
+        config(['services.madani_introspect.secret' => 'rahasia']);
+
+        $gtk = Gtk::query()->create([
+            'nama' => 'Budi Santoso',
+            'nip' => '198001012005011001',
+            'jenis' => Gtk::JENIS_GURU,
+            'status' => 'aktif',
+        ]);
+        DB::table('gtks')->where('id', $gtk->id)->update(['tanggal_lahir' => '0000-00-00']);
+
+        $this->getJson('/api/v1/simpatisans/gtks', [
+            'X-Madani-Introspect-Secret' => 'rahasia',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.0.tanggal_lahir', null);
     }
 }

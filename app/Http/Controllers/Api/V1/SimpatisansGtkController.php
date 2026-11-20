@@ -34,7 +34,7 @@ class SimpatisansGtkController extends Controller
                 'nuptk' => $gtk->nuptk,
                 'jenis_kelamin' => $gtk->jenis_kelamin,
                 'tempat_lahir' => $gtk->tempat_lahir,
-                'tanggal_lahir' => $gtk->tanggal_lahir?->toDateString(),
+                'tanggal_lahir' => $this->tanggal($gtk),
                 'agama' => $gtk->agama,
                 'nomor_hp' => $gtk->nomor_hp,
                 'email' => $gtk->email,
@@ -59,6 +59,18 @@ class SimpatisansGtkController extends Controller
                 'total' => $data->count(),
             ],
             'data' => $data,
-        ]);
+        ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
+    }
+
+    private function tanggal(Gtk $gtk): ?string
+    {
+        $mentah = $gtk->getRawOriginal('tanggal_lahir');
+        if (! is_string($mentah) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $mentah) !== 1) {
+            return null;
+        }
+
+        $waktu = strtotime($mentah);
+
+        return $waktu !== false && date('Y-m-d', $waktu) === $mentah ? $mentah : null;
     }
 }
