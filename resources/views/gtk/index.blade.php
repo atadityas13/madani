@@ -16,10 +16,14 @@
         </select>
         <button class="btn btn-outline-secondary" type="submit">Cari</button>
     </form>
+    <a class="btn btn-outline-secondary" href="{{ route('gtk.sync-simpatisans') }}">Sync Simpatisans</a>
     <a class="btn btn-madani" href="{{ route('gtk.create') }}">Tambah</a>
 </div>
 @if (session('status'))
     <div class="alert alert-success">{{ session('status') }}</div>
+@endif
+@if (session('error'))
+    <div class="alert alert-danger">{{ session('error') }}</div>
 @endif
 <div class="madani-card p-0">
     <div class="table-responsive">

@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Gtk;
 use App\Models\User;
+use App\Services\Simpatisans\GtkSyncService;
 use App\Support\GtkAkun;
 use App\Support\UkuranHalaman;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use RuntimeException;
 
 class GtkController extends Controller
 {
@@ -68,7 +70,39 @@ class GtkController extends Controller
         return redirect()->route('gtk.index')->with('status', 'GTK diperbarui.');
     }
 
-    public function destroy(Gtk $gtk): RedirectResponse
+    public function bandingkanSimpatisans(GtkSyncService $sinkron): View|RedirectResponse
+    {
+        try {
+            $hasil = $sinkron->fetchAndRemember();
+        } catch (RuntimeException $e) {
+            return redirect()
+                ->route('gtk.index')
+                ->with('error', $e->getMessage());
+        }
+
+        return view('gtk.sync', $hasil);
+    }
+
+    public function terapkanSimpatisans(GtkSyncService $sinkron): RedirectResponse
+    {
+        try {
+            $hasil = $sinkron->terapkanDariSesi();
+        } catch (RuntimeException $e) {
+            return redirect()
+                ->route('gtk.sync-simpatisans')
+                ->with('error', $e->getMessage());
+        }
+
+        return redirect()
+            ->route('gtk.sync-simpatisans')
+            ->with('status', sprintf(
+                'Sinkron guru selesai: %d ditambahkan, %d diperbarui. DUK mengikuti Simpatisans. Isian lain hanya diisi bila masih kosong.',
+                $hasil['dibuat'],
+                $hasil['diperbarui'],
+            ));
+    }
+
+    public function destroy(Request $request, Gtk $gtk): RedirectResponse
     {
         if ($gtk->rombels()->exists()) {
             return back()->with('status', 'GTK tidak dapat dihapus karena masih menjadi wali kelas.');
@@ -76,7 +110,9 @@ class GtkController extends Controller
 
         $gtk->delete();
 
-        return redirect()->route('gtk.index')->with('status', 'GTK dihapus.');
+        $route = $request->input('kembali') === 'sync' ? 'gtk.sync-simpatisans' : 'gtk.index';
+
+        return redirect()->route($route)->with('status', 'GTK dihapus.');
     }
 
     public function buatAkun(Gtk $gtk, GtkAkun $akun): RedirectResponse
