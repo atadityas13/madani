@@ -28,7 +28,9 @@ class SimpatisansGtkExportTest extends TestCase
             'duk' => '2',
             'email' => 'budi@example.com',
             'status_pegawai' => 'PNS',
+            'kode_internal' => 'BD',
             'mapel_ijazah' => 'Matematika',
+            'rumpun_ijazah' => null,
             'status_sertifikasi' => true,
             'jenis' => Gtk::JENIS_GURU,
             'status' => 'aktif',
@@ -49,7 +51,9 @@ class SimpatisansGtkExportTest extends TestCase
             ->assertJsonPath('data.0.nama', 'Budi Santoso')
             ->assertJsonPath('data.0.duk', '2')
             ->assertJsonPath('data.0.email', 'budi@example.com')
+            ->assertJsonPath('data.0.kode_internal', 'BD')
             ->assertJsonPath('data.0.mapel_ijazah', 'Matematika')
+            ->assertJsonPath('data.0.rumpun_ijazah', null)
             ->assertJsonPath('data.0.status_sertifikasi', true)
             ->assertJsonPath('data.0.status', 'aktif')
             ->assertJsonMissing(['nama' => 'Tendik Kantor']);

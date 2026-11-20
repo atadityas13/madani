@@ -45,6 +45,7 @@ class SimpatisansGtkController extends Controller
                 'kode_internal' => $gtk->kode_internal,
                 'duk' => $gtk->duk,
                 'mapel_ijazah' => $gtk->mapel_ijazah,
+                'rumpun_ijazah' => $gtk->rumpun_ijazah,
                 'mapel_sertifikasi' => $gtk->mapel_sertifikasi,
                 'status_sertifikasi' => (bool) $gtk->status_sertifikasi,
                 'is_bk' => (bool) $gtk->is_bk,

@@ -29,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'kode_internal',
     'duk',
     'mapel_ijazah',
+    'rumpun_ijazah',
     'mapel_sertifikasi',
     'status_sertifikasi',
     'is_bk',

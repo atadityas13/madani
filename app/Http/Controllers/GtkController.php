@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Gtk;
 use App\Models\User;
+use App\Services\Simpatisans\ReferensiMapelService;
 use App\Support\GtkAkun;
 use App\Support\UkuranHalaman;
 use Illuminate\Http\RedirectResponse;
@@ -46,6 +47,7 @@ class GtkController extends Controller
     {
         return view('gtk.form', [
             'gtk' => new Gtk(['status' => 'aktif', 'jenis' => Gtk::JENIS_GURU]),
+            'referensi' => app(ReferensiMapelService::class)->ambil(),
         ]);
     }
 
@@ -58,7 +60,10 @@ class GtkController extends Controller
 
     public function edit(Gtk $gtk): View
     {
-        return view('gtk.form', compact('gtk'));
+        return view('gtk.form', [
+            'gtk' => $gtk,
+            'referensi' => app(ReferensiMapelService::class)->ambil(),
+        ]);
     }
 
     public function update(Request $request, Gtk $gtk): RedirectResponse
@@ -130,9 +135,11 @@ class GtkController extends Controller
             'jabatan' => ['nullable', 'string', 'max:100'],
             'golongan' => ['nullable', 'string', 'max:50'],
             'status_pegawai' => ['nullable', 'string', 'max:30'],
-            'kode_internal' => ['nullable', 'string', 'max:40'],
+            'kode_internal' => ['nullable', 'string', 'size:2', 'regex:/^[A-Za-z0-9]{2}$/', Rule::unique('gtks', 'kode_internal')->ignore($gtk?->id)],
             'duk' => ['nullable', 'string', 'max:40'],
+            'ijazah_selection' => ['nullable', 'string', 'max:160'],
             'mapel_ijazah' => ['nullable', 'string', 'max:120'],
+            'rumpun_ijazah' => ['nullable', 'string', 'max:120'],
             'mapel_sertifikasi' => ['nullable', 'string', 'max:120'],
             'status_sertifikasi' => ['sometimes', 'boolean'],
             'is_bk' => ['sometimes', 'boolean'],
@@ -143,13 +150,64 @@ class GtkController extends Controller
         $data['status_sertifikasi'] = $request->boolean('status_sertifikasi');
         $data['is_bk'] = $request->boolean('is_bk');
 
-        foreach (['nip', 'nuptk', 'nrg', 'gelar_depan', 'gelar_belakang', 'tempat_lahir', 'agama', 'nomor_hp', 'email', 'alamat', 'jabatan', 'golongan', 'status_pegawai', 'kode_internal', 'duk', 'mapel_ijazah', 'mapel_sertifikasi'] as $field) {
+        foreach (['nip', 'nuptk', 'nrg', 'gelar_depan', 'gelar_belakang', 'tempat_lahir', 'agama', 'nomor_hp', 'email', 'alamat', 'jabatan', 'golongan', 'status_pegawai', 'kode_internal', 'duk', 'mapel_ijazah', 'rumpun_ijazah', 'mapel_sertifikasi'] as $field) {
             $data[$field] = $data[$field] ?? null;
             if (is_string($data[$field]) && trim($data[$field]) === '') {
                 $data[$field] = null;
             }
         }
 
+        if (is_string($data['kode_internal'])) {
+            $data['kode_internal'] = strtoupper($data['kode_internal']);
+        }
+
+        $this->terapkanIjazah($data, $request);
+
+        if (! $data['status_sertifikasi']) {
+            $data['mapel_sertifikasi'] = null;
+        }
+
         return $data;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function terapkanIjazah(array &$data, Request $request): void
+    {
+        unset($data['ijazah_selection']);
+
+        if (! $request->exists('ijazah_selection')) {
+            return;
+        }
+
+        $pilihan = $request->input('ijazah_selection');
+
+        if (! is_string($pilihan) || ! str_contains($pilihan, ':')) {
+            $data['mapel_ijazah'] = null;
+            $data['rumpun_ijazah'] = null;
+
+            return;
+        }
+
+        [$jenis, $nama] = explode(':', $pilihan, 2);
+        $nama = trim($nama);
+
+        if ($jenis === 'mapel' && $nama !== '') {
+            $data['mapel_ijazah'] = $nama;
+            $data['rumpun_ijazah'] = null;
+
+            return;
+        }
+
+        if ($jenis === 'rumpun' && $nama !== '') {
+            $data['rumpun_ijazah'] = $nama;
+            $data['mapel_ijazah'] = null;
+
+            return;
+        }
+
+        $data['mapel_ijazah'] = null;
+        $data['rumpun_ijazah'] = null;
     }
 }

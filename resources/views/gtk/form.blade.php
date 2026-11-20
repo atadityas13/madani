@@ -2,6 +2,7 @@
 
 @php
     $baru = ! $gtk->exists;
+    $referensi = $referensi ?? ['siap' => false, 'mapels' => [], 'rumpuns' => [], 'peringatan' => null];
 @endphp
 
 @section('title', $baru ? 'Tambah GTK' : 'Ubah GTK')
@@ -111,10 +112,37 @@
             </div>
         </div>
 
+        @php
+            $pilihanIjazah = old('ijazah_selection');
+            if ($pilihanIjazah === null) {
+                if ($gtk->mapel_ijazah) {
+                    $pilihanIjazah = 'mapel:'.$gtk->mapel_ijazah;
+                } elseif ($gtk->rumpun_ijazah) {
+                    $pilihanIjazah = 'rumpun:'.$gtk->rumpun_ijazah;
+                } else {
+                    $pilihanIjazah = '';
+                }
+            }
+            $opsiIjazah = [];
+            foreach ($referensi['rumpuns'] as $nama) {
+                $opsiIjazah['rumpun:'.$nama] = $nama;
+            }
+            foreach ($referensi['mapels'] as $nama) {
+                $opsiIjazah['mapel:'.$nama] = $nama;
+            }
+            $opsiMapel = [];
+            foreach ($referensi['mapels'] as $nama) {
+                $opsiMapel[$nama] = $nama;
+            }
+            $sudahSertifikasi = (string) old('status_sertifikasi', $gtk->status_sertifikasi ? '1' : '0') === '1';
+        @endphp
+
         <div class="row g-3 mb-3">
             <div class="col-md-6">
-                <label class="form-label">Kode internal</label>
-                <input class="form-control" name="kode_internal" value="{{ old('kode_internal', $gtk->kode_internal) }}">
+                <label class="form-label">Kode guru (KG)</label>
+                <input class="form-control text-uppercase @error('kode_internal') is-invalid @enderror" name="kode_internal" value="{{ old('kode_internal', $gtk->kode_internal) }}" maxlength="2" placeholder="AA">
+                <div class="form-text">2 karakter. Ditiru ke Simpatisans saat sync.</div>
+                @error('kode_internal') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="col-md-6">
                 <label class="form-label">DUK</label>
@@ -122,31 +150,47 @@
             </div>
         </div>
 
+        @if ($referensi['peringatan'])
+            <div class="alert alert-warning">{{ $referensi['peringatan'] }}</div>
+        @endif
+
         <div class="row g-3 mb-3">
             <div class="col-md-6">
-                <label class="form-label">Mapel ijazah</label>
-                <input class="form-control" name="mapel_ijazah" value="{{ old('mapel_ijazah', $gtk->mapel_ijazah) }}">
+                <label class="form-label">Mapel ijazah (S1)</label>
+                @if ($referensi['siap'])
+                    <x-emis-select name="ijazah_selection" :options="$opsiIjazah" :value="$pilihanIjazah" placeholder="Pilih rumpun atau mapel" />
+                    <div class="form-text">Rumpun ditampilkan lebih dulu, lalu mapel, sama seperti Simpatisans.</div>
+                @else
+                    <p class="form-control-plaintext mb-0">{{ $gtk->mapel_ijazah ?: ($gtk->rumpun_ijazah ?: 'Belum diisi') }}</p>
+                    <input type="hidden" name="mapel_ijazah" value="{{ old('mapel_ijazah', $gtk->mapel_ijazah) }}">
+                    <input type="hidden" name="rumpun_ijazah" value="{{ old('rumpun_ijazah', $gtk->rumpun_ijazah) }}">
+                @endif
             </div>
             <div class="col-md-6">
-                <label class="form-label">Mapel sertifikasi</label>
-                <input class="form-control" name="mapel_sertifikasi" value="{{ old('mapel_sertifikasi', $gtk->mapel_sertifikasi) }}">
+                <span class="form-label d-block">Tersertifikasi (TPG)</span>
+                <div class="d-flex gap-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="status_sertifikasi" id="sertifikasi_ya" value="1" @checked($sudahSertifikasi)>
+                        <label class="form-check-label" for="sertifikasi_ya">Ya</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="status_sertifikasi" id="sertifikasi_tidak" value="0" @checked(! $sudahSertifikasi)>
+                        <label class="form-check-label" for="sertifikasi_tidak">Tidak</label>
+                    </div>
+                </div>
+                <div id="mapel-sertifikasi-wrap" class="mt-3" @if (! $sudahSertifikasi) style="display: none;" @endif>
+                    <label class="form-label">Mapel sertifikasi</label>
+                    @if ($referensi['siap'])
+                        <x-emis-select name="mapel_sertifikasi" :options="$opsiMapel" :value="old('mapel_sertifikasi', $gtk->mapel_sertifikasi)" placeholder="Pilih mapel sertifikasi" />
+                    @else
+                        <p class="form-control-plaintext mb-0">{{ $gtk->mapel_sertifikasi ?: 'Belum diisi' }}</p>
+                        <input type="hidden" name="mapel_sertifikasi" value="{{ old('mapel_sertifikasi', $gtk->mapel_sertifikasi) }}">
+                    @endif
+                </div>
             </div>
         </div>
 
         <div class="row g-3 mb-4">
-            <div class="col-md-6">
-                <div class="form-check">
-                    <input
-                        class="form-check-input"
-                        type="checkbox"
-                        name="status_sertifikasi"
-                        id="status_sertifikasi"
-                        value="1"
-                        @checked(old('status_sertifikasi', $gtk->status_sertifikasi))
-                    >
-                    <label class="form-check-label" for="status_sertifikasi">Sudah sertifikasi</label>
-                </div>
-            </div>
             <div class="col-md-6">
                 <div class="form-check">
                     <input
@@ -157,10 +201,18 @@
                         value="1"
                         @checked(old('is_bk', $gtk->is_bk))
                     >
-                    <label class="form-check-label" for="is_bk">Guru BK</label>
+                    <label class="form-check-label" for="is_bk">Guru Bimbingan dan Konseling (BK)</label>
                 </div>
             </div>
         </div>
+
+        <script>
+            document.querySelectorAll('input[name="status_sertifikasi"]').forEach(function (radio) {
+                radio.addEventListener('change', function () {
+                    document.getElementById('mapel-sertifikasi-wrap').style.display = radio.value === '1' && radio.checked ? '' : 'none';
+                });
+            });
+        </script>
 
         <div class="d-flex gap-2">
             <a class="btn btn-outline-secondary" href="{{ route('gtk.index') }}">Batal</a>
