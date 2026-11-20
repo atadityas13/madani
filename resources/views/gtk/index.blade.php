@@ -16,7 +16,6 @@
         </select>
         <button class="btn btn-outline-secondary" type="submit">Cari</button>
     </form>
-    <a class="btn btn-outline-secondary" href="{{ route('gtk.sync-simpatisans') }}">Sync Simpatisans</a>
     <a class="btn btn-madani" href="{{ route('gtk.create') }}">Tambah</a>
 </div>
 @if (session('status'))

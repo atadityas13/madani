@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V1\GuruTunjanganController;
 use App\Http\Controllers\Api\V1\NotifikasiController;
 use App\Http\Controllers\Api\V1\PengumumanController;
 use App\Http\Controllers\Api\V1\ReferensiController;
+use App\Http\Controllers\Api\V1\SimpatisansGtkController;
 use App\Http\Controllers\Api\V1\SiswaAuthController;
 use App\Http\Controllers\Api\V1\SiswaCalendarController;
 use App\Http\Controllers\Api\V1\SiswaController;
@@ -29,6 +30,7 @@ Route::prefix('v1')->group(function () {
     Route::post('siswa/login', [SiswaAuthController::class, 'login'])->middleware('throttle:5,1');
     Route::post('guru/login', [GuruAuthController::class, 'login'])->middleware('throttle:5,1');
     Route::post('token/introspect', TokenIntrospectController::class)->middleware('throttle:60,1');
+    Route::get('simpatisans/gtks', [SimpatisansGtkController::class, 'index'])->middleware('throttle:60,1');
 
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('menus', [AppMenuController::class, 'index']);

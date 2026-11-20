@@ -179,8 +179,6 @@ Route::middleware('auth')->group(function () {
             ->parameters(['tahun-ajaran' => 'tahunAjaran'])
             ->except(['show']);
         Route::get('gtk/monitoring', [GtkMonitoringController::class, 'index'])->name('gtk.monitoring');
-        Route::get('gtk/sync-simpatisans', [GtkController::class, 'bandingkanSimpatisans'])->name('gtk.sync-simpatisans');
-        Route::post('gtk/sync-simpatisans', [GtkController::class, 'terapkanSimpatisans'])->name('gtk.sync-simpatisans.terapkan');
         Route::resource('gtk', GtkController::class)->except(['show']);
         Route::get('pengaturan/update-app', [AppUpdateController::class, 'index'])->name('app-updates.index');
         Route::post('pengaturan/update-app', [AppUpdateController::class, 'store'])->name('app-updates.store');

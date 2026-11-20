@@ -1,0 +1,57 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Gtk;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class SimpatisansGtkExportTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_ekspor_ditolak_tanpa_secret(): void
+    {
+        config(['services.madani_introspect.secret' => 'rahasia']);
+
+        $this->getJson('/api/v1/simpatisans/gtks')
+            ->assertUnauthorized();
+    }
+
+    public function test_ekspor_hanya_berisi_guru_yang_bisa_diubah_di_madani(): void
+    {
+        config(['services.madani_introspect.secret' => 'rahasia']);
+
+        Gtk::query()->create([
+            'nama' => 'Budi Santoso',
+            'nip' => '198001012005011001',
+            'duk' => '2',
+            'email' => 'budi@example.com',
+            'status_pegawai' => 'PNS',
+            'mapel_ijazah' => 'Matematika',
+            'status_sertifikasi' => true,
+            'jenis' => Gtk::JENIS_GURU,
+            'status' => 'aktif',
+        ]);
+        Gtk::query()->create([
+            'nama' => 'Tendik Kantor',
+            'nip' => '196501011990011002',
+            'jenis' => Gtk::JENIS_TENDIK,
+            'status' => 'aktif',
+        ]);
+
+        $this->getJson('/api/v1/simpatisans/gtks', [
+            'X-Madani-Introspect-Secret' => 'rahasia',
+        ])
+            ->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.nip', '198001012005011001')
+            ->assertJsonPath('data.0.nama', 'Budi Santoso')
+            ->assertJsonPath('data.0.duk', '2')
+            ->assertJsonPath('data.0.email', 'budi@example.com')
+            ->assertJsonPath('data.0.mapel_ijazah', 'Matematika')
+            ->assertJsonPath('data.0.status_sertifikasi', true)
+            ->assertJsonPath('data.0.status', 'aktif')
+            ->assertJsonMissing(['nama' => 'Tendik Kantor']);
+    }
+}
